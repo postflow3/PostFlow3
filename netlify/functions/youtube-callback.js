@@ -31,7 +31,7 @@ exports.handler = async (event) => {
     if (!response.ok || !tokens.access_token) {
       return { statusCode: 502, headers, body: html("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.") };
     }
-    const store = getStore({ name: "postflow3-private-tokens", consistency: "strong" });
+    const store = getStore("postflow3-private-tokens");
     await store.set("youtube-owner", encryptJson({ ...tokens, saved_at: Date.now() }));
     return { statusCode: 200, headers, body: html("YouTube conectado!", "A autorização foi concluída e os tokens foram guardados criptografados no servidor.", true) };
   } catch (error) {
