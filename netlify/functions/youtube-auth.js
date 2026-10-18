@@ -1,5 +1,5 @@
 const crypto = require("node:crypto");
-const { hasSession, makeStateCookie } = require("./_lib/security");
+const { hasSession, makeStateCookie } = require("../lib/security");
 
 exports.handler = async (event) => {
   const headers = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
