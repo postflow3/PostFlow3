@@ -5,7 +5,7 @@ exports.handler = async (event) => {
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
   if (!hasSession(event)) return { statusCode: 401, headers, body: JSON.stringify({ error: "Não autenticado." }) };
   try {
-    const store = getStore({ name: "postflow3-private-tokens", consistency: "strong" });
+    const store = getStore("postflow3-private-tokens");
     const tokens = await store.get("youtube-owner");
     return { statusCode: 200, headers, body: JSON.stringify({ connected: Boolean(tokens) }) };
   } catch {
