@@ -1,5 +1,5 @@
 const { getStore } = require("@netlify/blobs");
-const { hasSession } = require("./_lib/security");
+const { hasSession } = require("../lib/security");
 
 exports.handler = async (event) => {
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
