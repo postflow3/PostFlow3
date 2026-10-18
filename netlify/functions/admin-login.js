@@ -5,7 +5,7 @@ exports.handler = async (event) => {
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
   if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: JSON.stringify({ error: "Método não permitido." }) };
   try {
-    const store = getStore({ name: "postflow3-login-limits", consistency: "strong" });
+    const store = getStore("postflow3-login-limits");
     const ip = event.headers?.["x-nf-client-connection-ip"] || event.headers?.["client-ip"] || "unknown";
     const key = `attempts:${require("node:crypto").createHash("sha256").update(ip).digest("hex")}`;
     const now = Date.now();
@@ -23,7 +23,7 @@ exports.handler = async (event) => {
     const b = Buffer.from(expected);
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       attempts.count += 1;
-      await store.set(key, JSON.stringify(attempts), { expirationTtl: 900 });
+      await store.set(key, JSON.stringify(attempts));
       return { statusCode: 401, headers, body: JSON.stringify({ error: "Senha incorreta." }) };
     }
     await store.delete(key).catch(() => {});
