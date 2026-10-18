@@ -1,5 +1,5 @@
 const { getStore } = require("@netlify/blobs");
-const { hasSession, verifyStateCookie, encryptJson } = require("./_lib/security");
+const { hasSession, verifyStateCookie, encryptJson } = require("../lib/security");
 
 const html = (title, message, success = false) => `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — PostFlow3</title><body style="font:16px system-ui;max-width:640px;margin:12vh auto;padding:24px;color:#171735"><h1>${title}</h1><p>${message}</p><p><a href="/">Voltar ao PostFlow3</a></p><script>if(${success}){try{if(window.opener)window.opener.postMessage({type:"postflow3-youtube-connected"},"*")}catch(e){}}</script></body></html>`;
 
