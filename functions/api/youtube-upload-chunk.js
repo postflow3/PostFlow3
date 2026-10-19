@@ -65,13 +65,15 @@ export async function onRequestPost({ request, env }) {
     const post = {
       id: crypto.randomUUID(), title: pending.title, description: pending.description,
       filename: pending.filename, mimeType: pending.mimeType, size: pending.size,
-      scheduledAt: pending.scheduledAt, status: "scheduled_on_youtube",
+      scheduledAt: pending.scheduledAt,
+      publicationMode: pending.publicationMode || "scheduled",
+      status: pending.publicationMode === "immediate" ? "published_on_youtube" : "scheduled_on_youtube",
       youtubeVideoId: result.id, youtubeUrl: "https://www.youtube.com/watch?v=" + result.id,
       createdAt: pending.createdAt, uploadedAt: new Date().toISOString(), platforms: ["YouTube"]
     };
     await env.POSTFLOW3_KV.put("post:" + post.id, JSON.stringify(post));
     await env.POSTFLOW3_KV.put("youtube-upload:" + uploadId, await encryptJson(env, { ...pending, status: "complete", youtubeVideoId: result.id, completedAt: new Date().toISOString() }), { expirationTtl: 604800 });
-    return json({ complete: true, received: total, post, message: "O YouTube confirmou o vídeo. Ele está privado e agendado para a data escolhida." }, 201);
+    return json({ complete: true, received: total, post, message: pending.publicationMode === "immediate" ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública." : "O YouTube confirmou o vídeo. Ele está privado e agendado para a data escolhida." }, 201);
   } catch (e) {
     return json({ error: String(e?.message || "Falha ao enviar trecho ao YouTube.").slice(0, 350) }, 500);
   }
