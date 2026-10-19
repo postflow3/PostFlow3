@@ -14,3 +14,5 @@ O callback OAuth planejado é https://postflow3.pages.dev/api/youtube-callback. 
 - `POSTFLOW3_SESSION_SECRET` e `TOKEN_ENCRYPTION_KEY` foram configurados como secrets diretamente na Cloudflare; seus valores não foram exibidos nem colocados no repositório.
 - A prévia está autorizada somente para a branch `cloudflare-migration`; o deploy de produção continua desativado.
 - Ainda precisam ser cadastrados como secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `POSTFLOW3_ADMIN_PASSWORD` em Preview e Production.
+
+- A prévia da Cloudflare deve acompanhar apenas esta branch de migração enquanto a produção permanece desligada.
