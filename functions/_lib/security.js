@@ -60,6 +60,15 @@ export async function verifyStateCookie(request, env, state) {
     return diff === 0;
   } catch { return false; }
 }
+export async function decryptJson(env, value) {
+  const keyBytes = base64ToBytes(required(env, "TOKEN_ENCRYPTION_KEY"));
+  if (keyBytes.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY precisa ser uma chave Base64 de 32 bytes.");
+  const item = typeof value === "string" ? JSON.parse(value) : value;
+  if (!item || item.v !== 1 || !item.iv || !item.data) throw new Error("Formato de token criptografado inválido.");
+  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(item.iv) }, key, base64ToBytes(item.data));
+  return JSON.parse(dec.decode(plain));
+}
 export async function encryptJson(env, value) {
   const keyBytes = base64ToBytes(required(env, "TOKEN_ENCRYPTION_KEY"));
   if (keyBytes.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY precisa ser uma chave Base64 de 32 bytes.");
