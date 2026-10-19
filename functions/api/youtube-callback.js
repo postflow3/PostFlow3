@@ -20,7 +20,7 @@ export async function onRequestGet({ request, env }) {
     if (!clientId || !clientSecret) return respond("Configuração incompleta", "Configure as credenciais Google nos secrets do Cloudflare Pages.", 503);
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ code: params.get("code"), client_id: clientId, client_secret: clientSecret, redirect_uri: `${url.origin}/api/youtube-callback`, grant_type: "authorization_code" })
+      body: new URLSearchParams({ code: params.get("code"), client_id: clientId, client_secret: clientSecret, redirect_uri: env.GOOGLE_REDIRECT_URI || "https://cloudflare-migration.postflow3.pages.dev/api/youtube-callback", grant_type: "authorization_code" })
     });
     const tokens = await response.json();
     if (!response.ok || !tokens.access_token) return respond("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.", 502);
