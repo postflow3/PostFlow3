@@ -24,8 +24,9 @@ export async function onRequestGet({ request, env }) {
     });
     const tokens = await response.json();
     if (!response.ok || !tokens.access_token) return respond("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.", 502);
-    await env.POSTFLOW3_KV.put("youtube-owner", await encryptJson(env, { ...tokens, saved_at: Date.now() }));
-    return respond("YouTube conectado!", "A autorização foi concluída e os tokens foram guardados criptografados no servidor.", 200, true);
+    const stored = { ...tokens, expiry_date: Date.now() + Number(tokens.expires_in || 3600) * 1000, saved_at: Date.now() };
+    await env.POSTFLOW3_KV.put("youtube-owner", await encryptJson(env, stored));
+    return respond("Google conectado!", "A autorização do YouTube e a permissão de leitura do Google Drive foram guardadas criptografadas no servidor.", 200, true);
   } catch {
     return respond("Erro na conexão", "Confira os secrets e a configuração de armazenamento do Cloudflare Pages. Nenhum token foi exibido nesta página.", 500);
   }
