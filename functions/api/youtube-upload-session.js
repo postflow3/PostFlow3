@@ -44,20 +44,24 @@ export async function onRequestPost({ request, env }) {
     const filename = String(input.filename || "video.mp4").trim().slice(0, 200);
     const mimeType = String(input.mimeType || "").trim().toLowerCase();
     const size = Number(input.size);
+    const publicationMode = input.publicationMode === "immediate" ? "immediate" : "scheduled";
     const scheduledAt = String(input.scheduledAt || "").trim();
-    const date = new Date(scheduledAt);
+    const date = scheduledAt ? new Date(scheduledAt) : null;
 
     if (!title) return json({ error: "Digite o título do vídeo." }, 400);
     if (!Number.isSafeInteger(size) || size <= 0) return json({ error: "O tamanho do arquivo não é válido." }, 400);
     if (!(mimeType.startsWith("video/") || mimeType === "application/octet-stream")) return json({ error: "Escolha um arquivo de vídeo válido." }, 400);
-    if (!scheduledAt || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000) {
+    if (publicationMode === "scheduled" && (!scheduledAt || !date || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000)) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro para permitir o envio e processamento." }, 400);
     }
 
     const accessToken = await getAccessToken(env);
+    const status = publicationMode === "immediate"
+      ? { privacyStatus: "public", selfDeclaredMadeForKids: false }
+      : { privacyStatus: "private", publishAt: date.toISOString(), selfDeclaredMadeForKids: false };
     const metadata = {
       snippet: { title, description, categoryId: "22" },
-      status: { privacyStatus: "private", publishAt: date.toISOString(), selfDeclaredMadeForKids: false }
+      status
     };
     const init = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
       method: "POST",
@@ -78,7 +82,9 @@ export async function onRequestPost({ request, env }) {
     const uploadId = crypto.randomUUID();
     const pending = {
       uploadId, uploadUrl, title, description, filename, mimeType, size,
-      scheduledAt: date.toISOString(), createdAt: new Date().toISOString(),
+      publicationMode,
+      scheduledAt: publicationMode === "scheduled" ? date.toISOString() : null,
+      createdAt: new Date().toISOString(),
       status: "uploading"
     };
     await env.POSTFLOW3_KV.put("youtube-upload:" + uploadId, await encryptJson(env, pending), { expirationTtl: 604800 });
