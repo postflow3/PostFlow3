@@ -29,20 +29,34 @@ export async function onRequestGet({ request, env }) {
   if (!env.POSTFLOW3_KV || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração Google segura está incompleta." }, 503);
   try {
     const { accessToken } = await getAccessToken(request, env);
-    const url = new URL("https://www.googleapis.com/drive/v3/files");
-    url.searchParams.set("q", "mimeType contains 'video/' and trashed = false");
-    url.searchParams.set("pageSize", "100");
-    url.searchParams.set("orderBy", "modifiedTime desc");
-    url.searchParams.set("fields", "nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)");
-    url.searchParams.set("spaces", "drive");
-    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-    const data = await response.json();
-    if (!response.ok) return json({ error: data.error?.message || "Não foi possível listar os vídeos do Google Drive." }, response.status === 401 ? 401 : 502);
-    return json({ files: (data.files || []).map(file => ({
+    const files = [];
+    let pageToken = "";
+    // Search the user's accessible files, including shared drives. Filter video MIME types
+    // in code because Drive's q string operator is not reliable for mimeType matching.
+    for (let page = 0; page < 5; page++) {
+      const url = new URL("https://www.googleapis.com/drive/v3/files");
+      url.searchParams.set("q", "mimeType != 'application/vnd.google-apps.folder' and trashed = false");
+      url.searchParams.set("pageSize", "100");
+      url.searchParams.set("orderBy", "modifiedTime desc");
+      url.searchParams.set("fields", "nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)");
+      url.searchParams.set("spaces", "drive");
+      url.searchParams.set("corpora", "user");
+      url.searchParams.set("includeItemsFromAllDrives", "true");
+      url.searchParams.set("supportsAllDrives", "true");
+      if (pageToken) url.searchParams.set("pageToken", pageToken);
+      const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const data = await response.json();
+      if (!response.ok) return json({ error: data.error?.message || "Não foi possível listar os vídeos do Google Drive." }, response.status === 401 ? 401 : 502);
+      files.push(...(data.files || []).filter(file => (file.mimeType || "").startsWith("video/")));
+      pageToken = data.nextPageToken || "";
+      if (!pageToken) break;
+    }
+    files.sort((a, b) => new Date(b.modifiedTime || 0) - new Date(a.modifiedTime || 0));
+    return json({ files: files.map(file => ({
       id: file.id, name: file.name, mimeType: file.mimeType,
       size: file.size ? Number(file.size) : null,
       modifiedTime: file.modifiedTime, webViewLink: file.webViewLink
-    })), nextPageToken: data.nextPageToken || null });
+    })) });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Erro ao consultar o Google Drive." }, 500);
   }
