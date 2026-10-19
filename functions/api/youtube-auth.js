@@ -6,7 +6,7 @@ export async function onRequestGet({ request, env }) {
   const clientId = env.GOOGLE_CLIENT_ID;
   if (!clientId || !env.GOOGLE_CLIENT_SECRET) return new Response(JSON.stringify({ error: "Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET nos secrets do Cloudflare Pages." }), { status: 503, headers: { ...headers, "Content-Type": "application/json; charset=utf-8" } });
   const url = new URL(request.url);
-  const redirectUri = `${url.origin}/api/youtube-callback`;
+  const redirectUri = env.GOOGLE_REDIRECT_URI || "https://cloudflare-migration.postflow3.pages.dev/api/youtube-callback";
   const state = [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, "0")).join("");
   const params = new URLSearchParams({
     client_id: clientId, redirect_uri: redirectUri, response_type: "code",
