@@ -22,8 +22,10 @@ export async function onRequestGet({ request, env }) {
   if (!(await hasSession(request, env))) return respond("Sessão expirada", "Volte ao PostFlow3, entre novamente e repita a conexão.", 401);
   if (!(await verifyStateCookie(request, env, state))) return respond("Validação de segurança falhou", "Não foi possível validar esta solicitação. Inicie a conexão novamente.");
   try {
-    const clientKey = env.TIKTOK_CLIENT_KEY, clientSecret = env.TIKTOK_CLIENT_SECRET;
-    if (!clientKey || !clientSecret) return respond("Configuração incompleta", "Configure TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET nos secrets do Cloudflare Pages.", 503);
+    // Preview can use the separately stored Sandbox credentials; Production remains on its own branch.
+    const clientKey = env.TIKTOK_CLIENT_KEY1 || env.TIKTOK_CLIENT_KEY;
+    const clientSecret = env.TIKTOK_CLIENT_SECRET1 || env.TIKTOK_CLIENT_SECRET;
+    if (!clientKey || !clientSecret) return respond("Configuração incompleta", "Configure as credenciais do TikTok no ambiente Preview do Cloudflare Pages.", 503);
     const redirectUri = "https://cloudflare-migration.postflow3.pages.dev/api/tiktok-callback";
     const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
       method: "POST",
