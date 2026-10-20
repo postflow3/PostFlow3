@@ -24,7 +24,7 @@ export async function onRequestGet({ request, env }) {
   try {
     const clientKey = env.TIKTOK_CLIENT_KEY, clientSecret = env.TIKTOK_CLIENT_SECRET;
     if (!clientKey || !clientSecret) return respond("Configuração incompleta", "Configure TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET nos secrets do Cloudflare Pages.", 503);
-    const redirectUri = env.TIKTOK_REDIRECT_URI || new URL("/api/tiktok-callback", request.url).toString();
+    const redirectUri = "https://cloudflare-migration.postflow3.pages.dev/api/tiktok-callback";
     const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", "Cache-Control": "no-cache" },
