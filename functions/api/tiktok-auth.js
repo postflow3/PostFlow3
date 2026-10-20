@@ -7,8 +7,8 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 export async function onRequestGet({ request, env }) {
   if (!(await hasSession(request, env))) return json({ error: "Entre no PostFlow3 antes de conectar o TikTok." }, 401);
   // Preview can use the separately stored Sandbox credentials; Production remains on its own branch.
-  const clientKey = env.TIKTOK_CLIENT_KEY1 || env.TIKTOK_CLIENT_KEY;
-  if (!clientKey || !(env.TIKTOK_CLIENT_SECRET1 || env.TIKTOK_CLIENT_SECRET)) {
+  const clientKey = env.TIKTOK_CLIENT_KEY;
+  if (!clientKey || !env.TIKTOK_CLIENT_SECRET) {
     return json({ error: "Configure as credenciais do TikTok no ambiente Preview do Cloudflare Pages e cadastre /api/tiktok-callback no Login Kit do TikTok." }, 503);
   }
   // Preview OAuth must use the same stable callback URI registered in TikTok Developers.
