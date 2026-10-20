@@ -9,13 +9,15 @@ export async function onRequestGet({ request, env }) {
   if (!env.TIKTOK_CLIENT_KEY || !env.TIKTOK_CLIENT_SECRET) {
     return json({ error: "Configure TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET nos secrets do Cloudflare Pages e cadastre /api/tiktok-callback no Login Kit do TikTok." }, 503);
   }
-  const redirectUri = env.TIKTOK_REDIRECT_URI || new URL("/api/tiktok-callback", request.url).toString();
+  // Preview OAuth must use the same stable callback URI registered in TikTok Developers.
+  const redirectUri = "https://cloudflare-migration.postflow3.pages.dev/api/tiktok-callback";
   const state = [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, "0")).join("");
   const params = new URLSearchParams({
     client_key: env.TIKTOK_CLIENT_KEY,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: env.TIKTOK_SCOPES || "user.info.basic,video.publish",
+    // Current TikTok app configuration includes video.upload (draft upload), not video.publish (direct post).
+    scope: env.TIKTOK_SCOPES || "user.info.basic,video.upload",
     state
   });
   return new Response(null, { status: 302, headers: {
