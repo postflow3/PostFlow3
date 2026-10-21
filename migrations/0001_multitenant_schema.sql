@@ -25,7 +25,7 @@ END;
 CREATE TABLE IF NOT EXISTS social_accounts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  platform TEXT NOT NULL CHECK (platform IN ('youtube', 'instagram', 'tiktok')),
+  platform TEXT NOT NULL CHECK (platform IN ('youtube', 'instagram')),
   platform_user_id TEXT,
   username TEXT,
   encrypted_tokens TEXT NOT NULL,
