@@ -16,7 +16,11 @@ export async function onRequestGet({request,env}){
   const redirectUri=env.INSTAGRAM_REDIRECT_URI||new URL("/api/instagram-callback",request.url).toString();
   const tr=await fetch("https://api.instagram.com/oauth/access_token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:id,client_secret:secret,grant_type:"authorization_code",redirect_uri:redirectUri,code})});
   const token=await tr.json();
-  if(!tr.ok||!token.access_token)return respond("Não foi possível conectar","A Meta recusou a autorização. Confira o App ID, App Secret e URI de retorno.",502);
+  if(!tr.ok||!token.access_token){
+   const detail=String(token.error_message||token.error_description||token.error?.message||token.error_type||"Resposta de token recusada").replace(/[\r\n<>]/g," ").slice(0,220);
+   const codeInfo=token.code? " Código Meta: "+String(token.code).slice(0,20)+".":"";
+   return respond("Não foi possível conectar","A Meta recusou a troca do código por token. Detalhe retornado: "+detail+"."+codeInfo+" Confira também se o App Secret pertence ao mesmo App ID e se a URI de retorno é idêntica.",502);
+  }
   let accessToken=token.access_token,expiresIn=Number(token.expires_in||3600);
   const longUrl=new URL("https://graph.instagram.com/access_token");longUrl.search=new URLSearchParams({grant_type:"ig_exchange_token",client_secret:secret,access_token:accessToken}).toString();
   const lr=await fetch(longUrl),longToken=await lr.json();
