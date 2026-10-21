@@ -24,6 +24,6 @@ export async function onRequestPost({request,env}){
    throw e;
   }
   return json({ok:true,user:{id,name,email},message:"Conta criada. Bem-vindo ao PostFlow3."},201,{"Set-Cookie":await makeSessionCookie(env,{id})});
- }catch{return json({error:"Não foi possível criar sua conta. Verifique se o banco D1 está configurado e tente novamente."},500)}
+ }catch(e){console.error("PostFlow3 signup failure",e);return json({error:"Falha interna ao criar a conta.",detail:String(e?.message||e||"erro desconhecido").slice(0,240)},500)}
 }
 export async function onRequest({request}){return request.method==="POST"?new Response(null,{status:405,headers:{Allow:"POST"}}):json({error:"Método não permitido."},405,{Allow:"POST"});}
