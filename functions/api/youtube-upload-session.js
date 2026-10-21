@@ -1,11 +1,11 @@
-import { hasSession, decryptJson, encryptJson } from "../_lib/security.js";
+import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
 });
 
-async function getAccessToken(env) {
-  const encrypted = await env.POSTFLOW3_KV.get("youtube-owner");
+async function getAccessToken(env,userId) {
+  const encrypted = await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
   if (!encrypted) throw new Error("Conecte a conta Google/YouTube no PostFlow3.");
   let tokens = await decryptJson(env, encrypted);
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
@@ -28,12 +28,12 @@ async function getAccessToken(env) {
     expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000,
     saved_at: Date.now()
   };
-  await env.POSTFLOW3_KV.put("youtube-owner", await encryptJson(env, tokens));
+  await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, tokens));
   return tokens.access_token;
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!(await hasSession(request, env))) return json({ error: "Sua sessão expirou. Entre novamente no PostFlow3." }, 401);
+  const session=await getSession(request,env);if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
   if (!env.POSTFLOW3_KV || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     return json({ error: "A configuração segura do YouTube/KV está incompleta." }, 503);
   }
@@ -48,7 +48,7 @@ export async function onRequestPost({ request, env }) {
     const scheduledAt = String(input.scheduledAt || "").trim();
     const instagramVideoKey = String(input.instagramVideoKey || "").trim();
     const publishInstagram = input.publishInstagram === true;
-    if (publishInstagram && !/^instagram-media\/[0-9a-f-]{36}$/i.test(instagramVideoKey)) return json({ error: "O vídeo do Instagram não foi preparado corretamente." }, 400);
+    if (publishInstagram && !new RegExp("^instagram-media/"+session.userId+"/[0-9a-f-]{36}$","i").test(instagramVideoKey)) return json({ error: "O vídeo do Instagram não foi preparado corretamente." }, 400);
     const date = scheduledAt ? new Date(scheduledAt) : null;
 
     if (!title) return json({ error: "Digite o título do vídeo." }, 400);
@@ -58,7 +58,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro para permitir o envio e processamento." }, 400);
     }
 
-    const accessToken = await getAccessToken(env);
+    const accessToken = await getAccessToken(env,session.userId);
     const status = publicationMode === "immediate"
       ? { privacyStatus: "public", selfDeclaredMadeForKids: false }
       : { privacyStatus: "private", publishAt: date.toISOString(), selfDeclaredMadeForKids: false };
@@ -90,7 +90,7 @@ export async function onRequestPost({ request, env }) {
       createdAt: new Date().toISOString(),
       status: "uploading"
     };
-    await env.POSTFLOW3_KV.put("youtube-upload:" + uploadId, await encryptJson(env, pending), { expirationTtl: 604800 });
+    await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, pending), { expirationTtl: 604800 });
     return json({ uploadId, chunkSize: 8 * 1024 * 1024, message: "Sessão de envio criada para o canal do YouTube conectado." }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Não foi possível iniciar o envio.").slice(0, 350) }, 500);
