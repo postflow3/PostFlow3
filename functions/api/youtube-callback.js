@@ -1,5 +1,7 @@
 import { getSession, verifyStateCookie, encryptJson, userKey } from "../_lib/security.js";
 
+// Redeploy after Google OAuth secrets are configured in the Cloudflare Pages preview environment.
+
 function page(title, message, success = false) {
   const safeTitle = title.replace(/[&<>"]/g, "");
   const safeMessage = message.replace(/[&<>"]/g, "");
