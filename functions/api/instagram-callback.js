@@ -10,10 +10,12 @@ export async function onRequestGet({request,env}){
  if(!code||!state)return respond("Retorno inválido","O Instagram não enviou os dados necessários. Inicie a conexão novamente.");
  const session=await getSession(request,env);if(!session)return respond("Sessão expirada","Volte ao PostFlow3, entre novamente e repita a conexão.",401);
  if(!(await verifyStateCookie(request,env,state,session.userId)))return respond("Validação de segurança falhou","Não foi possível validar esta solicitação. Inicie a conexão novamente.");
+ let stage="validando configuração";
  try{
   const id=env.INSTAGRAM_APP_ID,secret=env.INSTAGRAM_APP_SECRET;
   if(!id||!secret)return respond("Configuração incompleta","Configure INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET nos secrets do Cloudflare Pages.",503);
   const redirectUri=env.INSTAGRAM_REDIRECT_URI||"https://cloudflare-migration.postflow3.pages.dev/api/instagram-callback";
+  stage="trocando o código de autorização";
   const tr=await fetch("https://api.instagram.com/oauth/access_token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:id,client_secret:secret,grant_type:"authorization_code",redirect_uri:redirectUri,code})});
   const token=await tr.json();
   if(!tr.ok||!token.access_token){
@@ -22,13 +24,20 @@ export async function onRequestGet({request,env}){
    return respond("Não foi possível conectar","A Meta recusou a troca do código por token. Detalhe retornado: "+detail+"."+codeInfo+" Confira também se o App Secret pertence ao mesmo App ID e se a URI de retorno é idêntica.",502);
   }
   let accessToken=token.access_token,expiresIn=Number(token.expires_in||3600);
+  stage="obtendo token de longa duração";
   const longUrl=new URL("https://graph.instagram.com/access_token");longUrl.search=new URLSearchParams({grant_type:"ig_exchange_token",client_secret:secret,access_token:accessToken}).toString();
   const lr=await fetch(longUrl),longToken=await lr.json();
   if(lr.ok&&longToken.access_token){accessToken=longToken.access_token;expiresIn=Number(longToken.expires_in||5184000);}
+  stage="consultando o perfil do Instagram";
   const profileUrl=new URL("https://graph.instagram.com/v23.0/me");profileUrl.search=new URLSearchParams({fields:"user_id,username",access_token:accessToken}).toString();
   const pr=await fetch(profileUrl),profile=await pr.json();
   if(!pr.ok||!profile.user_id)return respond("Autorização incompleta","Não foi possível ler o perfil. Verifique os produtos e permissões da Instagram API no painel da Meta.",502);
-  await env.POSTFLOW3_KV.put(userKey(session.userId,"instagram-owner"),await encryptJson(env,{access_token:accessToken,expiry_date:Date.now()+expiresIn*1000,user_id:String(profile.user_id),username:profile.username||"",saved_at:Date.now()}));
+  stage="criptografando e salvando a conexão";
+  const encrypted=await encryptJson(env,{access_token:accessToken,expiry_date:Date.now()+expiresIn*1000,user_id:String(profile.user_id),username:profile.username||"",saved_at:Date.now()});
+  await env.POSTFLOW3_KV.put(userKey(session.userId,"instagram-owner"),encrypted);
   return respond("Instagram conectado!","A conta @"+(profile.username||"Instagram")+" foi autorizada e os dados foram guardados criptografados no servidor.",200,true);
- }catch{return respond("Erro na conexão","Confira os secrets, o armazenamento KV e as configurações do app da Meta. Nenhum token foi exibido.",500);}
+ }catch(error){
+  console.error("PostFlow3 Instagram callback failure", {stage,error_name:error?.name||"Error",error_message:String(error?.message||"erro desconhecido").slice(0,240)});
+  return respond("Erro na conexão","A falha ocorreu ao "+stage+". Nenhum token foi exibido. Verifique as configurações correspondentes e tente novamente.",500);
+ }
 }
