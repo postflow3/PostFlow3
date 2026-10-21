@@ -2,10 +2,28 @@ import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 
+async function googleAccessToken(env, userId) {
+  const raw = await env.POSTFLOW3_KV.get(userKey(userId, "youtube-owner"));
+  if (!raw) throw new Error("Conecte novamente a conta Google.");
+  let tokens = await decryptJson(env, raw);
+  const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
+  if (tokens.access_token && expiry > Date.now() + 60000) return tokens.access_token;
+  if (!tokens.refresh_token) throw new Error("A conexão Google não tem token de renovação.");
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, refresh_token: tokens.refresh_token, grant_type: "refresh_token" })
+  });
+  const refreshed = await response.json().catch(() => ({}));
+  if (!response.ok || !refreshed.access_token) throw new Error("O Google não renovou a autorização.");
+  tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
+  await env.POSTFLOW3_KV.put(userKey(userId, "youtube-owner"), await encryptJson(env, tokens));
+  return tokens.access_token;
+}
+
 export async function onRequestPost({ request, env }) {
   const expected = env.POSTFLOW3_SCHEDULER_SECRET;
   if (!expected || request.headers.get("Authorization") !== "Bearer " + expected) return json({ error: "Não autorizado." }, 401);
-  if (!env.POSTFLOW3_KV || !env.POSTFLOW3_MEDIA) return json({ error: "Armazenamento não configurado." }, 503);
+  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento não configurado." }, 503);
   const results = [];
   try {
     const list = await env.POSTFLOW3_KV.list({ prefix: "user:", limit: 1000 });
@@ -13,7 +31,7 @@ export async function onRequestPost({ request, env }) {
       const ownerMatch = item.name.match(/^user:([0-9a-f-]{36}):post:/i); if (!ownerMatch) continue;
       const userId = ownerMatch[1];
       const post = await env.POSTFLOW3_KV.get(item.name, "json");
-      if (!post || post.status !== "scheduled" || new Date(post.scheduledAt).getTime() > Date.now()) continue;
+      if (!post || post.status !== "scheduled" || new Date(post.scheduledAt).getTime() > Date.now() || !post.videoKey || !env.POSTFLOW3_MEDIA) continue;
       post.status = "publishing";
       post.attemptedAt = new Date().toISOString();
       await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
@@ -112,14 +130,67 @@ export async function onRequestPost({ request, env }) {
           const pr = await fetch(pu), pd = await pr.json().catch(() => ({}));
           if (pd.permalink) post.instagramUrl = pd.permalink;
         } catch {}
-        await env.POSTFLOW3_MEDIA.delete(key);
-        results.push({ id: post.id, platform: "Instagram", status: "published" });
+        const driveMetaKey = userKey(userId, "instagram-drive:" + key.split("/").pop());
+        const driveMetaRaw = await env.POSTFLOW3_KV.get(driveMetaKey);
+        if (driveMetaRaw) {
+          const driveMeta = JSON.parse(driveMetaRaw);
+          try {
+            const googleToken = await googleAccessToken(env, userId);
+            const deleted = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(driveMeta.fileId), { method: "DELETE", headers: { Authorization: "Bearer " + googleToken } });
+            if (deleted.ok || deleted.status === 404) {
+              await env.POSTFLOW3_KV.delete(driveMetaKey);
+              post.driveSourceDeleted = true;
+              post.driveCleanupPending = false;
+            } else {
+              const deleteError = await deleted.json().catch(() => ({}));
+              post.driveCleanupPending = true;
+              post.driveCleanupError = deleteError.error?.message || "Publicação concluída, mas não foi possível apagar o original do Drive.";
+            }
+          } catch (cleanupError) {
+            post.driveCleanupPending = true;
+            post.driveCleanupError = String(cleanupError?.message || "Não foi possível apagar o original do Drive.").slice(0, 250);
+          }
+        }
+        results.push({ id: post.id, platform: "Instagram", status: "published", driveCleanupPending: Boolean(post.driveCleanupPending) });
       } catch (e) {
         post.instagramStatus = "failed";
         post.instagramError = String(e?.message || "Erro ao publicar no Instagram.").slice(0, 300);
         results.push({ id: post.id, platform: "Instagram", status: "failed", error: post.instagramError });
       }
       await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+    }
+    // Check YouTube-native scheduled uploads and delete the Drive source only after YouTube reports public.
+    for (const item of list.keys) {
+      const ownerMatch = item.name.match(/^user:([0-9a-f-]{36}):post:/i); if (!ownerMatch) continue;
+      const userId = ownerMatch[1];
+      const post = await env.POSTFLOW3_KV.get(item.name, "json");
+      if (!post || post.status !== "scheduled_on_youtube" || !post.driveFileId || post.driveSourceDeleted ||
+          !post.scheduledAt || new Date(post.scheduledAt).getTime() > Date.now()) continue;
+      try {
+        const googleToken = await googleAccessToken(env, userId);
+        const check = await fetch("https://www.googleapis.com/youtube/v3/videos?part=status&id=" + encodeURIComponent(post.youtubeVideoId || ""), { headers: { Authorization: "Bearer " + googleToken } });
+        const data = await check.json().catch(() => ({}));
+        const videoStatus = data.items?.[0]?.status?.privacyStatus;
+        if (!check.ok) throw new Error(data.error?.message || "Não foi possível confirmar o estado do vídeo no YouTube.");
+        if (videoStatus !== "public") continue;
+        const deleted = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(post.driveFileId), { method: "DELETE", headers: { Authorization: "Bearer " + googleToken } });
+        if (deleted.ok || deleted.status === 404) {
+          post.driveSourceDeleted = true;
+          post.driveCleanupPending = false;
+          post.driveDeletedAt = new Date().toISOString();
+          await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+          results.push({ id: post.id, platform: "YouTube", status: "published", driveSourceDeleted: true });
+        } else {
+          const deleteError = await deleted.json().catch(() => ({}));
+          post.driveCleanupPending = true;
+          post.driveCleanupError = deleteError.error?.message || "Não foi possível apagar o original do Drive.";
+          await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+        }
+      } catch (cleanupError) {
+        post.driveCleanupPending = true;
+        post.driveCleanupError = String(cleanupError?.message || "Não foi possível confirmar a publicação para limpar o Drive.").slice(0, 250);
+        await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+      }
     }
     return json({ processed: results.length, results });
   } catch { return json({ error: "Erro ao processar a fila." }, 500); }
