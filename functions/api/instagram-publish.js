@@ -19,7 +19,7 @@ export async function onRequestPost({request,env}){
   const created=await createResponse.json().catch(()=>({}));
   if(!createResponse.ok||!created.id)return json({error:created.error?.message||"A Meta não aceitou criar a publicação do Instagram."},502);
   let ready=false,lastStatus="";
-  for(let i=0;i<8;i++){
+  for(let i=0;i<12;i++){
    const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
    statusUrl.searchParams.set("fields","status_code,status");statusUrl.searchParams.set("access_token",account.access_token);
    const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
