@@ -17,7 +17,12 @@ export async function onRequestPost({request,env}){
   const mediaUrl=new URL("/api/instagram-media",request.url);mediaUrl.searchParams.set("key",videoKey);mediaUrl.searchParams.set("sig",await signature(env,videoKey));
   const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
   const created=await createResponse.json().catch(()=>({}));
-  if(!createResponse.ok||!created.id)return json({error:created.error?.message||"A Meta não aceitou criar a publicação do Instagram."},502);
+  if(!createResponse.ok||!created.id){
+   const metaError=created.error||{},metaCode=metaError.code!=null?String(metaError.code):"",metaSubcode=metaError.error_subcode!=null?String(metaError.error_subcode):"";
+   const detail=[metaError.message||"A Meta não aceitou criar a publicação do Instagram.",metaCode?"Código Meta: "+metaCode:null,metaSubcode?"Subcódigo: "+metaSubcode:null].filter(Boolean).join(" | ");
+   const blocked=/API access blocked/i.test(String(metaError.message||""))||metaCode==="200";
+   return json({error:blocked?"A Meta está bloqueando o acesso da API do Instagram para esta conta ou aplicativo. O YouTube já foi enviado; não tente publicar novamente ainda. Confira os alertas e as permissões do app no Meta for Developers e, após liberar o acesso, reconecte o Instagram. Detalhe: "+detail:detail,instagramApiBlocked:blocked,metaCode:metaCode||null,metaSubcode:metaSubcode||null},502);
+  }
   let ready=false,lastStatus="";
   for(let i=0;i<12;i++){
    const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
