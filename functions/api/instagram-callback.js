@@ -8,8 +8,8 @@ export async function onRequestGet({request,env}){
  if(p.has("error"))return respond("Autorização cancelada","O Instagram não autorizou o acesso. Volte ao PostFlow3 e tente novamente.");
  const code=p.get("code"),state=p.get("state");
  if(!code||!state)return respond("Retorno inválido","O Instagram não enviou os dados necessários. Inicie a conexão novamente.");
- if(!(await hasSession(request,env)))return respond("Sessão expirada","Volte ao PostFlow3, entre novamente e repita a conexão.",401);
- if(!(await verifyStateCookie(request,env,state)))return respond("Validação de segurança falhou","Não foi possível validar esta solicitação. Inicie a conexão novamente.");
+ const session=await getSession(request,env);if(!session)return respond("Sessão expirada","Volte ao PostFlow3, entre novamente e repita a conexão.",401);
+ if(!(await verifyStateCookie(request,env,state,session.userId)))return respond("Validação de segurança falhou","Não foi possível validar esta solicitação. Inicie a conexão novamente.");
  try{
   const id=env.INSTAGRAM_APP_ID,secret=env.INSTAGRAM_APP_SECRET;
   if(!id||!secret)return respond("Configuração incompleta","Configure INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET nos secrets do Cloudflare Pages.",503);
