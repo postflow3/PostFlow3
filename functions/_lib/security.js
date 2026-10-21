@@ -26,6 +26,19 @@ async function hmac(env, value) {
   const key = await crypto.subtle.importKey("raw", enc.encode(required(env, "POSTFLOW3_SESSION_SECRET")), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return base64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(value))));
 }
+async function encryptionKeyBytes(env) {
+  const configured = env.TOKEN_ENCRYPTION_KEY;
+  if (configured) {
+    try {
+      const bytes = base64ToBytes(configured.trim());
+      if (bytes.length === 32) return bytes;
+    } catch {}
+  }
+  // Stable fallback for deployments where TOKEN_ENCRYPTION_KEY was missing or malformed.
+  // The existing session secret is required by the login/session system and is never returned to the client.
+  const material = required(env, "POSTFLOW3_SESSION_SECRET") + ":postflow3-token-encryption-v1";
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(material)));
+}
 export async function makeSessionCookie(env, user) {
   if (!user || !user.id) throw new Error("Usuário inválido para criar sessão.");
   const payload = base64url(enc.encode(JSON.stringify({ uid: user.id, exp: Date.now() + 12 * 60 * 60 * 1000 })));
@@ -68,8 +81,7 @@ export async function verifyStateCookie(request, env, state, userId) {
   } catch { return false; }
 }
 export async function decryptJson(env, value) {
-  const keyBytes = base64ToBytes(required(env, "TOKEN_ENCRYPTION_KEY"));
-  if (keyBytes.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY precisa ser uma chave Base64 de 32 bytes.");
+  const keyBytes = await encryptionKeyBytes(env);
   const item = typeof value === "string" ? JSON.parse(value) : value;
   if (!item || item.v !== 1 || !item.iv || !item.data) throw new Error("Formato de token criptografado inválido.");
   const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
@@ -77,8 +89,7 @@ export async function decryptJson(env, value) {
   return JSON.parse(dec.decode(plain));
 }
 export async function encryptJson(env, value) {
-  const keyBytes = base64ToBytes(required(env, "TOKEN_ENCRYPTION_KEY"));
-  if (keyBytes.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY precisa ser uma chave Base64 de 32 bytes.");
+  const keyBytes = await encryptionKeyBytes(env);
   const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt"]);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(value))));
