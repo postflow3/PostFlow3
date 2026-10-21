@@ -38,10 +38,11 @@ export async function onRequestPost({ request, env }) {
     const fileId = String(input.fileId || "").trim();
     const title = String(input.title || "").trim().slice(0, 100);
     const description = String(input.description || "").trim().slice(0, 5000);
+    const publicationMode = input.publicationMode === "immediate" ? "immediate" : "scheduled";
     const scheduledAt = String(input.scheduledAt || "").trim();
-    const date = new Date(scheduledAt);
+    const date = scheduledAt ? new Date(scheduledAt) : null;
     if (!fileId || !title) return json({ error: "Escolha um vídeo do Drive e informe o título." }, 400);
-    if (!scheduledAt || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000) {
+    if (publicationMode === "scheduled" && (!scheduledAt || !date || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000)) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro." }, 400);
     }
     const tokens = await getTokens(env,session.userId);
@@ -54,7 +55,9 @@ export async function onRequestPost({ request, env }) {
     if (!size) return json({ error: "O Drive não informou o tamanho do vídeo; não posso iniciar o envio com segurança." }, 400);
     const metadata = {
       snippet: { title, description, categoryId: "22" },
-      status: { privacyStatus: "private", publishAt: date.toISOString(), selfDeclaredMadeForKids: false }
+      status: publicationMode === "immediate"
+        ? { privacyStatus: "public", selfDeclaredMadeForKids: false }
+        : { privacyStatus: "private", publishAt: date.toISOString(), selfDeclaredMadeForKids: false }
     };
     const initResponse = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
       method: "POST",
@@ -92,15 +95,16 @@ export async function onRequestPost({ request, env }) {
       driveFileId: meta.id,
       mimeType: meta.mimeType,
       size,
-      scheduledAt: date.toISOString(),
-      status: "scheduled_on_youtube",
+      scheduledAt: publicationMode === "scheduled" ? date.toISOString() : null,
+      publicationMode,
+      status: publicationMode === "immediate" ? "published_on_youtube" : "scheduled_on_youtube",
       youtubeVideoId: uploaded.id,
       youtubeUrl: "https://www.youtube.com/watch?v=" + uploaded.id,
       createdAt: new Date().toISOString(),
       platforms: ["YouTube"]
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
-    return json({ post, message: "O YouTube confirmou o vídeo como privado e agendado. Confira o agendamento no YouTube Studio." }, 201);
+    return json({ post, message: publicationMode === "immediate" ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública." : "O YouTube confirmou o vídeo como privado e agendado. Confira o agendamento no YouTube Studio." }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Falha ao agendar vídeo do Drive.").slice(0, 400) }, 500);
   }
