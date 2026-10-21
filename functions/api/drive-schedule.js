@@ -104,7 +104,29 @@ export async function onRequestPost({ request, env }) {
       platforms: ["YouTube"]
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
-    return json({ post, message: publicationMode === "immediate" ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública." : "O YouTube confirmou o vídeo como privado e agendado. Confira o agendamento no YouTube Studio." }, 201);
+
+    // YouTube has its own uploaded copy after the resumable upload completes.
+    // Remove the original Drive file only after YouTube confirms the video ID
+    // and the PostFlow3 record is safely saved, so scheduled publishing remains intact.
+    let driveSourceDeleted = false;
+    let driveCleanupWarning = "";
+    const deleteResponse = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId), {
+      method: "DELETE",
+      headers: auth
+    });
+    if (deleteResponse.ok || deleteResponse.status === 404) {
+      driveSourceDeleted = true;
+    } else {
+      const deleteError = await deleteResponse.json().catch(() => ({}));
+      driveCleanupWarning = deleteError.error?.message || "O vídeo foi agendado, mas não consegui apagar o arquivo original do Google Drive.";
+    }
+    const baseMessage = publicationMode === "immediate"
+      ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública."
+      : "O YouTube confirmou o vídeo como privado e agendado. Confira o agendamento no YouTube Studio.";
+    const message = driveSourceDeleted
+      ? baseMessage + " O arquivo original foi removido do Google Drive para liberar espaço."
+      : baseMessage + " Atenção: não foi possível remover o arquivo original do Google Drive" + (driveCleanupWarning ? ": " + driveCleanupWarning : ".");
+    return json({ post, driveSourceDeleted, driveCleanupWarning: driveCleanupWarning || null, message }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Falha ao agendar vídeo do Drive.").slice(0, 400) }, 500);
   }
