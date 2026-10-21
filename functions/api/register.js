@@ -1,5 +1,6 @@
 import { hashPassword, makeSessionCookie } from "../_lib/security.js";
 const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...extra}});
+// Cadastro requer D1 e segredo de sessão configurados no ambiente Pages ativo.
 export async function onRequestPost({request,env}){
  if(!env.POSTFLOW3_DB)return json({error:"Banco de dados indisponível. Tente novamente mais tarde."},503);
  if(!env.POSTFLOW3_SESSION_SECRET)return json({error:"O servidor ainda não está pronto para criar contas. Avise o administrador."},503);
