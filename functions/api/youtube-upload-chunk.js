@@ -72,7 +72,7 @@ export async function onRequestPost({ request, env }) {
       createdAt: pending.createdAt, uploadedAt: new Date().toISOString(), platforms: pending.publishInstagram ? ["YouTube", "Instagram"] : ["YouTube"], instagramVideoKey: pending.publishInstagram ? pending.instagramVideoKey : null, instagramStatus: pending.publishInstagram ? (pending.publicationMode === "immediate" ? "pending" : "scheduled") : null
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
-    await env.POSTFLOW3_KV.put("youtube-upload:" + uploadId, await encryptJson(env, { ...pending, status: "complete", youtubeVideoId: result.id, completedAt: new Date().toISOString() }), { expirationTtl: 604800 });
+    await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, { ...pending, status: "complete", youtubeVideoId: result.id, completedAt: new Date().toISOString() }), { expirationTtl: 604800 });
     return json({ complete: true, received: total, post, message: pending.publicationMode === "immediate" ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública." : "O YouTube confirmou o vídeo. Ele está privado e agendado para a data escolhida." }, 201);
   } catch (e) {
     return json({ error: String(e?.message || "Falha ao enviar trecho ao YouTube.").slice(0, 350) }, 500);
