@@ -2,7 +2,7 @@ import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 export async function onRequestPost({request,env}){
  const s=await getSession(request,env);if(!s)return json({error:"Entre novamente no PostFlow3."},401);
- if(!env.POSTFLOW3_KV||!env.TOKEN_ENCRYPTION_KEY||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return json({error:"A configuração segura do Google está incompleta."},503);
+ if(!env.POSTFLOW3_KV||!env.POSTFLOW3_SESSION_SECRET||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return json({error:"A configuração segura do Google está incompleta."},503);
  try{
   const id=request.headers.get("X-PostFlow-Drive-Upload-Id")||"",start=Number(request.headers.get("X-Chunk-Start")),end=Number(request.headers.get("X-Chunk-End")),total=Number(request.headers.get("X-Upload-Total"));
   if(!/^[0-9a-f-]{36}$/i.test(id)||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||!Number.isSafeInteger(total)||start<0||end<start||end>=total)return json({error:"Trecho inválido."},400);
