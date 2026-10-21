@@ -13,7 +13,7 @@ export async function onRequestGet({request,env}){
  try{
   const id=env.INSTAGRAM_APP_ID,secret=env.INSTAGRAM_APP_SECRET;
   if(!id||!secret)return respond("Configuração incompleta","Configure INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET nos secrets do Cloudflare Pages.",503);
-  const redirectUri="https://cloudflare-migration.postflow3.pages.dev/api/instagram-callback";
+  const redirectUri=env.INSTAGRAM_REDIRECT_URI||"https://cloudflare-migration.postflow3.pages.dev/api/instagram-callback";
   const tr=await fetch("https://api.instagram.com/oauth/access_token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:id,client_secret:secret,grant_type:"authorization_code",redirect_uri:redirectUri,code})});
   const token=await tr.json();
   if(!tr.ok||!token.access_token){
