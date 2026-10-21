@@ -16,7 +16,7 @@ async function accessToken(env,userId){
 }
 export async function onRequestPost({request,env}){
  const s=await getSession(request,env);if(!s)return json({error:"Entre novamente no PostFlow3."},401);
- if(!env.POSTFLOW3_KV||!env.TOKEN_ENCRYPTION_KEY||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return json({error:"A configuração segura do Google está incompleta."},503);
+ if(!env.POSTFLOW3_KV||!env.POSTFLOW3_SESSION_SECRET||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return json({error:"A configuração segura do Google está incompleta."},503);
  try{
   const i=await request.json(),filename=String(i.filename||"video.mp4").slice(0,200),mimeType=String(i.mimeType||"video/mp4").toLowerCase(),size=Number(i.size);
   if(!Number.isSafeInteger(size)||size<1||!mimeType.startsWith("video/"))return json({error:"Arquivo de vídeo inválido."},400);
