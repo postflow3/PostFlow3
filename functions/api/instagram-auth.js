@@ -1,7 +1,8 @@
 import { getSession, makeStateCookie } from "../_lib/security.js";
 export async function onRequestGet({ request, env }) {
  const headers={"Cache-Control":"no-store","Referrer-Policy":"no-referrer"};
- const session=await getSession(request,env);\n if(!session) return new Response(JSON.stringify({error:"Entre no PostFlow3 antes de conectar o Instagram."}),{status:401,headers:{...headers,"Content-Type":"application/json; charset=utf-8"}});
+ const session=await getSession(request,env);
+ if(!session) return new Response(JSON.stringify({error:"Entre no PostFlow3 antes de conectar o Instagram."}),{status:401,headers:{...headers,"Content-Type":"application/json; charset=utf-8"}});
  if(!env.INSTAGRAM_APP_ID||!env.INSTAGRAM_APP_SECRET) return new Response(JSON.stringify({error:"Configure INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET nos secrets do Cloudflare Pages e cadastre /api/instagram-callback como URI de retorno no app da Meta."}),{status:503,headers:{...headers,"Content-Type":"application/json; charset=utf-8"}});
  const redirectUri=env.INSTAGRAM_REDIRECT_URI||new URL("/api/instagram-callback",request.url).toString();
  const state=[...crypto.getRandomValues(new Uint8Array(32))].map(b=>b.toString(16).padStart(2,"0")).join("");
