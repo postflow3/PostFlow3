@@ -26,34 +26,41 @@ async function hmac(env, value) {
   const key = await crypto.subtle.importKey("raw", enc.encode(required(env, "POSTFLOW3_SESSION_SECRET")), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return base64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(value))));
 }
-export async function makeSessionCookie(env) {
-  const payload = base64url(enc.encode(JSON.stringify({ exp: Date.now() + 12 * 60 * 60 * 1000 })));
+export async function makeSessionCookie(env, user) {
+  if (!user || !user.id) throw new Error("Usuário inválido para criar sessão.");
+  const payload = base64url(enc.encode(JSON.stringify({ uid: user.id, exp: Date.now() + 12 * 60 * 60 * 1000 })));
   return `pf3_session=${payload}.${await hmac(env, payload)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=43200`;
 }
-export async function hasSession(request, env) {
+export async function getSession(request, env) {
   try {
     const raw = (request.headers.get("Cookie") || "").split(";").map(s => s.trim()).find(s => s.startsWith("pf3_session="))?.slice("pf3_session=".length);
-    if (!raw) return false;
+    if (!raw) return null;
     const [payload, signature] = raw.split(".");
-    if (!payload || !signature) return false;
+    if (!payload || !signature) return null;
     const expected = await hmac(env, payload);
-    if (signature.length !== expected.length) return false;
+    if (signature.length !== expected.length) return null;
     const a = enc.encode(signature), b = enc.encode(expected);
     let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-    if (diff !== 0) return false;
-    return Number(JSON.parse(dec.decode(fromBase64url(payload))).exp) > Date.now();
-  } catch { return false; }
+    if (diff !== 0) return null;
+    const data = JSON.parse(dec.decode(fromBase64url(payload)));
+    if (!data.uid || Number(data.exp) <= Date.now()) return null;
+    return { userId: String(data.uid) };
+  } catch { return null; }
 }
-export async function makeStateCookie(env, state) {
-  return `pf3_oauth_state=${state}.${await hmac(env, `oauth:${state}`)}; HttpOnly; Secure; SameSite=Lax; Path=/api; Max-Age=600`;
+export async function hasSession(request, env) {
+  return Boolean(await getSession(request, env));
 }
-export async function verifyStateCookie(request, env, state) {
+export async function makeStateCookie(env, state, userId) {
+  const value = `${state}:${userId}`;
+  return `pf3_oauth_state=${state}.${await hmac(env, `oauth:${value}`)}; HttpOnly; Secure; SameSite=Lax; Path=/api; Max-Age=600`;
+}
+export async function verifyStateCookie(request, env, state, userId) {
   try {
     const raw = (request.headers.get("Cookie") || "").split(";").map(s => s.trim()).find(s => s.startsWith("pf3_oauth_state="))?.slice("pf3_oauth_state=".length);
-    if (!raw || !state) return false;
+    if (!raw || !state || !userId) return false;
     const [cookieState, signature] = raw.split(".");
     if (cookieState !== state || !signature) return false;
-    const expected = await hmac(env, `oauth:${state}`);
+    const expected = await hmac(env, `oauth:${state}:${userId}`);
     if (signature.length !== expected.length) return false;
     const a = enc.encode(signature), b = enc.encode(expected);
     let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
@@ -79,4 +86,28 @@ export async function encryptJson(env, value) {
 }
 export async function sha256(value) {
   return [...new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(value)))].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+export async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 210000, hash: "SHA-256" }, key, 256);
+  return `pbkdf2-sha256.210000.${bytesToBase64(salt)}.${bytesToBase64(new Uint8Array(bits))}`;
+}
+export async function verifyPassword(password, stored) {
+  try {
+    const [scheme, iterationsText, saltText, hashText] = String(stored).split(".");
+    const iterations = Number(iterationsText);
+    if (scheme !== "pbkdf2-sha256" || !Number.isInteger(iterations) || iterations < 100000 || iterations > 500000 || !saltText || !hashText) return false;
+    const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: base64ToBytes(saltText), iterations, hash: "SHA-256" }, key, 256));
+    const actual = bytesToBase64(bits);
+    if (actual.length !== hashText.length) return false;
+    const a = enc.encode(actual), b = enc.encode(hashText);
+    let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+    return diff === 0;
+  } catch { return false; }
+}
+export function userKey(userId, key) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(userId))) throw new Error("Sessão de usuário inválida.");
+  return `user:${userId}:${key}`;
 }
