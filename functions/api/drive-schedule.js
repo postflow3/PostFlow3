@@ -1,11 +1,11 @@
-import { hasSession, decryptJson, encryptJson } from "../_lib/security.js";
+import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
 });
 
-async function getTokens(env) {
-  const encrypted = await env.POSTFLOW3_KV.get("youtube-owner");
+async function getTokens(env,userId) {
+  const encrypted = await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
   if (!encrypted) throw new Error("Conecte sua conta Google novamente.");
   let tokens = await decryptJson(env, encrypted);
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
@@ -24,12 +24,12 @@ async function getTokens(env) {
   const refreshed = await response.json();
   if (!response.ok || !refreshed.access_token) throw new Error("Não foi possível renovar a autorização Google.");
   tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put("youtube-owner", await encryptJson(env, tokens));
+  await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, tokens));
   return tokens;
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!(await hasSession(request, env))) return json({ error: "Faça login novamente no PostFlow3." }, 401);
+  const session=await getSession(request,env);if(!session)return json({error:"Faça login novamente no PostFlow3."},401);
   if (!env.POSTFLOW3_KV || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     return json({ error: "A configuração Google/KV está incompleta." }, 503);
   }
@@ -44,7 +44,7 @@ export async function onRequestPost({ request, env }) {
     if (!scheduledAt || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro." }, 400);
     }
-    const tokens = await getTokens(env);
+    const tokens = await getTokens(env,session.userId);
     const auth = { Authorization: "Bearer " + tokens.access_token };
     const driveMetaResponse = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId) + "?fields=id,name,mimeType,size,trashed", { headers: auth });
     const meta = await driveMetaResponse.json();
@@ -99,7 +99,7 @@ export async function onRequestPost({ request, env }) {
       createdAt: new Date().toISOString(),
       platforms: ["YouTube"]
     };
-    await env.POSTFLOW3_KV.put("post:" + post.id, JSON.stringify(post));
+    await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
     return json({ post, message: "O YouTube confirmou o vídeo como privado e agendado. Confira o agendamento no YouTube Studio." }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Falha ao agendar vídeo do Drive.").slice(0, 400) }, 500);
