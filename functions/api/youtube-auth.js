@@ -10,8 +10,8 @@ export async function onRequestGet({ request, env }) {
   const state = await makeOAuthState(env, session.userId);
   const params = new URLSearchParams({
     client_id: clientId, redirect_uri: redirectUri, response_type: "code",
-    scope: "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/drive.file",
-    access_type: "offline", prompt: "consent", state
+    scope: "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/drive",
+    access_type: "offline", prompt: "consent", include_granted_scopes: "true", state
   });
   return new Response(null, { status: 302, headers: { ...headers, "Location": `https://accounts.google.com/o/oauth2/v2/auth?${params}` } });
 }
