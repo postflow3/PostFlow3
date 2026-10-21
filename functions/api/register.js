@@ -2,6 +2,7 @@ import { hashPassword, makeSessionCookie } from "../_lib/security.js";
 const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...extra}});
 export async function onRequestPost({request,env}){
  if(!env.POSTFLOW3_DB)return json({error:"Banco de dados indisponível. Tente novamente mais tarde."},503);
+ if(!env.POSTFLOW3_SESSION_SECRET)return json({error:"O servidor ainda não está pronto para criar contas. Avise o administrador."},503);
  let body;try{body=await request.json()}catch{return json({error:"Envie os dados do cadastro em formato válido."},400)}
  const name=String(body.name||"").trim().replace(/\s+/g," ").slice(0,80);
  const email=String(body.email||"").trim().toLowerCase();
