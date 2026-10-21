@@ -54,6 +54,69 @@ export async function onRequestPost({ request, env }) {
         results.push({ id: post.id, status: post.status, error: post.error });
       }
     }
+    // Publish Instagram destinations whose scheduled time has arrived. YouTube
+    // already handles its own native scheduled publication in this deployment.
+    for (const item of list.keys) {
+      const post = await env.POSTFLOW3_KV.get(item.name, "json");
+      if (!post || post.status !== "scheduled_on_youtube" || post.instagramStatus !== "scheduled" ||
+          !post.instagramVideoKey || new Date(post.scheduledAt).getTime() > Date.now()) continue;
+      post.instagramStatus = "publishing";
+      post.instagramAttemptedAt = new Date().toISOString();
+      await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+      try {
+        const saved = await env.POSTFLOW3_KV.get("instagram-owner");
+        if (!saved) throw new Error("Conecte novamente o Instagram.");
+        const account = await decryptJson(env, saved);
+        if (!account.access_token || !account.user_id) throw new Error("A conexão do Instagram está incompleta.");
+        const key = post.instagramVideoKey;
+        const secret = env.POSTFLOW3_SESSION_SECRET;
+        if (!secret) throw new Error("A assinatura segura do vídeo não está configurada.");
+        const cryptoKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode("instagram-media:" + key)));
+        const sig = [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
+        const mediaUrl = new URL("/api/instagram-media", request.url);
+        mediaUrl.searchParams.set("key", key); mediaUrl.searchParams.set("sig", sig);
+        const createResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media", {
+          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
+        });
+        const created = await createResponse.json().catch(() => ({}));
+        if (!createResponse.ok || !created.id) throw new Error(created.error?.message || "O Instagram recusou criar a publicação.");
+        let ready = false, lastStatus = "";
+        for (let i = 0; i < 8; i++) {
+          const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(created.id));
+          statusUrl.searchParams.set("fields", "status_code,status"); statusUrl.searchParams.set("access_token", account.access_token);
+          const sr = await fetch(statusUrl), sd = await sr.json().catch(() => ({}));
+          if (sr.ok && sd.status_code === "FINISHED") { ready = true; break; }
+          if (sd.status_code === "ERROR") throw new Error(sd.status || "O Instagram não conseguiu processar o vídeo.");
+          lastStatus = sd.status || sd.status_code || "processando";
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        if (!ready) throw new Error("O Instagram ainda está processando o vídeo (" + lastStatus + ").");
+        const publishResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media_publish", {
+          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ creation_id: created.id, access_token: account.access_token })
+        });
+        const published = await publishResponse.json().catch(() => ({}));
+        if (!publishResponse.ok || !published.id) throw new Error(published.error?.message || "O Instagram não confirmou a publicação.");
+        post.instagramStatus = "published";
+        post.instagramMediaId = published.id;
+        post.instagramPublishedAt = new Date().toISOString();
+        try {
+          const pu = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(published.id));
+          pu.searchParams.set("fields", "permalink"); pu.searchParams.set("access_token", account.access_token);
+          const pr = await fetch(pu), pd = await pr.json().catch(() => ({}));
+          if (pd.permalink) post.instagramUrl = pd.permalink;
+        } catch {}
+        await env.POSTFLOW3_MEDIA.delete(key);
+        results.push({ id: post.id, platform: "Instagram", status: "published" });
+      } catch (e) {
+        post.instagramStatus = "failed";
+        post.instagramError = String(e?.message || "Erro ao publicar no Instagram.").slice(0, 300);
+        results.push({ id: post.id, platform: "Instagram", status: "failed", error: post.instagramError });
+      }
+      await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+    }
     return json({ processed: results.length, results });
   } catch { return json({ error: "Erro ao processar a fila." }, 500); }
 }
