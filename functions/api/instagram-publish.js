@@ -1,0 +1,39 @@
+import {hasSession,decryptJson} from "../_lib/security.js";
+const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
+async function signature(env,key){
+ const secret=env.POSTFLOW3_SESSION_SECRET;if(!secret)throw new Error("A configuração de assinatura do PostFlow3 está incompleta.");
+ const cryptoKey=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+ const bytes=new Uint8Array(await crypto.subtle.sign("HMAC",cryptoKey,new TextEncoder().encode("instagram-media:"+key)));
+ return [...bytes].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+export async function onRequestPost({request,env}){
+ if(!(await hasSession(request,env)))return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
+ if(!env.POSTFLOW3_KV||!env.POSTFLOW3_MEDIA||!env.TOKEN_ENCRYPTION_KEY)return json({error:"A configuração segura do Instagram/armazenamento está incompleta."},503);
+ try{
+  const input=await request.json(),videoKey=String(input.videoKey||""),caption=String(input.caption||"").trim().slice(0,2200);
+  if(!/^instagram-media\/[0-9a-f-]{36}$/i.test(videoKey))return json({error:"O vídeo preparado para o Instagram não foi encontrado."},400);
+  const raw=await env.POSTFLOW3_KV.get("instagram-owner");if(!raw)return json({error:"Conecte o Instagram profissional antes de publicar."},400);
+  const account=await decryptJson(env,raw);if(!account.access_token||!account.user_id)return json({error:"A conexão do Instagram expirou. Reconecte a conta."},401);
+  const mediaUrl=new URL("/api/instagram-media",request.url);mediaUrl.searchParams.set("key",videoKey);mediaUrl.searchParams.set("sig",await signature(env,videoKey));
+  const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
+  const created=await createResponse.json().catch(()=>({}));
+  if(!createResponse.ok||!created.id)return json({error:created.error?.message||"A Meta não aceitou criar a publicação do Instagram."},502);
+  let ready=false,lastStatus="";
+  for(let i=0;i<8;i++){
+   const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
+   statusUrl.searchParams.set("fields","status_code,status");statusUrl.searchParams.set("access_token",account.access_token);
+   const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
+   if(statusResponse.ok&&statusData.status_code==="FINISHED"){ready=true;break;}
+   if(statusData.status_code==="ERROR")return json({error:statusData.status||"O Instagram não conseguiu processar o vídeo."},502);
+   lastStatus=statusData.status||statusData.status_code||"processando";
+   await new Promise(resolve=>setTimeout(resolve,2000));
+  }
+  if(!ready)return json({error:"O Instagram ainda está processando o vídeo ("+lastStatus+"). Aguarde um pouco e tente novamente apenas se a publicação não aparecer no perfil."},202);
+  const publishResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media_publish",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({creation_id:created.id,access_token:account.access_token})});
+  const published=await publishResponse.json().catch(()=>({}));
+  if(!publishResponse.ok||!published.id)return json({error:published.error?.message||"O Instagram não confirmou a publicação."},502);
+  let permalink="";
+  try{const pUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
+  return json({published:true,mediaId:published.id,permalink},200);
+ }catch(e){return json({error:String(e?.message||"Falha ao publicar no Instagram.").slice(0,350)},500);}
+}
