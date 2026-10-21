@@ -13,8 +13,9 @@ export async function onRequestGet({ request, env }) {
   if (!env.POSTFLOW3_KV) return respond("Armazenamento não configurado", "Configure o namespace KV POSTFLOW3_KV no Cloudflare Pages.", 503);
   if (params.has("error")) return respond("Autorização cancelada", "O Google não autorizou o acesso. Volte ao PostFlow3 e tente novamente.");
   if (!params.get("code") || !params.get("state")) return respond("Retorno inválido", "O Google não enviou os dados necessários. Inicie a conexão novamente.");
-  if (!(await hasSession(request, env))) return respond("Sessão expirada", "Volte ao PostFlow3, entre novamente e repita a conexão.", 401);
-  if (!(await verifyStateCookie(request, env, params.get("state")))) return respond("Validação de segurança falhou", "Não foi possível validar esta solicitação. Inicie a conexão novamente.");
+  const session = await getSession(request, env);
+  if (!session) return respond("Sessão expirada", "Volte ao PostFlow3, entre novamente e repita a conexão.", 401);
+  if (!(await verifyStateCookie(request, env, params.get("state"), session.userId))) return respond("Validação de segurança falhou", "Não foi possível validar esta solicitação. Inicie a conexão novamente.");
   try {
     const clientId = env.GOOGLE_CLIENT_ID, clientSecret = env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) return respond("Configuração incompleta", "Configure as credenciais Google nos secrets do Cloudflare Pages.", 503);
