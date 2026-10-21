@@ -50,17 +50,17 @@ export async function getSession(request, env) {
 export async function hasSession(request, env) {
   return Boolean(await getSession(request, env));
 }
-export async function makeStateCookie(env, state, userId) {
-  const value = `${state}:${userId}`;
-  return `pf3_oauth_state=${state}.${await hmac(env, `oauth:${value}`)}; HttpOnly; Secure; SameSite=Lax; Path=/api; Max-Age=600`;
+export async function makeOAuthState(env, userId) {
+  const nonce = [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, "0")).join("");
+  return `${nonce}.${await hmac(env, `oauth:${nonce}:${userId}`)}`;
 }
 export async function verifyStateCookie(request, env, state, userId) {
   try {
-    const raw = (request.headers.get("Cookie") || "").split(";").map(s => s.trim()).find(s => s.startsWith("pf3_oauth_state="))?.slice("pf3_oauth_state=".length);
-    if (!raw || !state || !userId) return false;
-    const [cookieState, signature] = raw.split(".");
-    if (cookieState !== state || !signature) return false;
-    const expected = await hmac(env, `oauth:${state}:${userId}`);
+    if (!state || !userId) return false;
+    const parts = state.split(".");
+    if (parts.length !== 2 || !parts[0] || !parts[1]) return false;
+    const [nonce, signature] = parts;
+    const expected = await hmac(env, `oauth:${nonce}:${userId}`);
     if (signature.length !== expected.length) return false;
     const a = enc.encode(signature), b = enc.encode(expected);
     let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
