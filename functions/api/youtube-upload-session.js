@@ -46,6 +46,9 @@ export async function onRequestPost({ request, env }) {
     const size = Number(input.size);
     const publicationMode = input.publicationMode === "immediate" ? "immediate" : "scheduled";
     const scheduledAt = String(input.scheduledAt || "").trim();
+    const instagramVideoKey = String(input.instagramVideoKey || "").trim();
+    const publishInstagram = input.publishInstagram === true;
+    if (publishInstagram && !/^instagram-media\/[0-9a-f-]{36}$/i.test(instagramVideoKey)) return json({ error: "O vídeo do Instagram não foi preparado corretamente." }, 400);
     const date = scheduledAt ? new Date(scheduledAt) : null;
 
     if (!title) return json({ error: "Digite o título do vídeo." }, 400);
@@ -82,7 +85,7 @@ export async function onRequestPost({ request, env }) {
     const uploadId = crypto.randomUUID();
     const pending = {
       uploadId, uploadUrl, title, description, filename, mimeType, size,
-      publicationMode,
+      publicationMode, instagramVideoKey: publishInstagram ? instagramVideoKey : null, publishInstagram,
       scheduledAt: publicationMode === "scheduled" ? date.toISOString() : null,
       createdAt: new Date().toISOString(),
       status: "uploading"
