@@ -1,4 +1,4 @@
-import {hasSession,decryptJson} from "../_lib/security.js";
+import {getSession,decryptJson,userKey} from "../_lib/security.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function signature(env,key){
  const secret=env.POSTFLOW3_SESSION_SECRET;if(!secret)throw new Error("A configuração de assinatura do PostFlow3 está incompleta.");
@@ -7,12 +7,12 @@ async function signature(env,key){
  return [...bytes].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 export async function onRequestPost({request,env}){
- if(!(await hasSession(request,env)))return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
+ const session=await getSession(request,env);if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
  if(!env.POSTFLOW3_KV||!env.POSTFLOW3_MEDIA||!env.TOKEN_ENCRYPTION_KEY)return json({error:"A configuração segura do Instagram/armazenamento está incompleta."},503);
  try{
   const input=await request.json(),videoKey=String(input.videoKey||""),caption=String(input.caption||"").trim().slice(0,2200),postId=String(input.postId||""),title=String(input.title||"Vídeo do Instagram").trim().slice(0,100),filename=String(input.filename||"video.mp4").trim().slice(0,200),size=Number(input.size)||0;
-  if(!/^instagram-media\/[0-9a-f-]{36}$/i.test(videoKey))return json({error:"O vídeo preparado para o Instagram não foi encontrado."},400);
-  const raw=await env.POSTFLOW3_KV.get("instagram-owner");if(!raw)return json({error:"Conecte o Instagram profissional antes de publicar."},400);
+  if(!new RegExp("^instagram-media/"+session.userId+"/[0-9a-f-]{36}$","i").test(videoKey))return json({error:"O vídeo preparado para o Instagram não foi encontrado."},400);
+  const raw=await env.POSTFLOW3_KV.get(userKey(session.userId,"instagram-owner"));if(!raw)return json({error:"Conecte o Instagram profissional antes de publicar."},400);
   const account=await decryptJson(env,raw);if(!account.access_token||!account.user_id)return json({error:"A conexão do Instagram expirou. Reconecte a conta."},401);
   const mediaUrl=new URL("/api/instagram-media",request.url);mediaUrl.searchParams.set("key",videoKey);mediaUrl.searchParams.set("sig",await signature(env,videoKey));
   const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
@@ -34,7 +34,7 @@ export async function onRequestPost({request,env}){
   if(!publishResponse.ok||!published.id)return json({error:published.error?.message||"O Instagram não confirmou a publicação."},502);
   let permalink="";
   try{const pUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
-  if(/^[0-9a-f-]{36}$/i.test(postId)){const stored=await env.POSTFLOW3_KV.get("post:"+postId,"json");if(stored){stored.instagramStatus="published";stored.instagramMediaId=published.id;stored.instagramPublishedAt=new Date().toISOString();if(permalink)stored.instagramUrl=permalink;await env.POSTFLOW3_KV.put("post:"+postId,JSON.stringify(stored));}}else{const standalone={id:crypto.randomUUID(),title,description:caption,filename,size,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramMediaId:published.id,instagramUrl:permalink||null,instagramPublishedAt:new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};await env.POSTFLOW3_KV.put("post:"+standalone.id,JSON.stringify(standalone));}
+  if(/^[0-9a-f-]{36}$/i.test(postId)){const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");if(stored){stored.instagramStatus="published";stored.instagramMediaId=published.id;stored.instagramPublishedAt=new Date().toISOString();if(permalink)stored.instagramUrl=permalink;await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}}else{const standalone={id:crypto.randomUUID(),title,description:caption,filename,size,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramMediaId:published.id,instagramUrl:permalink||null,instagramPublishedAt:new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));}
   await env.POSTFLOW3_MEDIA.delete(videoKey);
   return json({published:true,mediaId:published.id,permalink},200);
  }catch(e){return json({error:String(e?.message||"Falha ao publicar no Instagram.").slice(0,350)},500);}
