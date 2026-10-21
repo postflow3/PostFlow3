@@ -19,11 +19,13 @@ export async function onRequestPost({request,env}){
   if(!(file instanceof File)||!file.size)return json({error:"Selecione um vídeo."},400);
   if(file.size>80*1024*1024)return json({error:"O vídeo precisa ter até 80 MB para o Instagram."},413);
   if(!/^video\/(mp4|quicktime|webm)$/.test(file.type))return json({error:"Para publicar no Instagram, use MP4, MOV ou WebM."},400);
-  const token=await googleToken(env,session.userId),body=new FormData();
-  body.append("metadata",new Blob([JSON.stringify({name:String(file.name||"video.mp4").slice(0,200),mimeType:file.type})],{type:"application/json"}));
-  body.append("file",file,file.name||"video.mp4");
-  const r=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,size",{method:"POST",headers:{Authorization:"Bearer "+token},body}),d=await r.json().catch(()=>({}));
-  if(!r.ok||!d.id)return json({error:d.error?.message||"O Google Drive não conseguiu guardar o vídeo. Reconecte a conta Google e autorize o acesso aos arquivos."},502);
+  const token=await googleToken(env,session.userId);
+  const init=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType,size",{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json; charset=UTF-8","X-Upload-Content-Type":file.type,"X-Upload-Content-Length":String(file.size)},body:JSON.stringify({name:String(file.name||"video.mp4").slice(0,200),mimeType:file.type})});
+  const uploadUrl=init.headers.get("Location"),initData=await init.json().catch(()=>({}));
+  if(!init.ok||!uploadUrl)return json({error:initData.error?.message||"O Google Drive não conseguiu iniciar o salvamento. Reconecte a conta Google e autorize o acesso aos arquivos."},502);
+  const saved=await fetch(uploadUrl,{method:"PUT",headers:{Authorization:"Bearer "+token,"Content-Type":file.type,"Content-Length":String(file.size),"Content-Range":"bytes 0-"+(file.size-1)+"/"+file.size},body:file});
+  const d=await saved.json().catch(()=>({}));
+  if(!saved.ok||!d.id)return json({error:d.error?.message||"O Google Drive não confirmou o salvamento do vídeo. Tente um vídeo menor ou reconecte a conta Google."},502);
   const videoKey="instagram-media/"+session.userId+"/"+crypto.randomUUID();
   await env.POSTFLOW3_KV.put(userKey(session.userId,"instagram-drive:"+videoKey.split("/").pop()),JSON.stringify({fileId:d.id,mimeType:d.mimeType||file.type,size:Number(d.size||file.size),createdAt:Date.now()}),{expirationTtl:7*86400});
   return json({videoKey,storedIn:"Google Drive",size:Number(d.size||file.size)},201);
