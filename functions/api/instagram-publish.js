@@ -8,7 +8,7 @@ async function signature(env,key){
 }
 export async function onRequestPost({request,env}){
  const session=await getSession(request,env);if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
- if(!env.POSTFLOW3_KV||!env.POSTFLOW3_MEDIA||!env.TOKEN_ENCRYPTION_KEY)return json({error:"A configuração segura do Instagram/armazenamento está incompleta."},503);
+ if(!env.POSTFLOW3_KV||!env.POSTFLOW3_SESSION_SECRET)return json({error:"A configuração segura do Instagram/armazenamento está incompleta."},503);
  try{
   const input=await request.json(),videoKey=String(input.videoKey||""),caption=String(input.caption||"").trim().slice(0,2200),postId=String(input.postId||""),title=String(input.title||"Vídeo do Instagram").trim().slice(0,100),filename=String(input.filename||"video.mp4").trim().slice(0,200),size=Number(input.size)||0;
   if(!new RegExp("^instagram-media/"+session.userId+"/[0-9a-f-]{36}$","i").test(videoKey))return json({error:"O vídeo preparado para o Instagram não foi encontrado."},400);
