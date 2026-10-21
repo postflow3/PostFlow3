@@ -24,7 +24,7 @@ async function token(env,userId) {
 
 export async function onRequestPost({ request, env }) {
   const session=await getSession(request,env);if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
-  if (!env.POSTFLOW3_KV || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração segura do YouTube está incompleta." }, 503);
+  if (!env.POSTFLOW3_KV || !env.POSTFLOW3_SESSION_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração segura do YouTube está incompleta." }, 503);
   try {
     const uploadId = request.headers.get("X-PostFlow-Upload-Id") || "";
     const start = Number(request.headers.get("X-Chunk-Start"));
