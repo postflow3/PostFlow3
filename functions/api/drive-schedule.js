@@ -105,28 +105,34 @@ export async function onRequestPost({ request, env }) {
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
 
-    // YouTube has its own uploaded copy after the resumable upload completes.
-    // Remove the original Drive file only after YouTube confirms the video ID
-    // and the PostFlow3 record is safely saved, so scheduled publishing remains intact.
+    // Keep the original in Drive until the scheduled YouTube post is actually public.
+    // For immediate uploads, YouTube has already accepted its own copy, so Drive can be cleaned now.
     let driveSourceDeleted = false;
     let driveCleanupWarning = "";
-    const deleteResponse = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId), {
-      method: "DELETE",
-      headers: auth
-    });
-    if (deleteResponse.ok || deleteResponse.status === 404) {
-      driveSourceDeleted = true;
-    } else {
-      const deleteError = await deleteResponse.json().catch(() => ({}));
-      driveCleanupWarning = deleteError.error?.message || "O vídeo foi agendado, mas não consegui apagar o arquivo original do Google Drive.";
+    if (publicationMode === "immediate") {
+      const deleteResponse = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId), {
+        method: "DELETE",
+        headers: auth
+      });
+      if (deleteResponse.ok || deleteResponse.status === 404) {
+        driveSourceDeleted = true;
+      } else {
+        const deleteError = await deleteResponse.json().catch(() => ({}));
+        driveCleanupWarning = deleteError.error?.message || "O vídeo foi enviado, mas não consegui apagar o arquivo original do Google Drive.";
+      }
     }
+    post.driveCleanupPending = publicationMode === "scheduled";
+    post.driveSourceDeleted = driveSourceDeleted;
+    await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
     const baseMessage = publicationMode === "immediate"
       ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública."
-      : "O YouTube confirmou o vídeo como privado e agendado. Confira o agendamento no YouTube Studio.";
+      : "O YouTube confirmou o vídeo como privado e agendado. O arquivo do Google Drive será mantido até a publicação ser confirmada.";
     const message = driveSourceDeleted
       ? baseMessage + " O arquivo original foi removido do Google Drive para liberar espaço."
-      : baseMessage + " Atenção: não foi possível remover o arquivo original do Google Drive" + (driveCleanupWarning ? ": " + driveCleanupWarning : ".");
-    return json({ post, driveSourceDeleted, driveCleanupWarning: driveCleanupWarning || null, message }, 201);
+      : driveCleanupWarning
+        ? baseMessage + " Atenção: não foi possível remover o arquivo original do Google Drive: " + driveCleanupWarning
+        : baseMessage;
+    return json({ post, driveSourceDeleted, driveCleanupPending: post.driveCleanupPending, driveCleanupWarning: driveCleanupWarning || null, message }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Falha ao agendar vídeo do Drive.").slice(0, 400) }, 500);
   }
