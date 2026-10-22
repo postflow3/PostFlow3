@@ -147,7 +147,7 @@ async function generateAICaption(){
   const frames=await extractVideoFrames(file);status.textContent="A IA está analisando o conteúdo e preparando as sugestões...";
   const response=await fetch("/api/ai-caption",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename:file.name,context:document.getElementById("aiContext")?.value||document.getElementById("description")?.value||"",frames})});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.error||"Não foi possível gerar sugestões.");
+  if(!response.ok)throw new Error((data.error||"Não foi possível gerar sugestões.")+(data.detail?"\nDetalhe do Gemini: "+data.detail:""));
   aiCaptionDraft=data;document.getElementById("aiCaptionRationale").textContent=data.rationale||"Confira as sugestões antes de publicar.";result.classList.remove("hidden");status.textContent="Sugestões prontas. Revise e escolha se deseja usá-las.";
  }catch(error){status.textContent=error.message||"Falha ao analisar o vídeo.";}
  finally{button.disabled=false;button.textContent="✦ Gerar título, legenda e hashtags com IA";}
