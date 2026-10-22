@@ -135,6 +135,30 @@ async function cleanupDriveIfComplete(env, userId, post) {
       try { fileId = JSON.parse(raw).fileId || ""; } catch {}
     }
   }
+  const token = await googleAccessToken(env, userId);
+  if (!fileId && post.filename && Number(post.size) > 0) {
+    // Recover legacy posts only if filename + size identify exactly one Drive file.
+    const escapedName = String(post.filename).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const query = "name = '" + escapedName + "' and size = " + Math.floor(Number(post.size)) + " and trashed = false";
+    const lookupUrl = new URL("https://www.googleapis.com/drive/v3/files");
+    lookupUrl.searchParams.set("q", query);
+    lookupUrl.searchParams.set("pageSize", "2");
+    lookupUrl.searchParams.set("fields", "files(id,name,size,mimeType)");
+    const lookup = await fetch(lookupUrl, { headers: { Authorization: "Bearer " + token } });
+    const lookupData = await lookup.json().catch(() => ({}));
+    if (lookup.ok && Array.isArray(lookupData.files) && lookupData.files.length === 1) {
+      fileId = String(lookupData.files[0].id || "");
+      if (fileId) post.driveFileId = fileId;
+    } else {
+      post.driveCleanupPending = true;
+      post.driveCleanupError = !lookup.ok
+        ? String(lookupData.error?.message || "Não foi possível localizar com segurança o original no Google Drive. O arquivo foi mantido.").slice(0, 250)
+        : (lookupData.files?.length > 1
+          ? "Há mais de um arquivo com o mesmo nome e tamanho no Google Drive. Nenhum foi apagado para evitar excluir o arquivo errado."
+          : "Não encontrei um único arquivo com o mesmo nome e tamanho no Google Drive. O arquivo foi mantido.");
+      return false;
+    }
+  }
   if (!fileId) {
     if (post.driveCleanupPending || post.driveFileId || post.instagramVideoKey) {
       post.driveCleanupPending = true;
@@ -142,7 +166,6 @@ async function cleanupDriveIfComplete(env, userId, post) {
     }
     return false;
   }
-  const token = await googleAccessToken(env, userId);
   const response = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
   if (response.ok || response.status === 404) {
     if (metadataKey) await env.POSTFLOW3_KV.delete(metadataKey);
