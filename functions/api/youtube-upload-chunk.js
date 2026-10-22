@@ -69,7 +69,7 @@ export async function onRequestPost({ request, env }) {
       publicationMode: pending.publicationMode || "scheduled",
       status: pending.publicationMode === "immediate" ? "published_on_youtube" : "scheduled_on_youtube",
       youtubeVideoId: result.id, youtubeUrl: "https://www.youtube.com/watch?v=" + result.id,
-      createdAt: pending.createdAt, uploadedAt: new Date().toISOString(), platforms: pending.publishInstagram ? ["YouTube", "Instagram"] : ["YouTube"], instagramVideoKey: pending.publishInstagram ? pending.instagramVideoKey : null, instagramStatus: pending.publishInstagram ? (pending.publicationMode === "immediate" ? "pending" : "scheduled") : null
+      createdAt: pending.createdAt, uploadedAt: new Date().toISOString(), platforms: pending.publishInstagram ? ["YouTube", "Instagram"] : ["YouTube"], instagramVideoKey: pending.publishInstagram ? pending.instagramVideoKey : null, driveFileId: pending.publishInstagram ? (pending.driveFileId || null) : null, driveCleanupPending: true, instagramStatus: pending.publishInstagram ? (pending.publicationMode === "immediate" ? "pending" : "scheduled") : null
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
     await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, { ...pending, status: "complete", youtubeVideoId: result.id, completedAt: new Date().toISOString() }), { expirationTtl: 604800 });
