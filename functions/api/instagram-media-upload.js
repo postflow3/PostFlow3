@@ -28,6 +28,6 @@ export async function onRequestPost({request,env}){
   if(!saved.ok||!d.id)return json({error:d.error?.message||"O Google Drive não confirmou o salvamento do vídeo. Tente um vídeo menor ou reconecte a conta Google."},502);
   const videoKey="instagram-media/"+session.userId+"/"+crypto.randomUUID();
   await env.POSTFLOW3_KV.put(userKey(session.userId,"instagram-drive:"+videoKey.split("/").pop()),JSON.stringify({fileId:d.id,mimeType:d.mimeType||file.type,size:Number(d.size||file.size),createdAt:Date.now()}));
-  return json({videoKey,storedIn:"Google Drive",size:Number(d.size||file.size)},201);
+  return json({videoKey,driveFileId:d.id,storedIn:"Google Drive",size:Number(d.size||file.size)},201);
  }catch(e){return json({error:String(e?.message||"Não foi possível salvar o vídeo no Google Drive.").slice(0,300)},500);}
 }
