@@ -220,10 +220,11 @@ export async function onRequestPost({ request, env }) {
         }
       }
 
+      const beforeCleanup = JSON.stringify(post);
       try {
         const deleted = await cleanupDriveIfComplete(env, userId, post);
         if (deleted) results.push({ id: post.id, platform: "Google Drive", status: "source_deleted_after_publication" });
-        changed = true;
+        if (JSON.stringify(post) !== beforeCleanup) changed = true;
       } catch (error) {
         post.driveCleanupPending = true;
         post.driveCleanupError = String(error?.message || "Falha ao limpar o arquivo do Drive.").slice(0, 250);
@@ -232,9 +233,10 @@ export async function onRequestPost({ request, env }) {
 
       const hasYoutube = hasPlatform(post, "YouTube") || Boolean(post.youtubeVideoId);
       const hasInstagram = hasPlatform(post, "Instagram") || Boolean(post.instagramVideoKey);
-      if ((!hasYoutube || post.youtubeStatus === "published") && (!hasInstagram || post.instagramStatus === "published")) {
+      if ((!hasYoutube || post.youtubeStatus === "published") && (!hasInstagram || post.instagramStatus === "published") && post.status !== "published") {
         post.status = "published";
         post.publishedAt = post.publishedAt || new Date().toISOString();
+        changed = true;
       }
       if (changed) await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
     }
