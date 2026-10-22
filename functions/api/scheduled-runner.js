@@ -1,197 +1,248 @@
 import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
+const due = post => post.publicationMode === "immediate" || !post.scheduledAt || new Date(post.scheduledAt).getTime() <= Date.now();
+const hasPlatform = (post, platform) => Array.isArray(post.platforms) ? post.platforms.includes(platform) : platform === "YouTube" ? Boolean(post.youtubeVideoId) : Boolean(post.instagramVideoKey);
 
 async function googleAccessToken(env, userId) {
-  const raw = await env.POSTFLOW3_KV.get(userKey(userId, "youtube-owner"));
+  const key = userKey(userId, "youtube-owner");
+  const raw = await env.POSTFLOW3_KV.get(key);
   if (!raw) throw new Error("Conecte novamente a conta Google.");
   let tokens = await decryptJson(env, raw);
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
-  if (tokens.access_token && expiry > Date.now() + 60000) return tokens.access_token;
+  if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A conexão Google não tem token de renovação.");
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, refresh_token: tokens.refresh_token, grant_type: "refresh_token" })
   });
   const refreshed = await response.json().catch(() => ({}));
-  if (!response.ok || !refreshed.access_token) throw new Error("O Google não renovou a autorização.");
+  if (!response.ok || !refreshed.access_token) throw new Error(refreshed.error_description || "O Google não renovou a autorização.");
   tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(userKey(userId, "youtube-owner"), await encryptJson(env, tokens));
+  await env.POSTFLOW3_KV.put(key, await encryptJson(env, tokens));
   return tokens.access_token;
 }
 
+async function instagramSignature(env, key) {
+  if (!env.POSTFLOW3_SESSION_SECRET) throw new Error("A assinatura segura do vídeo não está configurada.");
+  const cryptoKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.POSTFLOW3_SESSION_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode("instagram-media:" + key)));
+  return [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function publishInstagramStep({ request, env, userId, post }) {
+  const videoKey = String(post.instagramVideoKey || "");
+  if (!new RegExp("^instagram-media/" + userId + "/[0-9a-f-]{36}$", "i").test(videoKey)) throw new Error("O vídeo salvo para o Instagram não foi encontrado.");
+  const raw = await env.POSTFLOW3_KV.get(userKey(userId, "instagram-owner"));
+  if (!raw) throw new Error("Conecte novamente o Instagram.");
+  const account = await decryptJson(env, raw);
+  if (!account.access_token || !account.user_id) throw new Error("A conexão do Instagram está incompleta.");
+  let creationId = post.instagramCreationId;
+  if (!creationId) {
+    const mediaUrl = new URL("/api/instagram-media", request.url);
+    mediaUrl.searchParams.set("key", videoKey);
+    mediaUrl.searchParams.set("sig", await instagramSignature(env, videoKey));
+    const response = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media", {
+      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.id) throw new Error(data.error?.message || "O Instagram recusou criar a publicação.");
+    creationId = data.id;
+    post.instagramCreationId = creationId;
+    post.instagramStatus = "processing";
+    post.instagramAttemptedAt = new Date().toISOString();
+    await env.POSTFLOW3_KV.put(userKey(userId, "post:" + post.id), JSON.stringify(post));
+  }
+
+  const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(creationId));
+  statusUrl.searchParams.set("fields", "status_code,status");
+  statusUrl.searchParams.set("access_token", account.access_token);
+  const statusResponse = await fetch(statusUrl);
+  const statusData = await statusResponse.json().catch(() => ({}));
+  if (!statusResponse.ok) {
+    post.instagramStatus = "processing";
+    post.instagramError = String(statusData.error?.message || "O Instagram ainda não retornou o estado do vídeo.").slice(0, 250);
+    return "processing";
+  }
+  if (statusData.status_code === "ERROR") {
+    post.instagramStatus = "failed";
+    post.instagramError = String(statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
+    return "failed";
+  }
+  if (statusData.status_code !== "FINISHED") {
+    post.instagramStatus = "processing";
+    post.instagramProcessingStatus = String(statusData.status_code || statusData.status || "IN_PROGRESS").slice(0, 80);
+    return "processing";
+  }
+
+  const publishResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media_publish", {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ creation_id: creationId, access_token: account.access_token })
+  });
+  const published = await publishResponse.json().catch(() => ({}));
+  if (!publishResponse.ok || !published.id) {
+    post.instagramStatus = "failed";
+    post.instagramError = String(published.error?.message || "O Instagram não confirmou a publicação. Confira o perfil antes de tentar novamente.").slice(0, 250);
+    return "failed";
+  }
+  post.instagramStatus = "published";
+  post.instagramMediaId = published.id;
+  post.instagramPublishedAt = new Date().toISOString();
+  post.instagramCreationId = null;
+  post.instagramError = null;
+  try {
+    const permalinkUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(published.id));
+    permalinkUrl.searchParams.set("fields", "permalink");
+    permalinkUrl.searchParams.set("access_token", account.access_token);
+    const permalinkResponse = await fetch(permalinkUrl);
+    const permalinkData = await permalinkResponse.json().catch(() => ({}));
+    if (permalinkData.permalink) post.instagramUrl = permalinkData.permalink;
+  } catch {}
+  return "published";
+}
+
+async function checkYoutubePublication(env, userId, post) {
+  const token = await googleAccessToken(env, userId);
+  const response = await fetch("https://www.googleapis.com/youtube/v3/videos?part=status&id=" + encodeURIComponent(post.youtubeVideoId), { headers: { Authorization: "Bearer " + token } });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || "Não foi possível confirmar o estado do vídeo no YouTube.");
+  const item = data.items?.[0];
+  if (item?.status?.privacyStatus === "public") {
+    post.youtubeStatus = "published";
+    post.youtubePublishedAt = post.youtubePublishedAt || new Date().toISOString();
+    post.youtubeCheckError = null;
+    return true;
+  }
+  post.youtubeStatus = item?.status?.privacyStatus || "processing";
+  return false;
+}
+
+async function cleanupDriveIfComplete(env, userId, post) {
+  const hasYoutube = hasPlatform(post, "YouTube") || Boolean(post.youtubeVideoId);
+  const hasInstagram = hasPlatform(post, "Instagram") || Boolean(post.instagramVideoKey);
+  const youtubeDone = !hasYoutube || post.youtubeStatus === "published";
+  const instagramDone = !hasInstagram || post.instagramStatus === "published" || post.status === "published_on_instagram";
+  if (!youtubeDone || !instagramDone || post.driveSourceDeleted) return false;
+
+  let fileId = post.driveFileId || "";
+  let metadataKey = "";
+  if (!fileId && post.instagramVideoKey) {
+    const videoId = post.instagramVideoKey.split("/").pop();
+    metadataKey = userKey(userId, "instagram-drive:" + videoId);
+    const raw = await env.POSTFLOW3_KV.get(metadataKey);
+    if (raw) {
+      try { fileId = JSON.parse(raw).fileId || ""; } catch {}
+    }
+  }
+  if (!fileId) {
+    if (post.driveCleanupPending || post.driveFileId || post.instagramVideoKey) {
+      post.driveCleanupPending = true;
+      post.driveCleanupError = "Publicação confirmada, mas o identificador do arquivo original no Drive não está disponível. O arquivo foi mantido.";
+    }
+    return false;
+  }
+  const token = await googleAccessToken(env, userId);
+  const response = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+  if (response.ok || response.status === 404) {
+    if (metadataKey) await env.POSTFLOW3_KV.delete(metadataKey);
+    post.driveSourceDeleted = true;
+    post.driveCleanupPending = false;
+    post.driveCleanupError = null;
+    post.driveDeletedAt = new Date().toISOString();
+    return true;
+  }
+  const data = await response.json().catch(() => ({}));
+  post.driveCleanupPending = true;
+  post.driveCleanupError = String(data.error?.message || "Não foi possível apagar o original do Google Drive.").slice(0, 250);
+  return false;
+}
+
 export async function onRequestPost({ request, env }) {
-  const expected = env.POSTFLOW3_SCHEDULER_SECRET;
-  if (!expected || request.headers.get("Authorization") !== "Bearer " + expected) return json({ error: "Não autorizado." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento não configurado." }, 503);
+  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento KV não configurado." }, 503);
+  const configuredSecret = env.POSTFLOW3_SCHEDULER_SECRET;
+  const expected = configuredSecret || await env.POSTFLOW3_KV.get("system:scheduler-secret");
+  const supplied = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!expected || !supplied || supplied !== expected) return json({ error: "Não autorizado." }, 401);
+
+  const lockKey = "system:scheduler-lock";
+  const now = Date.now();
+  const currentLock = await env.POSTFLOW3_KV.get(lockKey, "json");
+  if (currentLock?.until > now) return json({ busy: true, processed: 0, message: "Outra execução ainda está em andamento." }, 200);
+  const runId = crypto.randomUUID();
+  await env.POSTFLOW3_KV.put(lockKey, JSON.stringify({ runId, until: now + 4 * 60 * 1000 }), { expirationTtl: 300 });
+
   const results = [];
   try {
-    const list = await env.POSTFLOW3_KV.list({ prefix: "user:", limit: 1000 });
-    for (const item of list.keys) {
-      const ownerMatch = item.name.match(/^user:([0-9a-f-]{36}):post:/i); if (!ownerMatch) continue;
-      const userId = ownerMatch[1];
-      const post = await env.POSTFLOW3_KV.get(item.name, "json");
-      if (!post || post.status !== "scheduled" || new Date(post.scheduledAt).getTime() > Date.now() || !post.videoKey || !env.POSTFLOW3_MEDIA) continue;
-      post.status = "publishing";
-      post.attemptedAt = new Date().toISOString();
-      await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-      try {
-        let tokens = await decryptJson(env, await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner")));
-        if (!tokens.refresh_token) throw new Error("A conexão do YouTube não tem token de renovação. Reconecte o YouTube.");
-        if (!tokens.access_token || !tokens.expires_in || (tokens.saved_at || 0) + tokens.expires_in * 1000 < Date.now() + 60_000) {
-          const refreshed = await fetch("https://oauth2.googleapis.com/token", {
-            method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, refresh_token: tokens.refresh_token, grant_type: "refresh_token" })
-          });
-          const next = await refreshed.json();
-          if (!refreshed.ok || !next.access_token) throw new Error("O Google não renovou a autorização.");
-          tokens = { ...tokens, ...next, refresh_token: tokens.refresh_token, saved_at: Date.now() };
-          await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, tokens));
-        }
-        const object = await env.POSTFLOW3_MEDIA.get(post.videoKey);
-        if (!object) throw new Error("O arquivo do vídeo não foi encontrado.");
-        const metadata = { snippet: { title: post.title, description: post.description || "", categoryId: "22" }, status: { privacyStatus: "public", selfDeclaredMadeForKids: false } };
-        const init = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
-          method: "POST", headers: { Authorization: "Bearer " + tokens.access_token, "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": post.mimeType, "X-Upload-Content-Length": String(object.size) },
-          body: JSON.stringify(metadata)
-        });
-        const uploadUrl = init.headers.get("Location");
-        if (!init.ok || !uploadUrl) throw new Error("O YouTube recusou iniciar o envio do vídeo.");
-        const uploaded = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": post.mimeType, "Content-Length": String(object.size) }, body: await object.arrayBuffer() });
-        const video = await uploaded.json().catch(() => ({}));
-        if (!uploaded.ok || !video.id) throw new Error(video.error?.message || "O YouTube não concluiu o envio.");
-        post.status = "published";
-        post.youtubeVideoId = video.id;
-        post.youtubeUrl = "https://www.youtube.com/watch?v=" + video.id;
-        post.publishedAt = new Date().toISOString();
-        await env.POSTFLOW3_MEDIA.delete(post.videoKey);
-        await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-        results.push({ id: post.id, status: post.status });
-      } catch (e) {
-        post.status = "failed";
-        post.error = String(e?.message || "Erro ao publicar").slice(0, 300);
-        await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-        results.push({ id: post.id, status: post.status, error: post.error });
-      }
-    }
-    // Publish Instagram destinations whose scheduled time has arrived. YouTube
-    // already handles its own native scheduled publication in this deployment.
-    for (const item of list.keys) {
-      const ownerMatch = item.name.match(/^user:([0-9a-f-]{36}):post:/i); if (!ownerMatch) continue;
-      const userId = ownerMatch[1];
-      const post = await env.POSTFLOW3_KV.get(item.name, "json");
-      if (!post || post.status !== "scheduled_on_youtube" || post.instagramStatus !== "scheduled" ||
-          !post.instagramVideoKey || new Date(post.scheduledAt).getTime() > Date.now()) continue;
-      post.instagramStatus = "publishing";
-      post.instagramAttemptedAt = new Date().toISOString();
-      await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-      try {
-        const saved = await env.POSTFLOW3_KV.get(userKey(userId,"instagram-owner"));
-        if (!saved) throw new Error("Conecte novamente o Instagram.");
-        const account = await decryptJson(env, saved);
-        if (!account.access_token || !account.user_id) throw new Error("A conexão do Instagram está incompleta.");
-        const key = post.instagramVideoKey;
-        const secret = env.POSTFLOW3_SESSION_SECRET;
-        if (!secret) throw new Error("A assinatura segura do vídeo não está configurada.");
-        const cryptoKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-        const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode("instagram-media:" + key)));
-        const sig = [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
-        const mediaUrl = new URL("/api/instagram-media", request.url);
-        mediaUrl.searchParams.set("key", key); mediaUrl.searchParams.set("sig", sig);
-        const createResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media", {
-          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
-        });
-        const created = await createResponse.json().catch(() => ({}));
-        if (!createResponse.ok || !created.id) throw new Error(created.error?.message || "O Instagram recusou criar a publicação.");
-        let ready = false, lastStatus = "";
-        for (let i = 0; i < 8; i++) {
-          const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(created.id));
-          statusUrl.searchParams.set("fields", "status_code,status"); statusUrl.searchParams.set("access_token", account.access_token);
-          const sr = await fetch(statusUrl), sd = await sr.json().catch(() => ({}));
-          if (sr.ok && sd.status_code === "FINISHED") { ready = true; break; }
-          if (sd.status_code === "ERROR") throw new Error(sd.status || "O Instagram não conseguiu processar o vídeo.");
-          lastStatus = sd.status || sd.status_code || "processando";
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        if (!ready) throw new Error("O Instagram ainda está processando o vídeo (" + lastStatus + ").");
-        const publishResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media_publish", {
-          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ creation_id: created.id, access_token: account.access_token })
-        });
-        const published = await publishResponse.json().catch(() => ({}));
-        if (!publishResponse.ok || !published.id) throw new Error(published.error?.message || "O Instagram não confirmou a publicação.");
-        post.instagramStatus = "published";
-        post.instagramMediaId = published.id;
-        post.instagramPublishedAt = new Date().toISOString();
+    const keys = [];
+    let cursor;
+    do {
+      const page = await env.POSTFLOW3_KV.list({ prefix: "user:", limit: 1000, cursor });
+      keys.push(...page.keys.filter(key => /^user:[0-9a-f-]{36}:post:/i.test(key.name)));
+      cursor = page.list_complete ? undefined : page.cursor;
+    } while (cursor);
+
+    for (const item of keys) {
+      const match = item.name.match(/^user:([0-9a-f-]{36}):post:/i);
+      if (!match) continue;
+      const userId = match[1];
+      let post = await env.POSTFLOW3_KV.get(item.name, "json");
+      if (!post) continue;
+      let changed = false;
+      const isDue = due(post);
+
+      if (post.youtubeVideoId && hasPlatform(post, "YouTube") && isDue && post.youtubeStatus !== "published") {
         try {
-          const pu = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(published.id));
-          pu.searchParams.set("fields", "permalink"); pu.searchParams.set("access_token", account.access_token);
-          const pr = await fetch(pu), pd = await pr.json().catch(() => ({}));
-          if (pd.permalink) post.instagramUrl = pd.permalink;
-        } catch {}
-        const driveMetaKey = userKey(userId, "instagram-drive:" + key.split("/").pop());
-        const driveMetaRaw = await env.POSTFLOW3_KV.get(driveMetaKey);
-        if (driveMetaRaw) {
-          const driveMeta = JSON.parse(driveMetaRaw);
-          try {
-            const googleToken = await googleAccessToken(env, userId);
-            const deleted = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(driveMeta.fileId), { method: "DELETE", headers: { Authorization: "Bearer " + googleToken } });
-            if (deleted.ok || deleted.status === 404) {
-              await env.POSTFLOW3_KV.delete(driveMetaKey);
-              post.driveSourceDeleted = true;
-              post.driveCleanupPending = false;
-            } else {
-              const deleteError = await deleted.json().catch(() => ({}));
-              post.driveCleanupPending = true;
-              post.driveCleanupError = deleteError.error?.message || "Publicação concluída, mas não foi possível apagar o original do Drive.";
-            }
-          } catch (cleanupError) {
-            post.driveCleanupPending = true;
-            post.driveCleanupError = String(cleanupError?.message || "Não foi possível apagar o original do Drive.").slice(0, 250);
-          }
+          const wasPublished = post.youtubeStatus === "published";
+          await checkYoutubePublication(env, userId, post);
+          changed = true;
+          if (!wasPublished && post.youtubeStatus === "published") results.push({ id: post.id, platform: "YouTube", status: "published" });
+        } catch (error) {
+          post.youtubeCheckError = String(error?.message || "Falha ao consultar YouTube.").slice(0, 250);
+          changed = true;
+          results.push({ id: post.id, platform: "YouTube", status: "check_pending", error: post.youtubeCheckError });
         }
-        results.push({ id: post.id, platform: "Instagram", status: "published", driveCleanupPending: Boolean(post.driveCleanupPending) });
-      } catch (e) {
-        post.instagramStatus = "failed";
-        post.instagramError = String(e?.message || "Erro ao publicar no Instagram.").slice(0, 300);
-        results.push({ id: post.id, platform: "Instagram", status: "failed", error: post.instagramError });
       }
-      await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-    }
-    // Check YouTube-native scheduled uploads and delete the Drive source only after YouTube reports public.
-    for (const item of list.keys) {
-      const ownerMatch = item.name.match(/^user:([0-9a-f-]{36}):post:/i); if (!ownerMatch) continue;
-      const userId = ownerMatch[1];
-      const post = await env.POSTFLOW3_KV.get(item.name, "json");
-      if (!post || post.status !== "scheduled_on_youtube" || !post.driveFileId || post.driveSourceDeleted ||
-          !post.scheduledAt || new Date(post.scheduledAt).getTime() > Date.now()) continue;
+
+      const instagramDue = post.instagramVideoKey && hasPlatform(post, "Instagram") && isDue;
+      if (instagramDue && !["published", "failed"].includes(post.instagramStatus)) {
+        try {
+          const before = post.instagramStatus;
+          const state = await publishInstagramStep({ request, env, userId, post });
+          changed = true;
+          results.push({ id: post.id, platform: "Instagram", status: state });
+          if (before !== "published" && state === "published") post.instagramError = null;
+        } catch (error) {
+          post.instagramStatus = "failed";
+          post.instagramError = String(error?.message || "Falha ao publicar no Instagram.").slice(0, 250);
+          changed = true;
+          results.push({ id: post.id, platform: "Instagram", status: "failed", error: post.instagramError });
+        }
+      }
+
       try {
-        const googleToken = await googleAccessToken(env, userId);
-        const check = await fetch("https://www.googleapis.com/youtube/v3/videos?part=status&id=" + encodeURIComponent(post.youtubeVideoId || ""), { headers: { Authorization: "Bearer " + googleToken } });
-        const data = await check.json().catch(() => ({}));
-        const videoStatus = data.items?.[0]?.status?.privacyStatus;
-        if (!check.ok) throw new Error(data.error?.message || "Não foi possível confirmar o estado do vídeo no YouTube.");
-        if (videoStatus !== "public") continue;
-        const deleted = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(post.driveFileId), { method: "DELETE", headers: { Authorization: "Bearer " + googleToken } });
-        if (deleted.ok || deleted.status === 404) {
-          post.driveSourceDeleted = true;
-          post.driveCleanupPending = false;
-          post.driveDeletedAt = new Date().toISOString();
-          await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-          results.push({ id: post.id, platform: "YouTube", status: "published", driveSourceDeleted: true });
-        } else {
-          const deleteError = await deleted.json().catch(() => ({}));
-          post.driveCleanupPending = true;
-          post.driveCleanupError = deleteError.error?.message || "Não foi possível apagar o original do Drive.";
-          await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
-        }
-      } catch (cleanupError) {
+        const deleted = await cleanupDriveIfComplete(env, userId, post);
+        if (deleted) results.push({ id: post.id, platform: "Google Drive", status: "source_deleted_after_publication" });
+        changed = true;
+      } catch (error) {
         post.driveCleanupPending = true;
-        post.driveCleanupError = String(cleanupError?.message || "Não foi possível confirmar a publicação para limpar o Drive.").slice(0, 250);
-        await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+        post.driveCleanupError = String(error?.message || "Falha ao limpar o arquivo do Drive.").slice(0, 250);
+        changed = true;
       }
+
+      const hasYoutube = hasPlatform(post, "YouTube") || Boolean(post.youtubeVideoId);
+      const hasInstagram = hasPlatform(post, "Instagram") || Boolean(post.instagramVideoKey);
+      if ((!hasYoutube || post.youtubeStatus === "published") && (!hasInstagram || post.instagramStatus === "published")) {
+        post.status = "published";
+        post.publishedAt = post.publishedAt || new Date().toISOString();
+      }
+      if (changed) await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
     }
-    return json({ processed: results.length, results });
-  } catch { return json({ error: "Erro ao processar a fila." }, 500); }
+    return json({ processed: results.length, results, checkedPosts: keys.length, at: new Date().toISOString() });
+  } catch (error) {
+    return json({ error: String(error?.message || "Erro ao processar a fila.").slice(0, 300) }, 500);
+  } finally {
+    const lock = await env.POSTFLOW3_KV.get(lockKey, "json");
+    if (lock?.runId === runId) await env.POSTFLOW3_KV.delete(lockKey);
+  }
 }
