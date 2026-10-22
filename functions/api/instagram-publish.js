@@ -19,6 +19,15 @@ export async function onRequestPost({request,env}){
   const pendingKey=userKey(session.userId,"instagram-pending:"+videoId);
   let pending=await env.POSTFLOW3_KV.get(pendingKey,"json");
   if(pending?.published){
+   if(/^[0-9a-f-]{36}$/i.test(postId)){
+    const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");
+    if(stored){stored.instagramStatus="published";stored.instagramMediaId=pending.mediaId;stored.instagramPublishedAt=pending.publishedAt||new Date().toISOString();stored.instagramVideoKey=videoKey;if(pending.permalink)stored.instagramUrl=pending.permalink;if(!Array.isArray(stored.platforms))stored.platforms=["YouTube"];if(!stored.platforms.includes("Instagram"))stored.platforms.push("Instagram");await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}
+   }else if(pending.postRecordId){
+    // The original standalone post record already exists; keep this retry idempotent.
+   }else{
+    const standalone={id:crypto.randomUUID(),title:pending.title||title,description:pending.caption||caption,filename:pending.filename||filename,size:Number(pending.size||size),platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramMediaId:pending.mediaId,instagramVideoKey:videoKey,instagramUrl:pending.permalink||null,instagramPublishedAt:pending.publishedAt||new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};
+    await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));pending.postRecordId=standalone.id;await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending),{expirationTtl:30*86400});
+   }
    return json({published:true,mediaId:pending.mediaId,permalink:pending.permalink||""},200);
   }
   let created;
@@ -53,9 +62,8 @@ export async function onRequestPost({request,env}){
   let permalink="";
   try{const pUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
   pending.published=true;pending.mediaId=published.id;pending.permalink=permalink;pending.publishedAt=new Date().toISOString();await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending));
-  if(/^[0-9a-f-]{36}$/i.test(postId)){const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");if(stored){stored.instagramStatus="published";stored.instagramMediaId=published.id;stored.instagramPublishedAt=new Date().toISOString();if(permalink)stored.instagramUrl=permalink;await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}}else{const standalone={id:crypto.randomUUID(),title,description:caption,filename,size,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramMediaId:published.id,instagramUrl:permalink||null,instagramPublishedAt:new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));}
-  await env.POSTFLOW3_KV.delete(userKey(session.userId,"instagram-drive:"+videoId));
-  await env.POSTFLOW3_KV.delete(pendingKey);
+  if(/^[0-9a-f-]{36}$/i.test(postId)){const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");if(stored){stored.instagramStatus="published";stored.instagramMediaId=published.id;stored.instagramPublishedAt=new Date().toISOString();stored.instagramVideoKey=videoKey;if(permalink)stored.instagramUrl=permalink;if(!Array.isArray(stored.platforms))stored.platforms=["YouTube"];if(!stored.platforms.includes("Instagram"))stored.platforms.push("Instagram");await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}}else{const standalone={id:crypto.randomUUID(),title,description:caption,filename,size,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramMediaId:published.id,instagramVideoKey:videoKey,instagramUrl:permalink||null,instagramPublishedAt:new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));pending.postRecordId=standalone.id;}
+  await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending),{expirationTtl:30*86400});
   return json({published:true,mediaId:published.id,permalink},200);
  }catch(e){return json({error:String(e?.message||"Falha ao publicar no Instagram.").slice(0,350)},500);}
 }
