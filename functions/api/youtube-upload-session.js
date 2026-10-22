@@ -47,8 +47,10 @@ export async function onRequestPost({ request, env }) {
     const publicationMode = input.publicationMode === "immediate" ? "immediate" : "scheduled";
     const scheduledAt = String(input.scheduledAt || "").trim();
     const instagramVideoKey = String(input.instagramVideoKey || "").trim();
+    const instagramDriveFileId = String(input.driveFileId || "").trim();
     const publishInstagram = input.publishInstagram === true;
     if (publishInstagram && !new RegExp("^instagram-media/"+session.userId+"/[0-9a-f-]{36}$","i").test(instagramVideoKey)) return json({ error: "O vídeo do Instagram não foi preparado corretamente." }, 400);
+    if (publishInstagram && !/^[\w-]{10,200}$/.test(instagramDriveFileId)) return json({ error: "Não foi possível identificar o arquivo original no Google Drive." }, 400);
     const date = scheduledAt ? new Date(scheduledAt) : null;
 
     if (!title) return json({ error: "Digite o título do vídeo." }, 400);
@@ -85,7 +87,7 @@ export async function onRequestPost({ request, env }) {
     const uploadId = crypto.randomUUID();
     const pending = {
       uploadId, uploadUrl, title, description, filename, mimeType, size,
-      publicationMode, instagramVideoKey: publishInstagram ? instagramVideoKey : null, publishInstagram,
+      publicationMode, instagramVideoKey: publishInstagram ? instagramVideoKey : null, driveFileId: publishInstagram ? instagramDriveFileId : null, publishInstagram,
       scheduledAt: publicationMode === "scheduled" ? date.toISOString() : null,
       createdAt: new Date().toISOString(),
       status: "uploading"
