@@ -15,13 +15,26 @@ export async function onRequestPost({request,env}){
   const raw=await env.POSTFLOW3_KV.get(userKey(session.userId,"instagram-owner"));if(!raw)return json({error:"Conecte o Instagram profissional antes de publicar."},400);
   const account=await decryptJson(env,raw);if(!account.access_token||!account.user_id)return json({error:"A conexão do Instagram expirou. Reconecte a conta."},401);
   const mediaUrl=new URL("/api/instagram-media",request.url);mediaUrl.searchParams.set("key",videoKey);mediaUrl.searchParams.set("sig",await signature(env,videoKey));
-  const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
-  const created=await createResponse.json().catch(()=>({}));
-  if(!createResponse.ok||!created.id){
-   const metaError=created.error||{},metaCode=metaError.code!=null?String(metaError.code):"",metaSubcode=metaError.error_subcode!=null?String(metaError.error_subcode):"";
-   const detail=[metaError.message||"A Meta não aceitou criar a publicação do Instagram.",metaCode?"Código Meta: "+metaCode:null,metaSubcode?"Subcódigo: "+metaSubcode:null].filter(Boolean).join(" | ");
-   const blocked=/API access blocked/i.test(String(metaError.message||""))||metaCode==="200";
-   return json({error:blocked?"A Meta está bloqueando o acesso da API do Instagram para esta conta ou aplicativo. O YouTube já foi enviado; não tente publicar novamente ainda. Confira os alertas e as permissões do app no Meta for Developers e, após liberar o acesso, reconecte o Instagram. Detalhe: "+detail:detail,instagramApiBlocked:blocked,metaCode:metaCode||null,metaSubcode:metaSubcode||null},502);
+  const videoId=videoKey.split("/").pop();
+  const pendingKey=userKey(session.userId,"instagram-pending:"+videoId);
+  let pending=await env.POSTFLOW3_KV.get(pendingKey,"json");
+  if(pending?.published){
+   return json({published:true,mediaId:pending.mediaId,permalink:pending.permalink||""},200);
+  }
+  let created;
+  if(pending?.creationId){
+   created={id:pending.creationId};
+  }else{
+   const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
+   created=await createResponse.json().catch(()=>({}));
+   if(!createResponse.ok||!created.id){
+    const metaError=created.error||{},metaCode=metaError.code!=null?String(metaError.code):"",metaSubcode=metaError.error_subcode!=null?String(metaError.error_subcode):"";
+    const detail=[metaError.message||"A Meta não aceitou criar a publicação do Instagram.",metaCode?"Código Meta: "+metaCode:null,metaSubcode?"Subcódigo: "+metaSubcode:null].filter(Boolean).join(" | ");
+    const blocked=/API access blocked/i.test(String(metaError.message||""))||metaCode==="200";
+    return json({error:blocked?"A Meta está bloqueando o acesso da API do Instagram para esta conta ou aplicativo. O YouTube já foi enviado; não tente publicar novamente ainda. Confira os alertas e as permissões do app no Meta for Developers e, após liberar o acesso, reconecte o Instagram. Detalhe: "+detail:detail,instagramApiBlocked:blocked,metaCode:metaCode||null,metaSubcode:metaSubcode||null},502);
+   }
+   pending={creationId:created.id,videoKey,caption,postId,title,filename,size,createdAt:new Date().toISOString()};
+   await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending));
   }
   let ready=false,lastStatus="";
   for(let i=0;i<12;i++){
@@ -29,18 +42,20 @@ export async function onRequestPost({request,env}){
    statusUrl.searchParams.set("fields","status_code,status");statusUrl.searchParams.set("access_token",account.access_token);
    const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
    if(statusResponse.ok&&statusData.status_code==="FINISHED"){ready=true;break;}
-   if(statusData.status_code==="ERROR")return json({error:statusData.status||"O Instagram não conseguiu processar o vídeo."},502);
+   if(statusData.status_code==="ERROR"){await env.POSTFLOW3_KV.delete(pendingKey);return json({error:statusData.status||"O Instagram não conseguiu processar o vídeo."},502);}
    lastStatus=statusData.status||statusData.status_code||"processando";
    await new Promise(resolve=>setTimeout(resolve,2000));
   }
-  if(!ready)return json({error:"O Instagram ainda está processando o vídeo ("+lastStatus+"). Aguarde um pouco e tente novamente apenas se a publicação não aparecer no perfil."},202);
+  if(!ready)return json({pending:true,error:"O Instagram ainda está processando o vídeo ("+lastStatus+"). O PostFlow3 continuará verificando sem criar outra publicação."},202);
   const publishResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media_publish",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({creation_id:created.id,access_token:account.access_token})});
   const published=await publishResponse.json().catch(()=>({}));
   if(!publishResponse.ok||!published.id)return json({error:published.error?.message||"O Instagram não confirmou a publicação."},502);
   let permalink="";
   try{const pUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
+  pending.published=true;pending.mediaId=published.id;pending.permalink=permalink;pending.publishedAt=new Date().toISOString();await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending));
   if(/^[0-9a-f-]{36}$/i.test(postId)){const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");if(stored){stored.instagramStatus="published";stored.instagramMediaId=published.id;stored.instagramPublishedAt=new Date().toISOString();if(permalink)stored.instagramUrl=permalink;await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}}else{const standalone={id:crypto.randomUUID(),title,description:caption,filename,size,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramMediaId:published.id,instagramUrl:permalink||null,instagramPublishedAt:new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));}
-  await env.POSTFLOW3_KV.delete(userKey(session.userId,"instagram-drive:"+videoKey.split("/").pop()));
+  await env.POSTFLOW3_KV.delete(userKey(session.userId,"instagram-drive:"+videoId));
+  await env.POSTFLOW3_KV.delete(pendingKey);
   return json({published:true,mediaId:published.id,permalink},200);
  }catch(e){return json({error:String(e?.message||"Falha ao publicar no Instagram.").slice(0,350)},500);}
 }
