@@ -17,9 +17,23 @@ export async function onRequestPost({request,env}){
    parts.push({inline_data:{mime_type:match[1],data:match[2]}});
   }
   if(parts.length===1)return json({error:"As imagens extraídas do vídeo estão inválidas. Tente outro arquivo."},400);
-  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.7,responseMimeType:"application/json"}})});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)return json({error:response.status===429?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.": "A IA não conseguiu analisar o vídeo agora. Verifique a configuração da chave Gemini.",detail:String(data.error?.message||"").slice(0,240)},502);
+  const endpoint="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY);
+  const payload=JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.7,responseMimeType:"application/json"}});
+  let response,data={};
+  // O Gemini pode devolver 503 durante picos de demanda. Tente mais uma vez,
+  // apenas para erros transitórios, sem repetir erros de chave/permissão.
+  for(let attempt=0;attempt<2;attempt++){
+   response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:payload});
+   data=await response.json().catch(()=>({}));
+   if(response.ok||(response.status!==429&&response.status!==503)||attempt===1)break;
+   await new Promise(resolve=>setTimeout(resolve,1200));
+  }
+  if(!response.ok){
+   const detail=String(data.error?.message||"").slice(0,240);
+   const overloaded=response.status===503&&/high demand|overload|unavailable|try again later/i.test(detail);
+   const limited=response.status===429;
+   return json({error:overloaded?"O Gemini está com muita procura neste momento. Tente novamente em 1 minuto.":limited?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.":"A IA não conseguiu analisar o vídeo agora. Verifique a configuração da chave Gemini.",detail},502);
+  }
   const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
   let result;try{result=JSON.parse(raw.replace(/^\s*\x60\x60\x60(?:json)?/i,"").replace(/\x60\x60\x60\s*$/,""));}catch{return json({error:"A IA retornou uma resposta que não consegui interpretar. Tente novamente."},502);}
   const hashtags=(Array.isArray(result.hashtags)?result.hashtags:[]).map(x=>String(x).replace(/^#+/,"").replace(/[^\p{L}\p{N}_]/gu,"")).filter(Boolean).slice(0,10);
