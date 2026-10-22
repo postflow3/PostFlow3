@@ -17,7 +17,7 @@ export async function onRequestPost({request,env}){
    parts.push({inline_data:{mime_type:match[1],data:match[2]}});
   }
   if(parts.length===1)return json({error:"As imagens extraídas do vídeo estão inválidas. Tente outro arquivo."},400);
-  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.7,responseMimeType:"application/json"}})});
+  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.7,responseMimeType:"application/json"}})});
   const data=await response.json().catch(()=>({}));
   if(!response.ok)return json({error:response.status===429?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.": "A IA não conseguiu analisar o vídeo agora. Verifique a configuração da chave Gemini.",detail:String(data.error?.message||"").slice(0,240)},502);
   const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
