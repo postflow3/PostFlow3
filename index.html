@@ -339,6 +339,189 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* POSTFLOW3 SIDEBAR REDESIGN — stronger navigation styling */
+.layout{align-items:stretch}
+.side{
+  box-sizing:border-box;
+  flex:0 0 258px;
+  width:258px;
+  min-width:258px;
+  min-height:100vh;
+  height:100vh;
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:7px;
+  padding:22px 15px 16px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  border-right:1px solid #252b42;
+  border-bottom:0;
+  border-radius:0 20px 20px 0;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(109,72,229,.20),transparent 42%),
+    linear-gradient(180deg,#101423 0%,#0b0e18 58%,#0a0c15 100%);
+  box-shadow:12px 0 40px rgba(0,0,0,.22);
+}
+.side .brand-logo{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  margin:0 0 18px!important;
+  padding:17px 12px!important;
+  border-radius:17px;
+  background:linear-gradient(135deg,rgba(139,92,246,.17),rgba(79,140,255,.07) 60%,rgba(17,20,35,.96));
+  border:1px solid #343251;
+  box-shadow:inset 0 1px rgba(255,255,255,.05),0 12px 26px rgba(0,0,0,.18);
+}
+.side .brand-logo img{display:block;width:100%;max-width:190px;max-height:58px;object-fit:contain}
+.side-label{
+  display:block;
+  margin:13px 10px 4px;
+  padding:0;
+  color:#747f9e;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.7px;
+}
+.side .nav{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-height:46px;
+  flex:0 0 auto;
+  margin:0;
+  padding:9px 12px;
+  border:1px solid transparent;
+  border-radius:12px;
+  color:#aab4ce;
+  background:transparent;
+  font-size:13px;
+  font-weight:650;
+  text-align:left;
+  white-space:normal;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.side .nav i{
+  display:grid;
+  place-items:center;
+  width:29px;
+  height:29px;
+  flex:0 0 29px;
+  border:1px solid #2a3047;
+  border-radius:9px;
+  background:#151a2a;
+  color:#a8b4d2;
+  font-size:16px;
+  font-style:normal;
+}
+.side .nav:hover{
+  color:#f4f5ff;
+  border-color:#303650;
+  background:rgba(255,255,255,.035);
+  transform:translateX(2px);
+}
+.side .nav.active{
+  color:#fff;
+  border-color:rgba(139,92,246,.42);
+  background:linear-gradient(100deg,rgba(124,78,238,.25),rgba(66,104,214,.12));
+  box-shadow:inset 3px 0 #9b7bff,0 7px 18px rgba(0,0,0,.12);
+}
+.side .nav.active i{
+  color:#fff;
+  border-color:rgba(167,139,250,.42);
+  background:linear-gradient(135deg,#7c4dff,#466cf0);
+  box-shadow:0 5px 14px rgba(108,78,237,.25);
+}
+.side-footer{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:auto;
+  padding:13px 10px;
+  border:1px solid #292f48;
+  border-radius:14px;
+  background:linear-gradient(135deg,#151a2c,#101321);
+}
+.side-footer-mark{
+  flex:0 0 32px;
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:linear-gradient(135deg,#8b5cf6,#4777f5);
+  color:white;
+}
+.side-footer b{display:block;color:#f0f2ff;font-size:11px}
+.side-footer small{display:block;margin-top:4px;color:#929dbb;font-size:10px}
+.side-live{flex:0 0 7px}
+.main{min-width:0;flex:1}
+@media(max-width:720px){
+  .layout{display:block}
+  .side{
+    box-sizing:border-box;
+    position:sticky;
+    top:0;
+    z-index:100;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    width:100%;
+    min-width:0;
+    min-height:0;
+    height:auto;
+    gap:7px;
+    padding:9px 10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    border:0;
+    border-bottom:1px solid #292f48;
+    border-radius:0;
+    background:rgba(10,12,22,.97);
+    box-shadow:0 8px 24px rgba(0,0,0,.28);
+    backdrop-filter:blur(18px);
+  }
+  .side .brand-logo{
+    flex:0 0 116px;
+    width:116px;
+    min-width:116px;
+    margin:0 5px 0 0!important;
+    padding:7px!important;
+    border-radius:11px;
+  }
+  .side .brand-logo img{max-height:34px}
+  .side-label,.side-footer{display:none}
+  .side .nav{
+    flex:0 0 auto;
+    width:auto;
+    min-height:40px;
+    gap:7px;
+    padding:6px 10px;
+    border-radius:10px;
+    white-space:nowrap;
+    font-size:11px;
+  }
+  .side .nav i{width:24px;height:24px;flex-basis:24px;font-size:13px}
+  .side .nav.active{box-shadow:inset 0 -2px #a78bfa}
+}
+@media(max-width:420px){
+  .side{gap:5px;padding:8px}
+  .side .brand-logo{flex-basis:98px;width:98px;min-width:98px}
+  .side .nav{gap:5px;padding:6px 8px;font-size:10px}
+  .side .nav i{width:22px;height:22px;flex-basis:22px}
+}
 </style></head><body><div id="authGate" class="auth-screen"><div class="auth-card"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><h1 id="authTitle">Crie sua conta</h1><p>Organize suas publicações do Instagram e YouTube em um só lugar. As contas e os conteúdos ficam separados por usuário.</p><div class="auth-tabs"><button id="tabRegister" class="active" type="button" onclick="setAuthMode('register')">Criar conta</button><button id="tabLogin" type="button" onclick="setAuthMode('login')">Entrar</button></div><form id="registerForm" class="auth-form" onsubmit="submitRegister(event)"><label for="registerName">Seu nome</label><input id="registerName" autocomplete="name" maxlength="80" required placeholder="Como podemos te chamar?"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="registerPassword">Senha (mínimo 10 caracteres)</label><input id="registerPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Crie uma senha forte"><button class="primary" type="submit">Criar minha conta</button><div id="registerMessage" class="auth-message" role="status"></div></form><form id="loginForm" class="auth-form hidden" onsubmit="submitLogin(event)"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Sua senha"><button class="primary" type="submit">Entrar no PostFlow3</button><div id="loginMessage" class="auth-message" role="status"></div></form><div class="auth-foot">Cadastro inicial limitado a 10 usuários. Não use senha de outros serviços.</div></div></div><div class="layout"><aside class="side"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><div class="side-label">PAINEL</div><button class="nav active" data-page="inicio"><i>⌂</i> Início</button><div class="side-label">CONTEÚDO</div><button class="nav" data-page="conteudos"><i>▣</i> Criar conteúdo</button><button class="nav" data-page="agendamentos"><i>▦</i> Calendário</button><button class="nav" data-page="publicacoes"><i>↗</i> Publicações</button><button class="nav" data-page="estatisticas"><i>▥</i> Estatísticas</button><div class="side-label">CONTA</div><button class="nav" data-page="contas"><i>♧</i> Redes conectadas</button><button class="nav" data-page="configuracoes"><i>⚙</i> Configurações</button><div class="side-footer"><span class="side-footer-mark">✦</span><div><b>PostFlow Ultra</b><small>Central de publicações</small></div><span class="side-live" title="Painel carregado"></span></div></aside><main class="main"><div class="top"><div class="top-brand"><div class="top-logo top-logo-image"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"><small>Seu conteúdo em todos os lugares</small></div><label class="top-search" for="globalSearch"><span class="search-glyph">⌕</span><input id="globalSearch" type="search" placeholder="Buscar publicações, vídeos e contas..." aria-label="Buscar no PostFlow3"><kbd>BUSCAR</kbd></label></div><div class="user-menu"><span class="notification">♧</span><span class="user-avatar">D</span><span><b id="userGreeting">Olá!</b><small>Plano Gratuito</small></span><button class="nav" style="width:auto;margin:0" onclick="logoutUser()">Sair</button></div></div><section id="inicio"><div class="dashboard-grid"><div class="dashboard-main"><div class="banner"><div class="hero-icon">🚀</div><div><h2>Seu conteúdo, em movimento.</h2><p>Gerencie, agende e publique seus vídeos no YouTube e Instagram em um só lugar.</p></div><div class="hero-slogan">Mais alcance<br>para o seu conteúdo!</div></div><div class="stats"><div class="card stat-card"><div class="stat-label">▶ Conteúdos preparados</div><div class="metric" id="count">0</div><span class="positive">Sua biblioteca</span></div><div class="card stat-card"><div class="stat-label">▦ Próximos agendamentos</div><div class="metric" id="scheduled">0</div><span class="muted">Na sua fila</span></div><div class="card stat-card"><div class="stat-label">♧ Contas conectadas</div><div class="metric" id="connectedCount">0/2</div><span class="positive">YouTube e Instagram</span></div><div class="card stat-card"><div class="stat-label">↗ Publicações confirmadas</div><div class="metric" id="publishedCount">0</div><span class="muted">Com base no histórico disponível</span></div></div><div class="platform-stats"><div class="card platform-stat"><div class="platform-stat-icon yt-icon">▶</div><div><small>YouTube · Inscritos</small><strong id="youtubeFollowers">—</strong><span>Dados da conta conectada</span></div></div><div class="card platform-stat"><div class="platform-stat-icon ig-icon">◎</div><div><small>Instagram · Seguidores</small><strong id="instagramFollowers">—</strong><span>Dados da conta conectada</span></div></div></div><div class="card create-shortcut"><div class="section-heading"><span class="section-icon">▣</span><div><h3>Criar nova publicação</h3><p class="muted">Envie um vídeo, escreva a legenda e escolha onde publicar.</p></div><button class="primary" onclick="show('conteudos')">＋ Criar conteúdo</button></div><div class="quick-destinations"><span class="destination-chip">▶ YouTube <small id="ytQuickStatus">Verificando conexão</small></span><span class="destination-chip">◎ Instagram <small id="igQuickStatus">Verificando conexão</small></span><span class="destination-chip muted">♪ TikTok <small>Em breve</small></span></div><p class="muted">Os vídeos enviados pelo computador ou celular podem ser preparados aqui. Para agendar, escolha a data e o horário na tela de criação.</p></div><div class="card queue-card"><div class="section-heading"><div><h3>Publicações recentes</h3><p class="muted">Status dos seus conteúdos no PostFlow3</p></div><button class="text-button" onclick="show('publicacoes')">Ver todas →</button></div><div id="homeQueue" class="muted">Carregando publicações...</div></div></div><aside class="dashboard-side"><div class="card side-panel"><div class="section-heading"><h3>Contas conectadas</h3><span class="live-dot">● Verificando</span></div><div class="social-row"><div class="social-icon yt-icon">▶</div><div class="social-info"><b>YouTube</b><small id="youtubeStatusText">Verificando conexão...</small><small id="youtubeAccountExtra">Conta conectada via Google</small></div><span class="social-arrow">›</span></div><div class="social-row"><div class="social-icon ig-icon">◎</div><div class="social-info"><b>Instagram</b><small id="instagramStatusText">Verificando conexão...</small><small id="instagramAccountExtra">Conta profissional</small></div><span class="social-arrow">›</span></div><div class="social-row"><div class="social-icon tt-icon">♪</div><div class="social-info"><b>TikTok</b><small id="tiktokStatusText">Em breve</small><small>Integração pausada</small></div><span class="social-arrow">›</span></div><button class="outline-button" onclick="show('contas')">Gerenciar conexões</button></div><div class="card side-panel"><div class="section-heading"><h3>Próximas publicações</h3><button class="text-button" onclick="show('agendamentos')">Ver todas →</button></div><div id="upcomingQueue" class="muted">Nenhum agendamento planejado.</div></div><div class="card side-panel"><div class="section-heading"><h3>Uso do Google Drive</h3><span class="drive-icon">▲</span></div><p class="muted">O Drive pode ser usado como origem/armazenamento dos vídeos compatíveis. O espaço disponível não é exibido pela integração atual.</p><div class="drive-note">Armazenamento externo · sem números inventados</div></div><div class="card side-panel"><div class="section-heading"><h3>Atividade recente</h3></div><div id="recentActivity" class="muted">As atividades aparecerão conforme os envios e publicações forem registrados.</div></div></aside></div><div class="card calendar-card"><div class="section-heading"><div><h3>▦ Calendário de agendamentos</h3><p class="muted">Veja o que está programado e o que já foi publicado.</p></div><div class="calendar-controls"><button class="outline-button" onclick="changeCalendar(-7)">← Semana anterior</button><button class="outline-button" onclick="resetCalendar()">Hoje</button><button class="outline-button" onclick="changeCalendar(7)">Próxima semana →</button></div></div><div id="calendarRange" class="calendar-range"></div><div id="scheduleCalendar" class="schedule-calendar"><p class="muted">Carregando calendário...</p></div><div class="calendar-legend"><span><i class="legend-published"></i> Publicado</span><span><i class="legend-scheduled"></i> Agendado</span><span><i class="legend-failed"></i> Falha</span></div></div></section><section id="conteudos" class="hidden"><div class="work"><div class="card"><h3>Novo conteúdo</h3><label class="upload" for="localVideo">📁<strong>Escolher vídeo do computador ou celular</strong><span class="muted">Clique para abrir seus arquivos. MP4, MOV, WebM e outros formatos de vídeo aceitos pelo YouTube.</span><input id="localVideo" type="file" accept="video/*" class="field" style="margin-top:14px"><div id="driveStatus" class="muted">O vídeo será enviado apenas aos destinos marcados: YouTube, Instagram ou ambos.</div></label><div class="storage-hint"><span class="storage-hint-icon">✦</span><div><b>Armazenamento automático</b><p>Envie o vídeo pelo seu dispositivo. O PostFlow3 cuida do processamento e da publicação agendada na nuvem.</p></div></div><label>Título<input id="title" class="field" placeholder="Título do seu vídeo"></label><label>Descrição e hashtags<textarea id="description" class="field" rows="4" placeholder="Escreva a legenda..."></textarea></label><div class="ai-caption-card"><div class="ai-caption-head"><span class="ai-caption-icon">✦</span><div><b>Assistente de conteúdo com IA</b><p>Analisa alguns quadros do vídeo e sugere título, legenda e hashtags.</p></div></div><label class="ai-context-label">O que você quer destacar? (opcional)<input id="aiContext" class="field" placeholder="Ex.: vídeo de vendas, humor, tutorial, produto..."></label><button id="aiCaptionButton" type="button" class="primary ai-caption-button" onclick="generateAICaption()">✦ Gerar título, legenda e hashtags com IA</button><div id="aiCaptionStatus" class="muted ai-caption-status" aria-live="polite"></div><div id="aiCaptionResult" class="ai-caption-result hidden"><b>Prévia gerada</b><p id="aiCaptionRationale"></p><button type="button" class="outline-button" onclick="applyAICaption()">Usar sugestões no conteúdo</button></div></div><b>Destinos</b><p class="muted">Escolha onde publicar: você pode enviar para as duas plataformas ou desmarcar o YouTube e publicar somente no Instagram. Você pode agendar somente o Instagram, somente o YouTube ou os dois, independentemente.</p><div class="checks"><label><input type="checkbox" id="targetYouTube" checked> ▶️ YouTube</label><label><input type="checkbox" id="targetInstagram" checked> 📸 Instagram conectado</label></div><label>Quando publicar<select id="publicationMode" class="field" onchange="togglePublicationMode()"><option value="scheduled" selected>Agendar para uma data e horário</option><option value="immediate">Publicar assim que o envio terminar</option></select></label><div id="scheduledDateField"><label>Data e horário planejados<input type="datetime-local" class="field" id="date"></label></div><button id="publishButton" class="primary" onclick="save()">Agendar publicação no YouTube e Instagram</button><div class="note">Para publicar nas duas plataformas, marque YouTube e Instagram. Publicações agendadas são acompanhadas pela rotina na nuvem; o vídeo original permanece armazenado até que todos os destinos selecionados confirmem a publicação.</div></div><div class="card"><h3>Pré-visualização</h3><video id="preview" controls playsinline style="width:100%;max-height:440px;border-radius:14px;background:#111638"></video><p class="muted">Confira o vídeo antes de preparar a postagem.</p></div></div></section><section id="agendamentos" class="hidden"><div class="card"><h3>Agendamentos planejados</h3><div id="agendaList"></div></div></section><section id="publicacoes" class="hidden"><div class="card"><h3>Fila de conteúdos</h3><div id="publishList"></div></div></section><section id="estatisticas" class="hidden">
  <div class="analytics-header"><div><h2>Visão geral do desempenho</h2><p class="muted">Resumo calculado a partir do histórico registrado no PostFlow3.</p></div><button class="outline-button" onclick="loadServerPosts()">↻ Atualizar dados</button></div>
  <div class="analytics-grid">
