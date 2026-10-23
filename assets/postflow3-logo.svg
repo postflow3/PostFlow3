@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 180" role="img" aria-labelledby="title desc">
+<title id="title">PostFlow3</title><desc id="desc">Logotipo PostFlow3 com símbolo de reprodução e gradientes azul, ciano e magenta.</desc>
+<defs>
+ <linearGradient id="flow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00e2e9"/><stop offset=".48" stop-color="#1768ff"/><stop offset="1" stop-color="#e321f5"/></linearGradient>
+ <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".72" stop-color="#f2f6ff"/><stop offset="1" stop-color="#a9caff"/></linearGradient>
+</defs>
+<g transform="translate(6 8)">
+ <rect x="0" y="28" width="56" height="12" rx="6" fill="url(#flow)"/>
+ <rect x="0" y="49" width="45" height="12" rx="6" fill="url(#flow)"/>
+ <rect x="0" y="70" width="32" height="12" rx="6" fill="url(#flow)"/>
+ <path d="M68 8 Q68 3 75 3 H126 Q164 3 164 42 Q164 73 137 83 L91 101 Q80 105 80 118 V137 Q80 145 71 145 H54 Q43 145 43 132 L62 18 Q63 8 68 8Z" fill="url(#paper)"/>
+ <path d="M75 31 Q76 24 84 28 L122 48 Q133 54 122 62 L77 88 Q68 93 69 81Z" fill="#05091b"/>
+ <path d="M80 38 Q80 34 85 37 L113 51 Q120 55 113 59 L82 77 Q77 80 78 74Z" fill="url(#flow)"/>
+ <path d="M46 120 L90 97 L80 137 Q77 145 67 145 Q46 145 43 130Z" fill="url(#flow)"/>
+</g>
+<text x="190" y="111" font-family="Inter,Arial,sans-serif" font-size="67" font-style="italic" font-weight="850" letter-spacing="-3" fill="#fff">PostFlow</text>
+<text x="544" y="111" font-family="Inter,Arial,sans-serif" font-size="67" font-weight="900" letter-spacing="-4" fill="url(#flow)">3</text>
+</svg>
