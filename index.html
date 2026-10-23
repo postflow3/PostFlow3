@@ -680,3 +680,66 @@ async function loadVideoAnalytics(){
  finally{if(button){button.disabled=false;button.textContent="↻ Atualizar métricas";}}
 }
 </script></body></html>
+
+
+/* SIDEBAR V2 — forcefully replace prior navigation appearance */
+.layout > .side{
+  width:292px!important;min-width:292px!important;flex:0 0 292px!important;
+  padding:28px 19px 20px!important;gap:10px!important;
+  border-right:1px solid #26345a!important;border-radius:0!important;
+  background:linear-gradient(155deg,#101329 0%,#090d1e 48%,#06172b 100%)!important;
+  box-shadow:10px 0 38px rgba(0,0,0,.32)!important;
+}
+.layout > .side .brand-logo{
+  min-height:104px!important;margin:0 0 25px!important;padding:22px 14px!important;
+  border:1px solid #36406b!important;border-radius:20px!important;
+  background:linear-gradient(135deg,#1c2550 0%,#10182f 58%,#121126 100%)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.08)!important;
+}
+.layout > .side .brand-logo img{max-width:210px!important;max-height:62px!important}
+.layout > .side .side-label{
+  margin:20px 9px 5px!important;padding:0 0 8px!important;
+  border-bottom:1px solid #202b49!important;color:#7486b5!important;
+  font-size:10px!important;font-weight:900!important;letter-spacing:2.2px!important;
+}
+.layout > .side .nav{
+  position:relative!important;min-height:52px!important;margin:0!important;padding:10px 13px!important;
+  gap:13px!important;border:1px solid transparent!important;border-radius:15px!important;
+  background:transparent!important;color:#c0cce6!important;font-size:13px!important;font-weight:700!important;
+  box-shadow:none!important;transform:none!important;
+}
+.layout > .side .nav i{
+  display:grid!important;place-items:center!important;width:34px!important;height:34px!important;flex:0 0 34px!important;
+  border:1px solid #303958!important;border-radius:11px!important;background:#171e36!important;
+  color:#a8b9e8!important;font-size:17px!important;
+}
+.layout > .side .nav:hover{
+  background:#17213d!important;border-color:#2c3b63!important;color:#fff!important;transform:translateX(3px)!important;
+}
+.layout > .side .nav.active{
+  border:1px solid #7561ff!important;
+  background:linear-gradient(105deg,#633cff 0%,#394dff 55%,#087fe9 100%)!important;
+  color:#fff!important;box-shadow:0 9px 25px rgba(67,75,255,.3),inset 0 1px rgba(255,255,255,.16)!important;
+}
+.layout > .side .nav.active i{
+  background:rgba(255,255,255,.17)!important;border-color:rgba(255,255,255,.25)!important;color:#fff!important;box-shadow:none!important;
+}
+.layout > .side .side-footer{
+  margin-top:auto!important;padding:15px 12px!important;border:1px solid #2c3a5f!important;border-radius:15px!important;
+  background:linear-gradient(120deg,#141d37,#101629)!important;
+}
+.layout > .side .side-footer-mark{width:39px!important;height:39px!important;border-radius:12px!important}
+@media(max-width:720px){
+ .layout > .side{width:100%!important;min-width:0!important;flex:0 0 auto!important;padding:10px 12px!important;gap:6px!important;border-radius:0!important}
+ .layout > .side .brand-logo{min-height:0!important;width:150px!important;min-width:150px!important;margin:0 8px 0 0!important;padding:8px!important;border-radius:12px!important}
+ .layout > .side .brand-logo img{max-height:34px!important}
+ .layout > .side .side-label{display:none!important}
+ .layout > .side .nav{min-height:42px!important;padding:7px 10px!important;gap:7px!important;border-radius:11px!important;font-size:12px!important}
+ .layout > .side .nav i{width:28px!important;height:28px!important;flex-basis:28px!important;font-size:14px!important}
+ .layout > .side .side-footer{display:none!important}
+}
+@media(max-width:480px){
+ .layout > .side .brand-logo{width:112px!important;min-width:112px!important}
+ .layout > .side .nav{padding:7px 8px!important;font-size:11px!important}
+ .layout > .side .nav i{display:none!important}
+}
