@@ -24,7 +24,7 @@ export async function onRequestPost({ request, env }) {
     if (!new RegExp("^instagram-media/" + session.userId + "/[0-9a-f-]{36}$", "i").test(videoKey)) {
       return json({ error: "O vídeo preparado para o Instagram não foi encontrado." }, 400);
     }
-    if (!/^[\\w-]{10,200}$/.test(driveFileId)) {
+    if (!/^[\w-]{10,200}$/.test(driveFileId)) {
       return json({ error: "Não foi possível identificar o vídeo salvo no Google Drive." }, 400);
     }
     if (!Number.isSafeInteger(size) || size <= 0 || size > 80 * 1024 * 1024) {
