@@ -1,13 +1,14 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
 });
 
-async function getTokens(env,userId) {
-  const encrypted = await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
-  if (!encrypted) throw new Error("Conecte sua conta Google novamente.");
-  let tokens = await decryptJson(env, encrypted);
+async function getTokens(env,userId,accountId="") {
+  let tokens = await getSocialAccount(env,userId,"youtube",accountId);
+  if (!tokens) throw new Error("Conecte ou selecione uma conta YouTube novamente.");
+  const storageKey = accountId ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens;
   if (!tokens.refresh_token) throw new Error("A autorização Google não tem token de renovação. Reconecte a conta.");
@@ -24,7 +25,7 @@ async function getTokens(env,userId) {
   const refreshed = await response.json();
   if (!response.ok || !refreshed.access_token) throw new Error("Não foi possível renovar a autorização Google.");
   tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, tokens));
+  await env.POSTFLOW3_KV.put(storageKey, await encryptJson(env, tokens));
   return tokens;
 }
 
@@ -36,6 +37,7 @@ export async function onRequestPost({ request, env }) {
   try {
     const input = await request.json();
     const fileId = String(input.fileId || "").trim();
+    const youtubeAccountId = String(input.youtubeAccountId || "").trim().slice(0,180);
     const title = String(input.title || "").trim().slice(0, 100);
     const description = String(input.description || "").trim().slice(0, 5000);
     const publicationMode = input.publicationMode === "immediate" ? "immediate" : "scheduled";
@@ -45,7 +47,7 @@ export async function onRequestPost({ request, env }) {
     if (publicationMode === "scheduled" && (!scheduledAt || !date || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000)) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro." }, 400);
     }
-    const tokens = await getTokens(env,session.userId);
+    const tokens = await getTokens(env,session.userId,youtubeAccountId);
     const auth = { Authorization: "Bearer " + tokens.access_token };
     const driveMetaResponse = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId) + "?fields=id,name,mimeType,size,trashed", { headers: auth });
     const meta = await driveMetaResponse.json();
