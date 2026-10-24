@@ -1,7 +1,7 @@
 import { getSession, userKey } from "../_lib/security.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 const safe=(v,max)=>String(v||"").trim().slice(0,max);
-const isPendingPost=post=>{const status=String(post?.status||"").trim().toLowerCase();if(/publicad|published|success|conclu[ií]d|falha|erro|failed|cancelad/.test(status))return false;return ["scheduled","agendado","queued","pending","pendente","na fila","em fila","rascunho","draft","processing","in_progress"].includes(status)||!!(post?.scheduledAt||post?.scheduled_at)&&!post?.publishedAt&&!post?.published_at;};
+const isPendingPost=post=>{const status=String(post?.status||"").trim().toLowerCase();if(/publicad|published|success|conclu[ií]d|falha|erro|failed|cancelad/.test(status))return false;return ["scheduled","agendado","queued","pending","pendente","na fila","em fila","rascunho","draft","processing","in_progress"].includes(status)||!!(post?.scheduledAt||post?.scheduled_at||post?.date)&&!post?.publishedAt&&!post?.published_at&&!post?.published_at;};
 export async function onRequestGet({request,env}){
  const session=await getSession(request,env);if(!session)return json({error:"Faça login novamente."},401);
  if(!env.POSTFLOW3_KV)return json({error:"Armazenamento KV não configurado."},503);
