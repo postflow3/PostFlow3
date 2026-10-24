@@ -123,6 +123,18 @@ async function cleanupDriveIfComplete(env, userId, post) {
   const youtubeDone = !hasYoutube || post.youtubeStatus === "published";
   const instagramDone = !hasInstagram || post.instagramStatus === "published" || post.status === "published_on_instagram";
   if (!youtubeDone || !instagramDone || post.driveSourceDeleted) return false;
+  if (post.driveCleanupGroup) {
+    const all = await env.POSTFLOW3_KV.list({ prefix: userKey(userId, "post:"), limit: 1000 });
+    for (const item of all.keys) {
+      if (item.name === userKey(userId, "post:" + post.id)) continue;
+      const sibling = await env.POSTFLOW3_KV.get(item.name, "json");
+      if (sibling && sibling.driveCleanupGroup === post.driveCleanupGroup &&
+          sibling.instagramStatus !== "published" && sibling.status !== "published_on_instagram" && sibling.status !== "published") {
+        post.driveCleanupPending = true;
+        return false;
+      }
+    }
+  }
 
   let fileId = post.driveFileId || "";
   let metadataKey = "";
