@@ -1,4 +1,5 @@
-import { getSession, verifyStateCookie, encryptJson, userKey } from "../_lib/security.js";
+import { getSession, verifyStateCookie } from "../_lib/security.js";
+import { saveSocialAccount } from "../_lib/social-accounts.js";
 
 // Redeploy after Google OAuth secrets are configured in the Cloudflare Pages preview environment.
 
@@ -27,9 +28,19 @@ export async function onRequestGet({ request, env }) {
     });
     const tokens = await response.json();
     if (!response.ok || !tokens.access_token) return respond("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.", 502);
-    const stored = { ...tokens, expiry_date: Date.now() + Number(tokens.expires_in || 3600) * 1000, saved_at: Date.now() };
-    await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-owner"), await encryptJson(env, stored));
-    return respond("Google conectado!", "A autorização do YouTube e a permissão de leitura do Google Drive foram guardadas criptografadas no servidor.", 200, true);
+    let channelId = "", channelTitle = "";
+    const channelResponse = await fetch("https://youtube.googleapis.com/youtube/v3/channels?part=snippet&mine=true", {
+      headers: { Authorization: "Bearer " + tokens.access_token, Accept: "application/json" }
+    });
+    const channelData = await channelResponse.json().catch(() => ({}));
+    if (channelResponse.ok && channelData.items?.length) {
+      channelId = String(channelData.items[0].id || "");
+      channelTitle = String(channelData.items[0].snippet?.title || "");
+    }
+    if (!channelId) return respond("Canal não encontrado", "O Google autorizou a conta, mas não retornou um canal do YouTube. Confirme que essa conta Google possui um canal e tente novamente.", 422);
+    const stored = { ...tokens, channel_id: channelId, channel_title: channelTitle, expiry_date: Date.now() + Number(tokens.expires_in || 3600) * 1000, saved_at: Date.now() };
+    await saveSocialAccount(env, session.userId, "youtube", channelId, channelTitle, stored);
+    return respond("YouTube conectado!", "O canal " + channelTitle + " foi salvo como uma conta independente. Você pode conectar outros canais sem substituir este.", 200, true);
   } catch {
     return respond("Erro na conexão", "Confira os secrets e a configuração de armazenamento do Cloudflare Pages. Nenhum token foi exibido nesta página.", 500);
   }
