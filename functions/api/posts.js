@@ -29,3 +29,27 @@ export async function onRequestPost({request,env}){
   return json({post},201);
  }catch{return json({error:"Não foi possível salvar o vídeo. Tente um arquivo menor."},500)}
 }
+
+export async function onRequestDelete({request,env}){
+ const session=await getSession(request,env);if(!session)return json({error:"Faça login novamente."},401);
+ if(!env.POSTFLOW3_KV)return json({error:"Armazenamento KV não configurado."},503);
+ try{
+  const prefix=userKey(session.userId,"post:");
+  const list=await env.POSTFLOW3_KV.list({prefix,limit:100});
+  let cancelled=0,failed=0;
+  for(const item of list.keys){
+   const key=item.name;
+   const post=await env.POSTFLOW3_KV.get(key,"json");
+   if(!post)continue;
+   const status=String(post.status||"").toLowerCase();
+   const pending=(status==="scheduled"||status==="agendado"||status==="queued"||status==="pending"||status==="pendente"||status==="na fila"||status==="em fila");
+   if(!pending)continue;
+   try{
+    if(env.POSTFLOW3_MEDIA&&post.videoKey)await env.POSTFLOW3_MEDIA.delete(post.videoKey);
+    await env.POSTFLOW3_KV.delete(key);
+    cancelled++;
+   }catch{failed++;}
+  }
+  return json({ok:true,cancelled,failed,message:cancelled?"Agendamentos cancelados.":"Nenhum agendamento pendente encontrado."});
+ }catch{return json({error:"Não foi possível limpar os agendamentos."},500)}
+}
