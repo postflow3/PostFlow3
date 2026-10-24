@@ -8,7 +8,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 async function token(env,userId,accountId="") {
   let t = await getSocialAccount(env,userId,"youtube",accountId);
   if (!t) throw new Error("Conecte ou selecione novamente a conta YouTube.");
-  const storageKey = accountId ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
+  const storageKey = accountId && accountId !== "primary" ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
   const expires = Number(t.expiry_date || ((t.saved_at || 0) + Number(t.expires_in || 0) * 1000));
   if (t.access_token && expires > Date.now() + 60000) return t.access_token;
   if (!t.refresh_token) throw new Error("A autorização Google expirou. Reconecte o YouTube.");
