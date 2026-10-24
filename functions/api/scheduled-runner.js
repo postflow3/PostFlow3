@@ -1,14 +1,14 @@
 import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 const due = post => post.publicationMode === "immediate" || !post.scheduledAt || new Date(post.scheduledAt).getTime() <= Date.now();
 const hasPlatform = (post, platform) => Array.isArray(post.platforms) ? post.platforms.includes(platform) : platform === "YouTube" ? Boolean(post.youtubeVideoId) : Boolean(post.instagramVideoKey);
 
-async function googleAccessToken(env, userId) {
-  const key = userKey(userId, "youtube-owner");
-  const raw = await env.POSTFLOW3_KV.get(key);
-  if (!raw) throw new Error("Conecte novamente a conta Google.");
-  let tokens = await decryptJson(env, raw);
+async function googleAccessToken(env, userId, accountId = "") {
+  let tokens = await getSocialAccount(env, userId, "youtube", accountId);
+  if (!tokens) throw new Error("Conecte novamente a conta YouTube selecionada.");
+  const key = accountId ? socialAccountKey(userId, "youtube", accountId) : userKey(userId, "youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A conexão Google não tem token de renovação.");
@@ -33,9 +33,8 @@ async function instagramSignature(env, key) {
 async function publishInstagramStep({ request, env, userId, post }) {
   const videoKey = String(post.instagramVideoKey || "");
   if (!new RegExp("^instagram-media/" + userId + "/[0-9a-f-]{36}$", "i").test(videoKey)) throw new Error("O vídeo salvo para o Instagram não foi encontrado.");
-  const raw = await env.POSTFLOW3_KV.get(userKey(userId, "instagram-owner"));
-  if (!raw) throw new Error("Conecte novamente o Instagram.");
-  const account = await decryptJson(env, raw);
+  const account = await getSocialAccount(env, userId, "instagram", String(post.instagramAccountId || ""));
+  if (!account) throw new Error("Conecte novamente a conta Instagram selecionada.");
   if (!account.access_token || !account.user_id) throw new Error("A conexão do Instagram está incompleta.");
   let creationId = post.instagramCreationId;
   if (!creationId) {
@@ -103,7 +102,7 @@ async function publishInstagramStep({ request, env, userId, post }) {
 }
 
 async function checkYoutubePublication(env, userId, post) {
-  const token = await googleAccessToken(env, userId);
+  const token = await googleAccessToken(env, userId, String(post.youtubeAccountId || ""));
   const response = await fetch("https://www.googleapis.com/youtube/v3/videos?part=status&id=" + encodeURIComponent(post.youtubeVideoId), { headers: { Authorization: "Bearer " + token } });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error?.message || "Não foi possível confirmar o estado do vídeo no YouTube.");
@@ -135,7 +134,7 @@ async function cleanupDriveIfComplete(env, userId, post) {
       try { fileId = JSON.parse(raw).fileId || ""; } catch {}
     }
   }
-  const token = await googleAccessToken(env, userId);
+  const token = await googleAccessToken(env, userId, String(post.youtubeAccountId || ""));
   if (!fileId && post.filename && Number(post.size) > 0) {
     // Recover legacy posts only if filename + size identify exactly one Drive file.
     const escapedName = String(post.filename).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
