@@ -1,13 +1,14 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
 });
 
-async function token(env,userId) {
-  const saved = await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
-  if (!saved) throw new Error("Conecte a conta Google/YouTube novamente.");
-  let t = await decryptJson(env, saved);
+async function token(env,userId,accountId="") {
+  let t = await getSocialAccount(env,userId,"youtube",accountId);
+  if (!t) throw new Error("Conecte ou selecione novamente a conta YouTube.");
+  const storageKey = accountId ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
   const expires = Number(t.expiry_date || ((t.saved_at || 0) + Number(t.expires_in || 0) * 1000));
   if (t.access_token && expires > Date.now() + 60000) return t.access_token;
   if (!t.refresh_token) throw new Error("A autorização Google expirou. Reconecte o YouTube.");
@@ -18,7 +19,7 @@ async function token(env,userId) {
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.access_token) throw new Error("Não foi possível renovar a autorização Google.");
   t = { ...t, ...d, refresh_token: t.refresh_token, expiry_date: Date.now() + Number(d.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, t));
+  await env.POSTFLOW3_KV.put(storageKey, await encryptJson(env, t));
   return t.access_token;
 }
 
@@ -43,7 +44,7 @@ export async function onRequestPost({ request, env }) {
     const response = await fetch(pending.uploadUrl, {
       method: "PUT",
       headers: {
-        Authorization: "Bearer " + await token(env,session.userId),
+        Authorization: "Bearer " + await token(env,session.userId,pending.youtubeAccountId||""),
         "Content-Type": pending.mimeType,
         "Content-Length": String(bytes.byteLength),
         "Content-Range": "bytes " + start + "-" + end + "/" + total
@@ -68,7 +69,7 @@ export async function onRequestPost({ request, env }) {
       scheduledAt: pending.scheduledAt,
       publicationMode: pending.publicationMode || "scheduled",
       status: pending.publicationMode === "immediate" ? "published_on_youtube" : "scheduled_on_youtube",
-      youtubeVideoId: result.id, youtubeUrl: "https://www.youtube.com/watch?v=" + result.id,
+      youtubeVideoId: result.id, youtubeUrl: "https://www.youtube.com/watch?v=" + result.id, youtubeAccountId: pending.youtubeAccountId || null, youtubeAccountName: pending.youtubeAccountName || null,
       createdAt: pending.createdAt, uploadedAt: new Date().toISOString(), platforms: pending.publishInstagram ? ["YouTube", "Instagram"] : ["YouTube"], instagramVideoKey: pending.publishInstagram ? pending.instagramVideoKey : null, driveFileId: pending.publishInstagram ? (pending.driveFileId || null) : null, driveCleanupPending: true, instagramStatus: pending.publishInstagram ? (pending.publicationMode === "immediate" ? "pending" : "scheduled") : null
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
