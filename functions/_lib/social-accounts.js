@@ -39,10 +39,14 @@ export async function saveSocialAccount(env, userId, platform, accountId, userna
 export async function getSocialAccount(env, userId, platform, accountId = "") {
   if (!validPlatform(platform)) return null;
   const id = safeId(accountId);
-  if (id) {
+  if (id && id !== "primary") {
     const raw = await env.POSTFLOW3_KV.get(socialAccountKey(userId, platform, id));
     if (raw) return await decryptJson(env, raw);
     return null;
+  }
+  if (id === "primary") {
+    const legacy = await env.POSTFLOW3_KV.get(userKey(userId, platform + "-owner"));
+    return legacy ? await decryptJson(env, legacy) : null;
   }
   const raw = await env.POSTFLOW3_KV.get(userKey(userId, platform + "-owner"));
   return raw ? await decryptJson(env, raw) : null;
