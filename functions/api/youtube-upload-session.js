@@ -8,7 +8,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 async function getAccessToken(env,userId,accountId="") {
   let tokens = await getSocialAccount(env,userId,"youtube",accountId);
   if (!tokens) throw new Error("Conecte ou selecione uma conta YouTube no PostFlow3.");
-  const storageKey = accountId ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
+  const storageKey = accountId && accountId !== "primary" ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A autorização não tem token de renovação. Reconecte o YouTube.");
