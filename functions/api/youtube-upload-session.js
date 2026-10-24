@@ -1,13 +1,14 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
 });
 
-async function getAccessToken(env,userId) {
-  const encrypted = await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
-  if (!encrypted) throw new Error("Conecte a conta Google/YouTube no PostFlow3.");
-  let tokens = await decryptJson(env, encrypted);
+async function getAccessToken(env,userId,accountId="") {
+  let tokens = await getSocialAccount(env,userId,"youtube",accountId);
+  if (!tokens) throw new Error("Conecte ou selecione uma conta YouTube no PostFlow3.");
+  const storageKey = accountId ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A autorização não tem token de renovação. Reconecte o YouTube.");
@@ -28,7 +29,7 @@ async function getAccessToken(env,userId) {
     expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000,
     saved_at: Date.now()
   };
-  await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, tokens));
+  await env.POSTFLOW3_KV.put(storageKey, await encryptJson(env, tokens));
   return tokens.access_token;
 }
 
@@ -49,6 +50,7 @@ export async function onRequestPost({ request, env }) {
     const instagramVideoKey = String(input.instagramVideoKey || "").trim();
     const instagramDriveFileId = String(input.driveFileId || "").trim();
     const publishInstagram = input.publishInstagram === true;
+    const youtubeAccountId = String(input.youtubeAccountId || "").trim().slice(0,180);
     if (publishInstagram && !new RegExp("^instagram-media/"+session.userId+"/[0-9a-f-]{36}$","i").test(instagramVideoKey)) return json({ error: "O vídeo do Instagram não foi preparado corretamente." }, 400);
     if (publishInstagram && !/^[\w-]{10,200}$/.test(instagramDriveFileId)) return json({ error: "Não foi possível identificar o arquivo original no Google Drive." }, 400);
     const date = scheduledAt ? new Date(scheduledAt) : null;
@@ -60,7 +62,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro para permitir o envio e processamento." }, 400);
     }
 
-    const accessToken = await getAccessToken(env,session.userId);
+    const accessToken = await getAccessToken(env,session.userId,youtubeAccountId);
     const status = publicationMode === "immediate"
       ? { privacyStatus: "public", selfDeclaredMadeForKids: false }
       : { privacyStatus: "private", publishAt: date.toISOString(), selfDeclaredMadeForKids: false };
@@ -86,14 +88,14 @@ export async function onRequestPost({ request, env }) {
 
     const uploadId = crypto.randomUUID();
     const pending = {
-      uploadId, uploadUrl, title, description, filename, mimeType, size,
+      uploadId, uploadUrl, title, description, filename, mimeType, size, youtubeAccountId,
       publicationMode, instagramVideoKey: publishInstagram ? instagramVideoKey : null, driveFileId: publishInstagram ? instagramDriveFileId : null, publishInstagram,
       scheduledAt: publicationMode === "scheduled" ? date.toISOString() : null,
       createdAt: new Date().toISOString(),
       status: "uploading"
     };
     await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, pending), { expirationTtl: 604800 });
-    return json({ uploadId, chunkSize: 8 * 1024 * 1024, message: "Sessão de envio criada para o canal do YouTube conectado." }, 201);
+    return json({ uploadId, chunkSize: 8 * 1024 * 1024, message: "Sessão de envio criada para a conta YouTube selecionada." }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Não foi possível iniciar o envio.").slice(0, 350) }, 500);
   }
