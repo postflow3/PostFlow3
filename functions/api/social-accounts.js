@@ -1,4 +1,4 @@
-import { getSession, userKey } from "../_lib/security.js";
+import { getSession, userKey, decryptJson } from "../_lib/security.js";
 import { listSocialAccounts, removeSocialAccount } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -17,7 +17,6 @@ export async function onRequestGet({ request, env }) {
       if (!legacy) continue;
       let data;
       try {
-        const { decryptJson } = await import("../_lib/security.js");
         data = await decryptJson(env, legacy);
       } catch { continue; }
       const accountId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "primary");
