@@ -38,6 +38,7 @@ export async function onRequestPost({ request, env }) {
     const input = await request.json();
     const fileId = String(input.fileId || "").trim();
     const youtubeAccountId = String(input.youtubeAccountId || "").trim().slice(0,180);
+    const driveCleanupGroup = String(input.driveCleanupGroup || "").trim().slice(0,180);
     const title = String(input.title || "").trim().slice(0, 100);
     const description = String(input.description || "").trim().slice(0, 5000);
     const publicationMode = input.publicationMode === "immediate" ? "immediate" : "scheduled";
