@@ -28,19 +28,23 @@ export async function onRequestGet({ request, env }) {
     });
     const tokens = await response.json();
     if (!response.ok || !tokens.access_token) return respond("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.", 502);
-    let channelId = "", channelTitle = "";
-    const channelResponse = await fetch("https://youtube.googleapis.com/youtube/v3/channels?part=snippet&mine=true", {
+    const channelResponse = await fetch("https://youtube.googleapis.com/youtube/v3/channels?part=snippet&mine=true&maxResults=50", {
       headers: { Authorization: "Bearer " + tokens.access_token, Accept: "application/json" }
     });
     const channelData = await channelResponse.json().catch(() => ({}));
-    if (channelResponse.ok && channelData.items?.length) {
-      channelId = String(channelData.items[0].id || "");
-      channelTitle = String(channelData.items[0].snippet?.title || "");
+    const channels = channelResponse.ok && Array.isArray(channelData.items) ? channelData.items : [];
+    if (!channels.length) return respond("Canal não encontrado", "O Google autorizou a conta, mas não retornou um canal do YouTube. Confirme que essa conta Google possui um canal e tente novamente.", 422);
+    const connectedChannels = [];
+    for (const channel of channels) {
+      const channelId = String(channel.id || "");
+      if (!channelId) continue;
+      const channelTitle = String(channel.snippet?.title || channelId);
+      const stored = { ...tokens, channel_id: channelId, channel_title: channelTitle, expiry_date: Date.now() + Number(tokens.expires_in || 3600) * 1000, saved_at: Date.now() };
+      await saveSocialAccount(env, session.userId, "youtube", channelId, channelTitle, stored);
+      connectedChannels.push(channelTitle);
     }
-    if (!channelId) return respond("Canal não encontrado", "O Google autorizou a conta, mas não retornou um canal do YouTube. Confirme que essa conta Google possui um canal e tente novamente.", 422);
-    const stored = { ...tokens, channel_id: channelId, channel_title: channelTitle, expiry_date: Date.now() + Number(tokens.expires_in || 3600) * 1000, saved_at: Date.now() };
-    await saveSocialAccount(env, session.userId, "youtube", channelId, channelTitle, stored);
-    return respond("YouTube conectado!", "O canal " + channelTitle + " foi salvo como uma conta independente. Você pode conectar outros canais sem substituir este.", 200, true);
+    if (!connectedChannels.length) return respond("Canal não encontrado", "Não foi possível identificar os canais do YouTube autorizados.", 422);
+    return respond("YouTube conectado!", connectedChannels.length === 1 ? "O canal " + connectedChannels[0] + " foi salvo como uma conta independente. Você pode conectar outros canais sem substituir este." : connectedChannels.length + " canais do YouTube foram salvos como contas independentes: " + connectedChannels.join(", ") + ".", 200, true);
   } catch {
     return respond("Erro na conexão", "Confira os secrets e a configuração de armazenamento do Cloudflare Pages. Nenhum token foi exibido nesta página.", 500);
   }
