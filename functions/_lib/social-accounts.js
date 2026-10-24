@@ -42,6 +42,13 @@ export async function getSocialAccount(env, userId, platform, accountId = "") {
   if (id && id !== "primary") {
     const raw = await env.POSTFLOW3_KV.get(socialAccountKey(userId, platform, id));
     if (raw) return await decryptJson(env, raw);
+    // Migrate access for a legacy primary connection without moving or exposing its token.
+    const legacy = await env.POSTFLOW3_KV.get(userKey(userId, platform + "-owner"));
+    if (legacy) {
+      const data = await decryptJson(env, legacy);
+      const legacyId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "");
+      if (legacyId && legacyId === id) return data;
+    }
     return null;
   }
   if (id === "primary") {
