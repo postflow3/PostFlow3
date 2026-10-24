@@ -1,4 +1,1241 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PostFlow 3 — Demonstração</title><style>
-:root{font-family:Inter,system-ui,Arial,sans-serif;color:#111638;background:#f6f7ff}*{box-sizing:border-box}body{margin:0}button,input,textarea{font:inherit}button{cursor:pointer;border:0}.layout{display:flex;min-height:100vh}.side{width:235px;background:#fff;border-right:1px solid #e8e9f6;padding:28px 16px;flex-shrink:0}.brand{font-size:25px;font-weight:850;letter-spacing:-1px;margin:0 0 35px}.brand span,.gradient{background:linear-gradient(100deg,#632cff,#d72fea,#009cf6);background-clip:text;color:transparent}.nav{display:flex;align-items:center;gap:12px;padding:13px 15px;margin:5px 0;border-radius:12px;color:#565e82;background:none;width:100%;text-align:left}.nav.active{background:linear-gradient(90deg,#6535ff,#9951ff);color:white;box-shadow:0 7px 18px #6b39ff33}.main{padding:30px;max-width:1550px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:16px}.top h1{margin:0;font-size:27px}.muted{color:#79809e;font-size:13px}.primary{background:linear-gradient(90deg,#632cff,#be30f4);color:#fff;border-radius:12px;padding:13px 21px;font-weight:700;box-shadow:0 7px 18px #8035ff35}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:28px 0}.card{background:#fff;border:1px solid #eceefa;border-radius:17px;padding:22px;box-shadow:0 8px 30px #282b6010}.metric{font-size:28px;font-weight:800;margin:9px 0}.positive{color:#10a36a;font-size:12px}.accounts{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px}.account{display:flex;justify-content:space-between;align-items:center;gap:10px}.account b{display:block}.account small{color:#9b7c2a}.pill{border-radius:50px;background:#fff5d8;color:#a07a12;padding:7px 10px;font-size:11px}.work{display:grid;grid-template-columns:1.2fr .85fr;gap:20px}.field{width:100%;border:1px solid #e0e4f3;border-radius:10px;padding:12px;margin:7px 0 14px;background:#fff;outline-color:#8c45ff}.upload{border:2px dashed #d6dafa;border-radius:14px;padding:25px;text-align:center;background:#fafaff;display:block;cursor:pointer;margin:12px 0}.upload strong{display:block;margin:9px}.checks{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 18px}.checks label{display:flex;gap:7px;align-items:center}.queue{margin-top:22px}.entry{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid #eef0fa;padding:14px 0}.tag{font-size:11px;color:#6440c8;background:#f0eaff;padding:5px 9px;border-radius:30px}.hidden{display:none}.banner{background:linear-gradient(110deg,#efe7ff,#f9faff 55%,#dff7ff);border-radius:18px;padding:23px;margin:22px 0}.banner h2{margin:0 0 8px}.banner p{margin:0;color:#5f6585}.note{background:#fff9e7;border:1px solid #ffe5a0;border-radius:12px;padding:12px;font-size:12px;color:#755b19;margin-top:16px}@media(max-width:950px){.side{width:75px;padding:20px 8px}.brand{font-size:13px}.nav{font-size:0;justify-content:center}.nav i{font-size:20px}.stats{grid-template-columns:repeat(2,1fr)}.accounts{grid-template-columns:1fr}.work{grid-template-columns:1fr}}@media(max-width:520px){.layout{display:block}.side{width:100%;display:flex;overflow-x:auto;padding:12px;gap:8px}.brand{margin:8px}.nav{width:auto;white-space:nowrap;padding:10px}.main{padding:16px}.stats{gap:8px}.card{padding:15px}.top h1{font-size:21px}}
-</style></head><body><div class="layout"><aside class="side"><div class="brand">▶ <span>PostFlow 3</span></div><button class="nav active" data-page="inicio"><i>⌂</i> Início</button><button class="nav" data-page="conteudos"><i>▣</i> Conteúdos</button><button class="nav" data-page="agendamentos"><i>▦</i> Agendamentos</button><button class="nav" data-page="publicacoes"><i>↗</i> Publicações</button><button class="nav" data-page="estatisticas"><i>▥</i> Estatísticas</button><button class="nav" data-page="contas"><i>♧</i> Contas</button><button class="nav" data-page="configuracoes"><i>⚙</i> Configurações</button></aside><main class="main"><div class="top"><div><h1 id="heading">Olá! 👋</h1><div class="muted">Gerencie seus conteúdos em todas as plataformas, em um só lugar.</div></div><button class="primary" onclick="show('conteudos')">＋ Novo conteúdo</button></div><div class="banner"><h2>Crie uma vez. Publique em todos os lugares.</h2><p>Seu painel de controle para Instagram, YouTube e TikTok.</p></div><section id="inicio"><div class="stats"><div class="card"><div class="muted">▶ Conteúdos preparados</div><div class="metric" id="count">0</div><span class="positive">Biblioteca local</span></div><div class="card"><div class="muted">▦ Agendados (demo)</div><div class="metric" id="scheduled">0</div><span class="muted">Não enviados</span></div><div class="card"><div class="muted">♧ Contas conectadas</div><div class="metric">0/3</div><span class="muted">Aguardando APIs</span></div><div class="card"><div class="muted">↗ Publicações reais</div><div class="metric">0</div><span class="muted">Integrações pendentes</span></div></div><div class="accounts"><div class="card account"><div><b>📸 Instagram</b><small>Não conectado</small></div><span class="pill">Pendente</span></div><div class="card account"><div><b>▶️ YouTube</b><small>Não conectado</small></div><span class="pill">Pendente</span></div><div class="card account"><div><b>🎵 TikTok</b><small>Não conectado</small></div><span class="pill">Pendente</span></div></div><div class="work"><div class="card"><h3>Criar novo conteúdo</h3><p class="muted">Prepare uma publicação para as três plataformas.</p><button class="primary" onclick="show('conteudos')">Enviar vídeo →</button></div><div class="card"><h3>Fila de publicações</h3><div id="homeQueue" class="muted">Nenhum conteúdo preparado.</div></div></div></section><section id="conteudos" class="hidden"><div class="work"><div class="card"><h3>Novo conteúdo</h3><label class="upload">☁️<strong id="fileName">Selecione seu vídeo</strong><span class="muted">MP4, MOV ou WebM (demonstração local)</span><input id="video" type="file" accept="video/mp4,video/quicktime,video/webm" style="display:none"></label><label>Título<input id="title" class="field" placeholder="Título do seu vídeo"></label><label>Descrição e hashtags<textarea id="description" class="field" rows="4" placeholder="Escreva a legenda..."></textarea></label><b>Publicar em</b><div class="checks"><label><input type="checkbox" id="yt" checked> YouTube</label><label><input type="checkbox" id="ig" checked> Instagram</label><label><input type="checkbox" id="tt" checked> TikTok</label></div><label>Data e horário planejados<input type="datetime-local" class="field" id="date"></label><button class="primary" onclick="save()">Salvar na fila de demonstração</button><div class="note">Esta prévia não envia vídeos nem conecta contas. Apenas salva os metadados no navegador. O arquivo de vídeo não é armazenado.</div></div><div class="card"><h3>Pré-visualização</h3><video id="preview" controls playsinline style="width:100%;max-height:440px;border-radius:14px;background:#111638"></video><p class="muted">Confira o vídeo antes de preparar a postagem.</p></div></div></section><section id="agendamentos" class="hidden"><div class="card"><h3>Agendamentos planejados</h3><div id="agendaList"></div></div></section><section id="publicacoes" class="hidden"><div class="card"><h3>Fila de conteúdos</h3><div id="publishList"></div></div></section><section id="estatisticas" class="hidden"><div class="card"><h3>Estatísticas</h3><p class="muted">Os dados reais de visualizações, curtidas e alcance aparecerão após a integração das APIs e quando as plataformas disponibilizarem essas métricas.</p></div></section><section id="contas" class="hidden"><div class="accounts" style="margin-top:20px"><div class="card"><h3>📸 Instagram</h3><p class="muted">Conta profissional necessária.</p><button class="primary" onclick="alert('Conexão real disponível após configurar Meta OAuth e hospedar o sistema.')">Conectar Instagram</button></div><div class="card"><h3>▶️ YouTube</h3><p class="muted">Autorização Google OAuth.</p><button class="primary" onclick="connectYouTube()">Conectar YouTube</button></div><div class="card"><h3>🎵 TikTok</h3><p class="muted">Autorização oficial do TikTok.</p><button class="primary" onclick="alert('Conexão real depende do TikTok Login Kit e aprovação dos escopos de publicação.')">Conectar TikTok</button></div></div></section><section id="configuracoes" class="hidden"><div class="card"><h3>Configurações</h3><p class="muted">PostFlow 3 — demonstração local. Login, armazenamento seguro, automação e conexões serão habilitados na versão hospedada.</p><button onclick="if(confirm('Apagar os dados de demonstração deste navegador?')){localStorage.removeItem('postflow3_demo');render();}" class="primary">Limpar dados de teste</button></div></section></main></div><script>
-let posts=[];try{posts=JSON.parse(localStorage.getItem('postflow3_demo')||'[]')}catch(e){};const $=id=>document.getElementById(id);let url;function show(p){document.querySelectorAll('main section').forEach(e=>e.classList.toggle('hidden',e.id!==p));document.querySelectorAll('.nav').forEach(e=>e.classList.toggle('active',e.dataset.page===p));$('heading').textContent=({inicio:'Olá! 👋',conteudos:'Criar conteúdo',agendamentos:'Agendamentos',publicacoes:'Publicações',estatisticas:'Estatísticas',contas:'Conectar contas',configuracoes:'Configurações'})[p];render()}document.querySelectorAll('.nav').forEach(e=>e.onclick=()=>show(e.dataset.page));$('video').onchange=e=>{const f=e.target.files[0];if(!f)return;$('fileName').textContent=f.name;if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);$('preview').src=url};function save(){const title=$('title').value.trim();const nets=[['yt','YouTube'],['ig','Instagram'],['tt','TikTok']].filter(([id])=>$(id).checked).map(x=>x[1]);if(!title||!$('video').files.length||!nets.length){alert('Escolha um vídeo, digite um título e selecione ao menos uma plataforma.');return}posts.unshift({id:Date.now(),title,description:$('description').value,filename:$('video').files[0].name,nets,date:$('date').value});localStorage.setItem('postflow3_demo',JSON.stringify(posts));$('title').value='';$('description').value='';$('date').value='';$('video').value='';$('fileName').textContent='Selecione seu vídeo';$('preview').removeAttribute('src');$('preview').load();alert('Conteúdo salvo na fila de demonstração. Nenhuma postagem foi enviada.');show('publicacoes')}function render(){const list=posts.length?posts.map(p=>`<div class="entry"><div><b>${escapeHtml(p.title)}</b><div class="muted">${escapeHtml(p.filename)} · ${p.nets.join(' · ')} ${p.date?'· '+escapeHtml(p.date.replace('T',' ')):''}</div></div><span class="tag">Rascunho</span></div>`).join(''):'<p class="muted">Nenhum conteúdo preparado.</p>';$('publishList').innerHTML=list;$('agendaList').innerHTML=posts.filter(p=>p.date).length?posts.filter(p=>p.date).map(p=>`<div class="entry"><b>${escapeHtml(p.title)}</b><span class="tag">${escapeHtml(p.date.replace('T',' '))}</span></div>`).join(''):'<p class="muted">Nenhum agendamento planejado.</p>';$('homeQueue').innerHTML=list;$('count').textContent=posts.length;$('scheduled').textContent=posts.filter(p=>p.date).length}function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function connectYouTube(){try{const password=prompt('Digite a senha de administrador do PostFlow3 para continuar:');if(password===null)return;const login=await fetch('/.netlify/functions/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({password})});const loginData=await login.json().catch(()=>({}));if(!login.ok)throw new Error(loginData.error||'Não foi possível entrar.');window.location.href='/.netlify/functions/youtube-auth';}catch(e){alert(e.message||'Erro ao iniciar a conexão.')}}render();</script></body></html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PostFlow3 — Central de publicações</title><style>:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#18213d;background:#f5f6fc;font-synthesis:none;text-rendering:optimizeLegibility;--ink:#18213d;--muted:#77819d;--line:#e7eaf4;--purple:#7655f6;--cyan:#27c8dc}*{box-sizing:border-box}html{min-height:100%;background:#f5f6fc}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 75% 0%,#f0edff 0,transparent 36%),#f5f6fc}button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #9c8aff;outline-offset:2px}.layout{display:flex;min-height:100vh}.side{width:252px;background:linear-gradient(180deg,#171b35 0%,#202447 100%);color:#fff;padding:28px 16px 20px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid #292e50;box-shadow:8px 0 30px #2024470b}.brand{font-size:24px;font-weight:850;letter-spacing:-1.1px;margin:0 0 38px;padding:0 10px;color:#fff}.brand span,.gradient{background:linear-gradient(105deg,#a99aff,#e49bff 52%,#69e6f2);background-clip:text;-webkit-background-clip:text;color:transparent}.nav{display:flex;align-items:center;gap:12px;padding:13px 15px;margin:6px 0;border-radius:12px;color:#b9c0dc;background:transparent;width:100%;text-align:left;font-size:13px;font-weight:650;white-space:nowrap}.nav i{font-style:normal;font-size:18px;width:22px;text-align:center}.nav:hover{background:#ffffff12;color:#fff}.nav.active{background:linear-gradient(105deg,#7655f6,#8b5cf6 65%,#a15af2);color:white;box-shadow:0 9px 22px #7655f64a}.main{padding:32px clamp(18px,3vw,44px) 48px;max-width:1650px;width:100%;margin:0 auto;min-width:0}.top{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:22px;border-bottom:1px solid #e8eaf5}.top h1{margin:0 0 7px;font-size:clamp(23px,2.2vw,31px);letter-spacing:-1px;color:#202746;font-weight:800}.muted{color:var(--muted);font-size:13px;line-height:1.55}.primary{background:linear-gradient(105deg,#7655f6,#9958ef);color:#fff;border-radius:12px;padding:13px 20px;font-weight:750;font-size:13px;box-shadow:0 7px 18px #7655f633}.primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px #7655f644}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;margin:24px 0}.card{background:#fff;border:1px solid #e9ebf5;border-radius:18px;padding:22px;box-shadow:0 8px 28px #252c5a08;min-width:0}.card h3{margin:0 0 9px;font-size:17px;letter-spacing:-.3px;color:#202746}.metric{font-size:31px;line-height:1.2;font-weight:850;letter-spacing:-1.2px;margin:12px 0;color:#202746}.positive{color:#0b9a70;font-size:12px;font-weight:700}.accounts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-bottom:20px}.account{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:91px}.account b{display:block;font-size:14px;margin-bottom:7px;color:#222a48}.account small{color:#8a92ab;font-size:12px}.pill{border-radius:50px;background:#fff5d8;color:#a07a12;padding:7px 11px;font-size:11px;font-weight:750;white-space:nowrap}.work{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:start}.field{width:100%;border:1px solid #dfe4f2;border-radius:11px;padding:12px 13px;margin:7px 0 15px;background:#fbfcff;color:#222a48;outline-color:#9279ff;transition:border-color .18s,box-shadow .18s}.field:focus{border-color:#9c88ff;box-shadow:0 0 0 4px #8f75ff16}.upload{border:1.5px dashed #bfc6e5;border-radius:15px;padding:25px;text-align:center;background:linear-gradient(145deg,#faf9ff,#f6fbff);display:block;cursor:pointer;margin:12px 0;color:#6250b3}.upload:hover{border-color:#9278ff;background:#f6f2ff}.upload strong{display:block;margin:10px;color:#2b3152;font-size:14px}.checks{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 18px}.checks label{display:flex;gap:8px;align-items:center;padding:10px 12px;background:#f7f7ff;border:1px solid #e8e8f7;border-radius:10px;font-size:13px;font-weight:650}.checks input{accent-color:#7655f6}.queue{margin-top:22px}.entry{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid #eef0f8;padding:15px 0}.entry b{font-size:13px;color:#252c4a}.tag{font-size:11px;color:#6545c6;background:#f0ebff;padding:6px 10px;border-radius:30px;font-weight:750;white-space:nowrap}.hidden{display:none!important}.banner{position:relative;overflow:hidden;background:linear-gradient(110deg,#e9e4ff 0%,#f7f3ff 48%,#e0f8fc 100%);border:1px solid #e8e2ff;border-radius:20px;padding:27px 29px;margin:24px 0 25px}.banner:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:5%;top:-90px;background:#ffffff50;pointer-events:none}.banner h2{margin:0 0 9px;font-size:clamp(19px,2vw,25px);letter-spacing:-.7px;color:#29274f}.banner p{margin:0;color:#626a8c;font-size:13px}.note{background:#fff9e9;border:1px solid #f5e5b4;border-radius:12px;padding:13px 15px;font-size:12px;line-height:1.55;color:#755b19;margin-top:16px}.auth-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#ece8ffef,#e5f9ffed);backdrop-filter:blur(14px)}.auth-card{width:min(100%,460px);background:#fff;border:1px solid #e8e9f6;border-radius:24px;padding:32px;box-shadow:0 28px 90px #24205b25}.auth-card h1{margin:0 0 8px;font-size:29px;letter-spacing:-.8px;color:#202746}.auth-card p{color:#68708f;line-height:1.6;font-size:14px}.auth-tabs{display:flex;gap:8px;margin:21px 0}.auth-tabs button{flex:1;border-radius:11px;padding:12px;background:#f1efff;color:#5d36b7;font-weight:750}.auth-tabs button.active{background:linear-gradient(105deg,#7655f6,#9958ef);color:white;box-shadow:0 6px 15px #7655f633}.auth-form label{display:block;font-size:12px;font-weight:750;color:#303855;margin:13px 0 5px}.auth-form input{width:100%;border:1px solid #dfe3f2;border-radius:11px;padding:13px;margin:4px 0 8px;background:#fbfcff}.auth-form .primary{width:100%;margin-top:12px}.auth-message{font-size:13px;color:#b42318;min-height:18px;margin-top:8px;overflow-wrap:anywhere}.auth-foot{font-size:12px;color:#8187a2;margin-top:17px;line-height:1.5}section> .card{margin-top:4px}#conteudos label:not(.upload){font-size:13px;font-weight:700;color:#333b5b}#conteudos .checks label{font-weight:650}#preview{object-fit:contain}a{color:#6846d7;font-weight:650;text-decoration:none}a:hover{text-decoration:underline}#driveFileSelect{background:#fff}@media(min-width:1500px){.main{padding-top:38px}.stats{gap:20px}.card{padding:24px}}@media(max-width:1050px){.side{width:214px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.work{grid-template-columns:1fr}.accounts{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){.layout{display:block}.side{position:sticky;top:0;z-index:50;width:100%;height:auto;display:flex;align-items:center;gap:5px;overflow-x:auto;padding:10px 12px;border-right:0;border-bottom:1px solid #303453;box-shadow:0 6px 18px #20244712}.brand{font-size:17px;margin:0 10px 0 0;padding:0;flex-shrink:0}.nav{width:auto;flex-shrink:0;margin:0;padding:10px 12px;font-size:12px;gap:7px}.nav i{font-size:15px;width:auto}.main{padding:19px 14px 34px}.top{align-items:flex-start;flex-wrap:wrap}.top>div:first-child{min-width:180px;flex:1}.top h1{font-size:23px}.top>div:last-child{display:flex;flex-wrap:wrap}.banner{padding:22px 20px;margin:18px 0}.stats{gap:10px;margin:16px 0}.card{padding:17px;border-radius:15px}.metric{font-size:27px}.accounts{grid-template-columns:1fr;gap:10px}.work{gap:13px}.auth-card{padding:25px 21px}}@media(max-width:420px){.side{gap:3px}.brand{font-size:15px}.nav{padding:9px 10px;font-size:11px}.nav i{display:none}.main{padding:16px 11px 28px}.top .primary{padding:11px 13px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}.metric{font-size:24px}.muted{font-size:12px}.banner h2{font-size:19px}.checks{gap:8px}.checks label{padding:9px}.upload{padding:20px 13px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}/* APPROVED DARK NAVY THEME */:root{color-scheme:dark;--ink:#edf4ff;--muted:#9bb5d9;--line:#12365f;--purple:#1768ff;--cyan:#10d8f0;background:#020b1c;color:#edf4ff}html,body{background:#020b1c!important;color:#edf4ff!important}body{background:radial-gradient(ellipse at 55% -10%,#102b67 0,transparent 45%),linear-gradient(120deg,#020817,#03142b 70%,#020b1c)!important}.side{background:linear-gradient(180deg,#031126,#04152e 70%,#020b1c)!important;border-right:1px solid #12345c!important}.brand{color:#fff!important}.brand span,.gradient{background:linear-gradient(100deg,#fff,#2585ff 52%,#1de4ed)!important;background-clip:text!important;-webkit-background-clip:text!important;color:transparent!important}.nav{color:#d4e5ff!important}.nav:hover{background:#0a2a51!important;color:#fff!important}.nav.active{background:linear-gradient(100deg,#0866ff,#0648d6)!important;box-shadow:0 8px 22px #005bff35!important;color:#fff!important}.top{border-color:#14345b!important}.top h1,.card h3,.account b,#conteudos label:not(.upload){color:#f0f6ff!important}.muted,.account small{color:#9ab5da!important}.primary{background:linear-gradient(100deg,#0867ff,#652cff)!important;color:#fff!important;border:1px solid #287cff!important}.card{background:linear-gradient(145deg,#061a34,#041329)!important;border:1px solid #123d6c!important;border-radius:14px!important;box-shadow:0 8px 24px #0003!important;color:#edf4ff!important}.banner{background:linear-gradient(105deg,#061d50,#2110a2 58%,#4b10ee)!important;border:1px solid #176aff!important;border-radius:14px!important}.banner h2{color:#fff!important}.banner p{color:#d0e0ff!important}.metric{color:#fff!important}.positive{color:#12e8c0!important}.pill{background:#063b3d!important;color:#42f4ce!important;border:1px solid #0d706c!important}.field,.auth-form input,select,textarea,input{background:#041a35!important;color:#eff6ff!important;border-color:#174574!important}.field::placeholder,input::placeholder,textarea::placeholder{color:#6689b4!important}.upload{background:linear-gradient(145deg,#04152d,#061c3b)!important;border-color:#0876ff!important;color:#9fcaff!important}.upload strong{color:#f0f6ff!important}.checks label{background:#061b35!important;border-color:#16436f!important;color:#e5f1ff!important}.entry{border-color:#12365e!important}.entry b{color:#f1f7ff!important}.tag{color:#9cc6ff!important;background:#102f5c!important}.note{background:#2b210b!important;border-color:#6b5014!important;color:#f8d98b!important}.auth-screen{background:linear-gradient(135deg,#020817f2,#041b39f5)!important}.auth-card{background:#06172e!important;border-color:#16416d!important;box-shadow:0 28px 90px #0009!important}.auth-card h1{color:#fff!important}.auth-card p,.auth-foot{color:#a4bbda!important}.auth-tabs button{background:#0a2b52!important;color:#b9d5ff!important}.auth-tabs button.active{background:linear-gradient(100deg,#0867ff,#652cff)!important;color:#fff!important}.auth-form label{color:#d9e9ff!important}.auth-message{color:#ff9696!important}a{color:#5caaff!important}#driveFileSelect{background:#041a35!important}@media(max-width:720px){.side{background:#031126!important}.nav.active{background:linear-gradient(100deg,#0866ff,#0648d6)!important}}
+/* DASHBOARD REDESIGN: approved reference structure */
+.top{display:flex;justify-content:space-between;align-items:center;gap:22px;padding:16px 0 20px;border-bottom:1px solid #12345c}.top-brand{display:flex;align-items:center;gap:34px;min-width:0}.top-logo{font-size:27px;font-weight:900;letter-spacing:-1px;white-space:nowrap;color:#fff}.top-logo span{background:linear-gradient(90deg,#fff,#318bff,#18d7f0);background-clip:text;-webkit-background-clip:text;color:transparent}.top-logo small{display:block;font-size:10px;font-weight:500;letter-spacing:0;color:#9ab5da}.top-search{display:flex;align-items:center;gap:12px;min-width:240px;width:min(40vw,500px);padding:13px 17px;border-radius:10px;background:#061e43;border:1px solid #103c70;color:#72a9ed;font-size:13px}.user-menu{display:flex;align-items:center;gap:12px;color:#fff;white-space:nowrap}.user-menu b,.user-menu small{display:block}.user-menu b{font-size:13px}.user-menu small{font-size:11px;color:#10e0c2;margin-top:4px}.user-avatar{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#5c9dff,#6334ff);font-weight:800}.notification{color:#b9d4ff;font-size:22px}.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(285px,.82fr);gap:20px;align-items:start}.dashboard-main,.dashboard-side{min-width:0}.dashboard-main .banner{display:flex;align-items:center;gap:22px;min-height:130px;margin:16px 0;background:linear-gradient(110deg,#061d50,#2110a2 58%,#4b10ee)!important}.hero-icon{font-size:50px;filter:drop-shadow(0 5px 10px #0005)}.hero-slogan{margin-left:auto;color:#fff;font-size:15px;font-style:italic;transform:rotate(-4deg);white-space:nowrap}.dashboard-main .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}.stat-card{padding:16px!important;border-radius:12px!important}.stat-label{font-size:11px;color:#9dbbe1;min-height:28px}.stat-card .metric{font-size:27px;margin:8px 0}.stat-card .positive,.stat-card .muted{font-size:10px}.create-shortcut,.queue-card,.side-panel{padding:18px!important;margin:14px 0!important}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.section-heading h3{margin:0!important}.section-heading p{margin:5px 0 0}.section-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:10px;background:linear-gradient(135deg,#0878ff,#6335ff);font-size:18px}.quick-destinations{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.destination-chip{display:flex;flex-direction:column;gap:4px;padding:10px 13px;background:#061d3a;border:1px solid #164779;border-radius:10px;color:#eef6ff;font-size:12px;font-weight:700}.destination-chip small{font-size:10px;color:#18e4c0;font-weight:500}.text-button{background:transparent;color:#47a4ff;padding:4px;font-size:12px;font-weight:700}.side-panel .section-heading{margin-bottom:8px}.side-panel .section-heading h3{font-size:15px}.live-dot{color:#16dfc1;font-size:10px;white-space:nowrap}.social-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #12365c}.social-icon{display:grid;place-items:center;width:39px;height:39px;border-radius:50%;font-size:19px;font-weight:900;flex-shrink:0}.yt-icon{background:#f00;color:#fff}.ig-icon{background:linear-gradient(135deg,#ffb13d,#f12e83,#783eff);color:#fff}.tt-icon{background:#050b18;color:#6cecf3;border:1px solid #203a60}.social-info{min-width:0;flex:1}.social-info b,.social-info small{display:block}.social-info b{font-size:12px;color:#f4f8ff}.social-info small{font-size:10px;color:#12e4c0;margin-top:3px}.social-arrow{font-size:25px;color:#70a8eb}.outline-button{width:100%;padding:10px;border-radius:9px;background:#08234a;border:1px solid #1a4e83;color:#91c2ff;font-size:11px;font-weight:700}.drive-icon{color:#27e1cd}.drive-note{font-size:10px;padding:10px;border-radius:8px;background:#061f39;color:#8fb9e9;border:1px solid #143b62}.queue-card .entry{padding:12px 0}.queue-card .entry b{font-size:12px}.queue-card .tag{font-size:10px}.dashboard-side .side-panel:first-child{margin-top:16px!important}
+@media(max-width:1150px){.dashboard-grid{grid-template-columns:minmax(0,1fr)}.dashboard-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.dashboard-side .side-panel{margin:0!important}.dashboard-side .side-panel:first-child{margin-top:0!important}.top-brand{gap:16px}.top-search{width:30vw;min-width:170px}}
+@media(max-width:720px){.top{align-items:flex-start;flex-direction:column}.top-brand{width:100%;align-items:flex-start;flex-direction:column;gap:12px}.top-search{width:100%}.user-menu{width:100%;justify-content:flex-end}.dashboard-grid{display:block}.dashboard-main .banner{gap:12px;padding:17px}.hero-icon{font-size:35px}.hero-slogan{display:none}.dashboard-main .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-side{display:block}.dashboard-side .side-panel{margin:12px 0!important}.section-heading{align-items:flex-start;flex-wrap:wrap}}
+
+.ai-caption-card{margin:15px 0 20px;padding:17px;border:1px solid #1558a3;border-radius:13px;background:linear-gradient(145deg,#061e3c,#081637)}.ai-caption-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}.ai-caption-head b{display:block;color:#f4f8ff;font-size:14px}.ai-caption-head p{margin:5px 0 0;color:#9bbbe4;font-size:11px;line-height:1.5}.ai-caption-icon{display:grid;place-items:center;width:39px;height:39px;flex-shrink:0;border-radius:11px;background:linear-gradient(135deg,#0878ff,#6c35ff);font-size:20px;color:white}.ai-context-label{display:block;margin-top:12px;font-size:12px;color:#d9e9ff;font-weight:700}.ai-caption-button{width:100%;margin-top:4px}.ai-caption-status{margin-top:10px;white-space:pre-wrap}.ai-caption-result{margin-top:12px;padding:12px;border-radius:10px;background:#061329;border:1px solid #174574}.ai-caption-result b{color:#70e4d3}.ai-caption-result p{font-size:12px;line-height:1.55;color:#b5ccec}.ai-caption-result .outline-button{margin-top:5px}@media(max-width:720px){.ai-caption-card{padding:13px}}\n/* POSTFLOW ULTRA POLISH */
+.side{display:flex;flex-direction:column}.side-label{padding:20px 15px 5px;color:#577ba8;font-size:9px;font-weight:850;letter-spacing:1.5px}.side-footer{display:flex;align-items:center;gap:10px;margin-top:auto;padding:15px 10px 4px;border-top:1px solid #12345c;color:#eef6ff}.side-footer-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0878ff,#652cff);font-size:17px}.side-footer b,.side-footer small{display:block}.side-footer b{font-size:11px;letter-spacing:.2px}.side-footer small{font-size:9px;color:#82a9d8;margin-top:4px}.side-live{width:7px;height:7px;border-radius:50%;background:#18e2be;box-shadow:0 0 0 4px #18e2be16;margin-left:auto}.top-search{padding:0 12px;gap:10px}.top-search input{width:100%;min-width:0;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#eaf4ff!important;font-size:12px;padding:12px 0}.top-search input::placeholder{color:#7195c1}.search-glyph{font-size:22px;color:#74aaff}.top-search kbd{flex-shrink:0;border:1px solid #285080;border-radius:5px;padding:3px 6px;font-size:9px;color:#83a9d8;background:#08254a}@media(max-width:720px){.side{flex-direction:row}.side-label,.side-footer{display:none}.top-search{min-width:0}.top-search kbd{display:none}}
+
+/* live data labels */.stat-label{color:#a8c7ef}.dashboard-side .entry{gap:10px}.dashboard-side .entry .tag{white-space:nowrap}.dashboard-side #upcomingQueue .entry,.dashboard-side #recentActivity .entry{padding:10px 0;border-top:1px solid #12365c}.drive-note{line-height:1.5}.data-hint{font-size:10px;color:#8fb9e9}
+
+/* Calendar and social account metrics, matching approved dark dashboard */.platform-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}.platform-stat{display:flex;align-items:center;gap:13px;padding:15px!important}.platform-stat-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;font-size:20px;flex-shrink:0}.platform-stat>div:last-child{display:flex;flex-direction:column;gap:3px;min-width:0}.platform-stat small{color:#9abce7;font-size:11px}.platform-stat strong{font-size:24px;color:#f4f8ff}.platform-stat span{font-size:10px;color:#6fdacb}.calendar-card{margin:18px 0!important;padding:18px!important}.calendar-controls{display:flex;gap:7px;flex-wrap:wrap}.calendar-controls .outline-button{width:auto;padding:8px 10px;font-size:10px}.calendar-range{font-size:12px;color:#7fb9ff;margin:6px 0 12px;font-weight:700}.schedule-calendar{overflow-x:auto}.calendar-days{display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));gap:7px;min-width:740px}.calendar-day{min-height:155px;border:1px solid #12365c;border-radius:10px;background:linear-gradient(180deg,#061a34,#041329);overflow:hidden}.calendar-day.is-today{border-color:#1683ff;box-shadow:inset 0 0 0 1px #1683ff33}.calendar-day-head{display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid #12365c;color:#8fb7e8;font-size:11px}.calendar-day-head b{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;color:#f4f8ff;background:#0d315b;font-size:12px}.calendar-day.is-today .calendar-day-head b{background:#0867ff}.calendar-events{padding:6px;display:flex;flex-direction:column;gap:6px}.calendar-event{padding:7px;border-radius:7px;display:flex;flex-direction:column;gap:3px;min-width:0;font-size:10px}.calendar-event b{font-size:9px;text-transform:uppercase;letter-spacing:.2px}.calendar-event span{font-size:10px;font-weight:800}.calendar-event small{font-size:9px;line-height:1.35;overflow-wrap:anywhere}.calendar-event.scheduled{background:linear-gradient(120deg,#092e73,#342083);border:1px solid #2859c0;color:#dceaff}.calendar-event.published{background:linear-gradient(120deg,#064b48,#07534c);border:1px solid #117d71;color:#b9fff0}.calendar-event.failed{background:#501e32;border:1px solid #9b3557;color:#ffd4e0}.calendar-empty{color:#44658b;font-size:12px;display:block;text-align:center;padding:14px 0}.calendar-empty-note{font-size:11px;color:#789bc4;padding:8px 2px}.calendar-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:13px;color:#9bb5d9;font-size:10px}.calendar-legend span{display:flex;align-items:center;gap:6px}.calendar-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}.legend-published{background:#16d7b6}.legend-scheduled{background:#287bff}.legend-failed{background:#f06a95}@media(max-width:720px){.platform-stats{grid-template-columns:1fr}.calendar-card .section-heading{display:block}.calendar-controls{margin-top:12px}.calendar-controls .outline-button{flex:1}}
+
+.agenda-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.cancel-one-button{padding:7px 10px!important;font-size:12px!important}
+.danger-button{border:1px solid #ef667f!important;color:#ff9bad!important;background:rgba(180,35,70,.12)!important}.danger-button:hover{background:rgba(180,35,70,.22)!important}.danger-button:disabled{opacity:.65;cursor:wait}
+/* Refined publication lists: clear hierarchy, compact rows, consistent status */.queue-card,.dashboard-side .side-panel{overflow:hidden}.queue-card #homeQueue,.dashboard-side #upcomingQueue,.dashboard-side #recentActivity{display:flex;flex-direction:column;gap:0}.post-row{display:flex;align-items:flex-start;gap:11px;padding:13px 0;border-top:1px solid #12365c;min-width:0}.post-row:first-child,.activity-row:first-child{border-top:0}.post-platform-icon{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:10px;background:#0a2a50;color:#9ec9ff;font-size:16px;font-weight:800}.post-platform-icon.published{background:#06443f;color:#5cf2d5}.post-platform-icon.scheduled{background:#0a2f70;color:#82b7ff}.post-platform-icon.failed{background:#4b2035;color:#ff9fbd}.post-platform-icon.draft{background:#162a46;color:#9bb5d9}.post-row-main{flex:1;min-width:0}.post-row-title{font-size:12px;font-weight:750;color:#f1f6ff;line-height:1.4;overflow-wrap:anywhere}.post-row-meta{font-size:10px;color:#82a9d8;margin-top:4px;line-height:1.35;overflow-wrap:anywhere}.post-row-time{font-size:10px;color:#a8c5e8;margin-top:6px;display:flex;gap:5px;align-items:center}.post-time-icon{color:#5da7ff}.post-status{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;max-width:90px;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:750;white-space:nowrap}.post-status.published{background:#064b45;color:#58f0d1}.post-status.scheduled{background:#0a3275;color:#9cc5ff}.post-status.failed{background:#4e2036;color:#ffabc3}.post-status.draft{background:#182b45;color:#a8bfdc}.post-row-error{font-size:10px;color:#ff9fbd;margin-top:5px;overflow-wrap:anywhere}.activity-row{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid #12365c}.activity-dot{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:12px;font-weight:800;background:#162a46;color:#b4cbe7}.activity-dot.published{background:#06443f;color:#55f0d1}.activity-dot.scheduled{background:#0a3275;color:#9cc5ff}.activity-dot.failed{background:#4e2036;color:#ffabc3}.activity-main{min-width:0;display:flex;flex-direction:column;gap:4px}.activity-main b{font-size:11px;color:#eaf3ff}.activity-main small{font-size:10px;line-height:1.4;color:#8daed7;overflow-wrap:anywhere}.empty-state{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:22px 12px;color:#83a5cf}.empty-state>span{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;background:#0a2b50;color:#70adff;font-size:19px}.empty-state b{font-size:11px;color:#dbeaff}.empty-state small{font-size:10px;line-height:1.5;color:#809fc4;max-width:260px}.dashboard-side .section-heading{margin-bottom:10px}.dashboard-side .side-panel{padding:16px!important}.dashboard-side .side-panel .section-heading h3{font-size:14px}.queue-card #homeQueue .entry{border-top:1px solid #12365c;padding:12px 0}.queue-card #homeQueue .entry:first-child{border-top:0}.queue-card #homeQueue .entry>div{min-width:0}.queue-card #homeQueue .entry .muted{font-size:10px;line-height:1.5;overflow-wrap:anywhere}.queue-card #homeQueue .tag{flex-shrink:0;white-space:nowrap}.dashboard-side #upcomingQueue .post-row{padding:12px 0}.dashboard-side #upcomingQueue .post-row-title{font-size:11px}.dashboard-side #upcomingQueue .post-status{max-width:75px;padding:5px 7px}.dashboard-side #recentActivity .activity-row{padding:11px 0}@media(max-width:720px){.post-row{gap:8px}.post-platform-icon{width:30px;height:30px}.post-status{font-size:8px;padding:5px 6px}.dashboard-side .side-panel{padding:14px!important}}
+
+/* LAUNCH FINISH — visual polish without changing publishing logic */
+:root{--panel:#061a34;--panel-2:#081f3e;--blue:#1478ff;--violet:#6b35ff;--mint:#18dfbd;--soft-border:#17416c}
+body{letter-spacing:.005em}
+.side{padding:25px 14px 18px}
+.side .brand{font-size:25px;margin-bottom:22px}
+.side-label{padding:19px 14px 7px;font-size:9px;letter-spacing:1.7px}
+.nav{position:relative;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}
+.nav:not(.active):hover{border-color:#17416c;transform:translateX(2px)}
+.nav.active{border-color:#3685ff55}
+.main{max-width:1720px;padding-top:25px}
+.top{gap:20px}
+.top-logo{line-height:1.05}
+.top-logo small{margin-top:7px;line-height:1.4}
+.top-search{border-radius:12px;box-shadow:inset 0 1px #ffffff08}
+.top-search:focus-within{border-color:#2686ff;box-shadow:0 0 0 3px #1478ff20}
+.user-avatar{box-shadow:0 0 0 3px #1478ff20}
+.banner{box-shadow:0 14px 35px #0002}
+.dashboard-main .banner{position:relative;isolation:isolate}
+.dashboard-main .banner:before{content:"";position:absolute;z-index:-1;width:240px;height:240px;right:15%;top:-155px;border-radius:50%;border:1px solid #ffffff15;box-shadow:0 0 0 28px #ffffff05,0 0 0 58px #ffffff04}
+.card{transition:border-color .18s,transform .18s,box-shadow .18s}
+.stat-card:hover,.platform-stat:hover{border-color:#2778cf!important;transform:translateY(-2px);box-shadow:0 12px 28px #0004!important}
+.stat-card .metric{font-variant-numeric:tabular-nums}
+.section-heading{min-width:0}
+.section-heading p{font-size:12px;line-height:1.55}
+.primary{min-height:42px;border-radius:11px!important;font-weight:750;letter-spacing:.01em}
+.primary:focus-visible,.outline-button:focus-visible,.text-button:focus-visible{outline:3px solid #69aaff;outline-offset:3px}
+.outline-button{border-radius:10px;transition:background .18s,border-color .18s}
+.outline-button:hover{background:#0c3262;border-color:#2b75c2;color:#fff}
+.text-button:hover{color:#fff}
+.social-row{transition:background .18s}
+.social-row:hover{background:#ffffff04}
+.storage-hint,.settings-note{display:flex;gap:12px;align-items:flex-start;margin:14px 0 17px;padding:14px;border:1px solid #174574;border-radius:12px;background:linear-gradient(120deg,#061d3b,#07172e)}
+.storage-hint-icon{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:#0b3a70;color:#9ecaff;font-size:17px}
+.storage-hint b,.settings-note b{display:block;color:#eaf4ff;font-size:12px}
+.storage-hint p,.settings-note p{margin:5px 0 0;color:#9ab5d9;font-size:11px;line-height:1.55}
+#conteudos .work>.card:first-child{border-top:2px solid #1478ff}
+#conteudos .work>.card:last-child{position:sticky;top:22px}
+#conteudos label:not(.upload){display:block;line-height:1.45}
+#conteudos .field{border-radius:10px}
+#conteudos .checks label{flex:1;min-width:145px;justify-content:center;cursor:pointer}
+#conteudos .checks input{width:16px;height:16px}
+#publishButton{width:100%;margin-top:5px;min-height:48px;font-size:14px}
+#preview{border:1px solid #173b63;min-height:180px}
+#agendamentos .card,#publicacoes .card,#estatisticas .card,#configuracoes .card{border-top:2px solid #1478ff}
+#contas .account,#contas .card{min-width:0}
+.auth-screen{background:radial-gradient(ellipse at 50% 10%,#0b3470 0,transparent 45%),linear-gradient(135deg,#020817f7,#03152cf7)!important}
+.auth-card{position:relative;overflow:hidden;width:min(100%,480px);padding:36px!important;border-radius:22px!important}
+.auth-card:before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;background:linear-gradient(90deg,#0878ff,#6335ff,#17d7e7)}
+.auth-card>.brand{font-size:26px;margin:0 0 30px;padding:0}
+.auth-card h1{font-size:30px;line-height:1.15}
+.auth-card>p{font-size:13px}
+.auth-form input{min-height:46px}
+.auth-form .primary{min-height:47px}
+.auth-foot{border-top:1px solid #14365b;padding-top:14px}
+::selection{background:#1d65c7;color:#fff}
+@media(max-width:1150px){.main{padding-top:20px}.dashboard-main .banner{min-height:115px}}
+@media(max-width:720px){.side{padding:10px 11px;gap:5px}.side .brand{font-size:16px;margin:0 8px 0 0}.nav{border-radius:10px}.nav:not(.active):hover{transform:none}.main{padding:14px 12px 28px}.top{padding-bottom:15px}.user-menu{gap:9px}.dashboard-main .banner{min-height:0;margin:14px 0;padding:18px}.dashboard-main .stats{gap:9px}.stat-card{padding:13px!important}.stat-card .metric{font-size:25px}.create-shortcut,.queue-card,.side-panel{padding:15px!important}.section-heading{gap:10px}.section-heading .primary{width:100%}#conteudos .work>.card:last-child{position:static}#conteudos .checks label{min-width:0}.auth-card{padding:27px 22px!important}.auth-card>.brand{margin-bottom:23px}}
+@media(max-width:420px){.top-logo{font-size:24px}.user-menu .notification{display:none}.dashboard-main .banner{align-items:flex-start}.dashboard-main .stats{gap:7px}.stat-card .metric{font-size:23px}.stat-label{font-size:10px}.storage-hint,.settings-note{padding:11px}.auth-card h1{font-size:27px}}
+
+/* ANALYTICS DASHBOARD v1 — based on saved PostFlow3 history */
+.analytics-header{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:18px 0 16px}.analytics-header h2{margin:0 0 6px;font-size:23px;letter-spacing:-.6px;color:#f3f8ff}.analytics-header .outline-button{width:auto;padding:10px 14px}.analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}.analytics-kpi{display:flex;align-items:center;gap:13px;padding:17px!important}.analytics-kpi-icon{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;border-radius:12px;font-size:21px;font-weight:800}.analytics-kpi-icon.blue{background:#0a2f64;color:#6bb4ff}.analytics-kpi-icon.green{background:#06483f;color:#56f0c5}.analytics-kpi-icon.purple{background:#2d205e;color:#b5a0ff}.analytics-kpi-icon.red{background:#4b2033;color:#ff9eb7}.analytics-kpi>div:last-child{min-width:0;display:flex;flex-direction:column;gap:4px}.analytics-kpi span{font-size:11px;color:#a8c7ef}.analytics-kpi strong{font-size:27px;line-height:1.1;color:#fff}.analytics-kpi small{font-size:10px;color:#789bc4;line-height:1.4}.analytics-panels{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:15px;align-items:stretch}.analytics-panel{padding:19px!important;margin:0 0 15px!important}.analytics-panel .section-heading{margin-bottom:15px}.weekly-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end;min-height:205px;padding:12px 0 0}.weekly-day{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;min-width:0;height:185px}.weekly-count{font-size:11px;color:#c9e3ff;font-weight:800}.weekly-track{height:130px;width:min(100%,32px);display:flex;align-items:flex-end;border-radius:8px;background:#061a34;border:1px solid #12365c;overflow:hidden}.weekly-bar{width:100%;min-height:3px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#1ee4d0,#0871ff);transition:height .2s}.weekly-day small{font-size:10px;color:#9bb9df}.platform-breakdown{display:flex;flex-direction:column;gap:17px;padding:7px 0}.platform-breakdown-row{display:flex;flex-direction:column;gap:8px}.platform-breakdown-label{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#d8e9ff}.platform-breakdown-label strong{color:#fff}.platform-track{height:9px;border-radius:30px;background:#061a34;border:1px solid #12365c;overflow:hidden}.platform-fill{height:100%;border-radius:30px;background:linear-gradient(90deg,#0878ff,#19d6df)}.platform-fill.instagram{background:linear-gradient(90deg,#ff8a39,#ec348b,#8c4cff)}.platform-fill.other{background:linear-gradient(90deg,#7c8ca7,#b7c3d8)}.analytics-empty{font-size:12px;color:#7e9fc6;line-height:1.6;padding:15px 0}.analytics-note{margin-top:1px!important}.analytics-note b{font-size:13px;color:#dcecff}.analytics-note p{margin:7px 0 0;line-height:1.65;font-size:11px}@media(max-width:1050px){.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.analytics-panels{grid-template-columns:1fr}}@media(max-width:520px){.analytics-header{align-items:flex-start;flex-direction:column}.analytics-header h2{font-size:20px}.analytics-grid{gap:9px}.analytics-kpi{padding:13px!important;gap:9px}.analytics-kpi-icon{width:34px;height:34px;font-size:17px}.analytics-kpi strong{font-size:23px}.analytics-kpi span{font-size:10px}.analytics-kpi small{font-size:9px}.analytics-panel{padding:14px!important}.weekly-chart{gap:5px}.weekly-track{width:min(100%,26px)}.weekly-day small{font-size:9px}}
+
+/* POSTFLOW3 BRAND REFRESH */
+.brand-logo{display:flex;align-items:center;justify-content:center;padding:13px 9px!important;margin-bottom:30px!important;border-radius:16px;background:linear-gradient(135deg,#020a20,#081c42 60%,#21083b);border:1px solid #183c72;box-shadow:0 10px 28px #02081755}.brand-logo img{display:block;width:100%;max-width:205px;height:auto;max-height:76px;object-fit:contain}.side .brand-logo{margin-left:0;margin-right:0}.auth-card>.brand-logo{margin:0 0 28px!important;padding:14px!important}.top-logo-image{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:10px 15px;border-radius:15px;background:linear-gradient(110deg,#020a20,#071b3b 66%,#21083b);border:1px solid #183c72;box-shadow:0 8px 22px #18264b12;max-width:340px}.top-logo-image img{display:block;width:min(100%,300px);height:auto;max-height:90px;object-fit:contain}.top-logo-image small{font-size:10px;letter-spacing:.25px;color:#a9c7ed;padding-left:4px}.side .brand-logo img{max-width:210px}@media(max-width:720px){.side .brand-logo{padding:5px 7px!important;margin:0 8px 0 0!important;width:142px;min-width:142px}.side .brand-logo img{max-height:44px}.auth-card>.brand-logo{width:100%;max-width:100%;margin-bottom:23px!important}.top-logo-image{width:100%;max-width:100%}.top-logo-image img{width:min(100%,260px);max-height:72px}}
+
+/* POSTFLOW3 PREMIUM LAYOUT PASS — visual-only overrides, no app logic changed */
+:root{color-scheme:dark;--ink:#edf5ff;--muted:#91a8c9;--line:#1b3557;--purple:#7048ff;--cyan:#13d9e8}
+html,body{background:#030916;color:#edf5ff}
+body{background:radial-gradient(ellipse at 82% -8%,#112b57 0,transparent 36%),radial-gradient(ellipse at 2% 18%,#071b3b 0,transparent 28%),#030916}
+.layout{gap:0}
+.side{width:258px;flex:0 0 258px;padding:24px 16px 18px;background:linear-gradient(180deg,#071329 0%,#050d1d 72%,#09091e 100%);border-right:1px solid #142b49;box-shadow:10px 0 35px #0002}
+.brand-logo{margin-bottom:26px!important}
+.side-label{margin:19px 10px 8px;color:#5f7da5;font-size:10px;letter-spacing:1.5px;font-weight:800}
+.nav{min-height:43px;width:100%;padding:11px 13px;margin:3px 0;border:1px solid transparent;border-radius:12px;background:transparent;color:#a7bbd7;text-align:left;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:650}
+.nav i{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#10233e;color:#81bfff;font-size:16px;font-style:normal;flex:0 0 25px}
+.nav:hover{background:#0b1c34;border-color:#193b61;color:#fff;transform:translateX(2px)}
+.nav.active{background:linear-gradient(100deg,#103d72,#19234b 70%,#25143f);border-color:#205a94;color:#fff;box-shadow:inset 3px 0 #13d9e8,0 7px 20px #0002}
+.nav.active i{background:linear-gradient(135deg,#00cde3,#2563ff);color:white}
+.side-footer{margin-top:auto;border:1px solid #1a3659;border-radius:15px;padding:13px;background:linear-gradient(135deg,#0c2140,#10152f);gap:10px}
+.side-footer-mark{display:grid;place-items:center;width:31px;height:31px;border-radius:10px;background:linear-gradient(135deg,#00d5e6,#2b63ff 55%,#c026d3);color:#fff}
+.side-footer b{color:#e8f4ff;font-size:11px}.side-footer small{color:#829ec4}
+.main{min-width:0;padding:27px clamp(18px,2.5vw,38px) 42px;background:transparent}
+.top{align-items:center;gap:20px;margin-bottom:25px;padding-bottom:20px;border-bottom:1px solid #142945}
+.top-brand{display:flex;align-items:center;gap:18px;min-width:0;flex:1}
+.top-logo-image{min-width:210px;max-width:250px;padding:9px 12px;background:linear-gradient(110deg,#07152a,#0b1b36 65%,#21103c);border-color:#193657;border-radius:14px}
+.top-logo-image img{width:100%;max-height:63px}
+.top-logo-image small{font-size:9px}
+.top-search{display:flex;align-items:center;gap:10px;flex:1;min-width:150px;max-width:420px;padding:0 12px;border:1px solid #1a3454;border-radius:12px;background:#081426;color:#6e8db6}
+.top-search input{min-width:0;width:100%;padding:12px 0;border:0;background:transparent;color:#eaf4ff;outline:none}
+.top-search input::placeholder{color:#617b9f}
+.top-search kbd{font-size:9px;letter-spacing:.7px;white-space:nowrap;color:#7290b8}
+.user-menu{gap:11px;color:#e6f1ff}
+.user-menu b{font-size:12px}.user-menu small{display:block;margin-top:3px;color:#7f9cc1;font-size:10px}
+.user-avatar{display:grid;place-items:center;width:38px;height:38px;border:1px solid #2362a1;border-radius:13px;background:linear-gradient(135deg,#0878ff,#6534e9 72%,#b22bdd);color:white;font-weight:800;box-shadow:0 5px 20px #1455b533}
+.notification{display:grid;place-items:center;width:36px;height:36px;border:1px solid #1b3557;border-radius:11px;background:#0a192d;color:#91caff}
+.top .nav{width:auto;min-height:36px;padding:8px 12px;margin:0}
+.banner{position:relative;overflow:hidden;display:flex;align-items:center;gap:20px;padding:26px 28px;margin:0 0 18px;border:1px solid #21508a;border-radius:20px;background:radial-gradient(ellipse at 88% 5%,#7a28bc66,transparent 42%),radial-gradient(ellipse at 4% 100%,#0878ff66,transparent 45%),linear-gradient(115deg,#0c2b51,#101d43 60%,#1a1238);box-shadow:0 16px 38px #0003}
+.banner:after{content:"";position:absolute;right:-60px;bottom:-135px;width:300px;height:300px;border-radius:50%;border:1px solid #70baff20;box-shadow:0 0 0 25px #70baff08,0 0 0 55px #70baff06;pointer-events:none}
+.banner h2{font-size:clamp(21px,2vw,29px);line-height:1.18;letter-spacing:-.8px;color:#f5f9ff;margin:0 0 8px}
+.banner p{max-width:560px;color:#b2c9e9;font-size:12px;line-height:1.7;margin:0}
+.hero-icon{display:grid;place-items:center;flex:0 0 52px;width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#00cfe3,#236aff 60%,#9c27db);font-size:24px;box-shadow:0 10px 26px #0878ff35}
+.hero-slogan{margin-left:auto;padding-left:20px;border-left:1px solid #ffffff20;color:#d5e7ff;font-size:12px;line-height:1.7;font-weight:750;white-space:nowrap}
+.card{min-width:0;border:1px solid #1a3454;border-radius:17px!important;background:linear-gradient(145deg,#0b192d,#081426 80%)!important;color:#e8f3ff;box-shadow:0 10px 30px #0002!important}
+.card h3,.section-heading h3{color:#edf6ff;font-size:14px;letter-spacing:-.15px}
+.muted,.section-heading p{color:#8da7ca!important}
+.stats{gap:13px;margin:0 0 15px}
+.stat-card{position:relative;overflow:hidden;padding:18px!important}
+.stat-card:after{content:"";position:absolute;right:-24px;top:-28px;width:82px;height:82px;border-radius:50%;background:#177aff0b;pointer-events:none}
+.stat-label{color:#a1b9d8;font-size:11px;font-weight:650;line-height:1.5}
+.stat-card .metric{margin:12px 0 7px;font-size:31px;letter-spacing:-1px;color:#fff}
+.positive{color:#53e6c1!important}
+.platform-stats{gap:13px;margin-bottom:16px}
+.platform-stat{padding:16px!important;gap:12px}
+.platform-stat-icon,.social-icon{border-radius:12px!important}
+.platform-stat small{color:#9bb5d6;font-size:10px}
+.platform-stat strong{color:#f4f8ff;font-size:22px}
+.platform-stat span{color:#718fb5;font-size:10px}
+.dashboard-grid{gap:18px}
+.dashboard-main,.dashboard-side{min-width:0;gap:15px}
+.dashboard-side .card{padding:18px!important}
+.section-heading{gap:14px;margin-bottom:13px}
+.section-heading .primary{white-space:nowrap}
+.create-shortcut,.queue-card{padding:20px!important}
+.create-shortcut{border-top:2px solid #0fbfdb!important}
+.quick-destinations{gap:9px;flex-wrap:wrap}
+.destination-chip{padding:9px 12px;border:1px solid #1d3b5d;border-radius:11px;background:#0a1b31;color:#dcecff;font-size:11px}
+.destination-chip small{color:#83a4cb}
+.social-row{padding:10px 8px;border-radius:11px}
+.social-info b{color:#edf6ff;font-size:12px}
+.social-info small{color:#86a3c8}
+.live-dot{color:#51e0bd!important;font-size:10px}
+.outline-button{min-height:37px;padding:9px 12px;border:1px solid #24466b;background:#0b1c32;color:#bcd7f8;border-radius:10px!important;font-size:11px;font-weight:700}
+.outline-button:hover{background:#10305a;border-color:#2f7bc0;color:#fff}
+.primary{min-height:42px;padding:11px 16px;border-radius:11px!important;background:linear-gradient(105deg,#0879ff 0%,#3858ff 48%,#a22be7 100%);color:#fff;font-weight:800;box-shadow:0 7px 20px #2458ed2b}
+.primary:hover{transform:translateY(-1px);box-shadow:0 11px 27px #2458ed45;filter:brightness(1.08)}
+.text-button{background:transparent;color:#73c9ff;font-size:11px;font-weight:750}
+#conteudos .work{gap:18px}
+#conteudos .work>.card{padding:23px!important}
+#conteudos .work>.card:first-child{border-top:2px solid #11d3e5!important}
+#conteudos h3{font-size:16px;margin-top:0}
+#conteudos label:not(.upload){color:#c3d6ef;font-size:12px;font-weight:650;margin:13px 0}
+#conteudos .field,.auth-form input{width:100%;border:1px solid #244263;background:#061225;color:#eef6ff;border-radius:11px;padding:12px 13px;transition:border-color .18s,box-shadow .18s}
+#conteudos .field:focus,.auth-form input:focus{border-color:#2387ec;box-shadow:0 0 0 3px #0878ff20;outline:none}
+#conteudos .field::placeholder,.auth-form input::placeholder{color:#607b9e}
+.upload{display:flex;align-items:center;gap:10px;padding:22px!important;border:1px dashed #2b6ba1!important;border-radius:15px!important;background:radial-gradient(ellipse at 50% 0%,#0d39704d,transparent 70%),#07172b!important;color:#a8d8ff!important;text-align:center;transition:border-color .2s,background .2s}
+.upload:hover{border-color:#16cfe1!important;background:#0a203b!important}
+.upload strong{color:#edf7ff;font-size:13px}
+.storage-hint,.settings-note{border-color:#1b466f;background:linear-gradient(120deg,#081d38,#0b1730)}
+.ai-caption-card{padding:17px!important;margin:17px 0;border:1px solid #253d70!important;border-radius:15px!important;background:linear-gradient(130deg,#101d3a,#0c1730 72%,#1b1239)!important}
+.ai-caption-head b{color:#f4f7ff}.ai-caption-head p{color:#9bb4d9}
+.ai-caption-icon{background:linear-gradient(135deg,#00cfe3,#3561ff 60%,#bc26e6)!important;color:#fff!important}
+.checks{gap:10px}
+.checks label{padding:12px;border:1px solid #203b5c;border-radius:12px;background:#08172b;color:#d6e8ff}
+.checks label:has(input:checked){border-color:#2369a4;background:linear-gradient(110deg,#0b2b4c,#151a3a)}
+#publishButton{margin-top:12px;min-height:48px}
+.note,.drive-note{padding:13px;border-radius:12px;border:1px solid #1a3c5e;background:#07172a;color:#8faed2;font-size:11px;line-height:1.7}
+#preview{width:100%;border-radius:14px;background:#020712;border:1px solid #203d5e;min-height:180px}
+#agendamentos .card,#publicacoes .card,#estatisticas .card,#configuracoes .card{border-top:1px solid #1a3454}
+.calendar-card{margin-top:18px;padding:21px!important}
+.calendar-controls{display:flex;flex-wrap:wrap;gap:7px}
+.calendar-range{color:#cce3ff;font-size:12px;font-weight:750;margin:12px 0}
+.schedule-calendar{gap:9px}
+.calendar-day{min-width:0;border:1px solid #1b3555!important;border-radius:13px!important;background:#071528!important;padding:10px!important}
+.calendar-day-head{color:#a9c6e7}
+.calendar-event{border-radius:9px!important;padding:8px!important;background:#0b2d50!important;border-left:3px solid #14d9e7!important;color:#dceeff}
+.calendar-legend{color:#8da8c9;font-size:10px}
+.post-row,.activity-row{border-bottom:1px solid #162e4b}
+.post-row-title{color:#eff6ff}.post-row-meta,.post-row-time{color:#87a4ca}
+.post-status{border-radius:999px!important;padding:5px 9px!important;font-size:10px;font-weight:750}
+.auth-screen{background:radial-gradient(ellipse at 12% 10%,#0a397a 0,transparent 34%),radial-gradient(ellipse at 90% 95%,#4b0876 0,transparent 32%),#020611!important}
+.auth-card{background:linear-gradient(150deg,#0b1b32,#071224 78%,#130e2c)!important;border:1px solid #1d3b5e!important;box-shadow:0 30px 100px #0008!important}
+.auth-card h1{color:#f4f8ff}.auth-card>p{color:#99b3d4}.auth-tabs{background:#071225;border:1px solid #1a3454;border-radius:12px;padding:4px}.auth-tabs button{border-radius:9px;color:#8da8ca}.auth-tabs button.active{background:linear-gradient(100deg,#0b65c9,#6036c9);color:white;box-shadow:0 4px 14px #0003}.auth-form label{color:#b9cde8}.auth-foot{color:#708caf}
+.analytics-kpi{background:linear-gradient(145deg,#0c1e35,#081426)!important}
+.analytics-note{background:linear-gradient(145deg,#0b1a2d,#081426)!important}
+@media(min-width:1500px){.main{max-width:none;padding-left:40px;padding-right:40px}.dashboard-grid{grid-template-columns:minmax(0,1.75fr) minmax(300px,.85fr)}}
+@media(max-width:1150px){.side{width:225px;flex-basis:225px}.top-brand{gap:12px}.top-logo-image{min-width:170px;max-width:205px}.hero-slogan{display:none}}
+@media(max-width:900px){.dashboard-grid{grid-template-columns:1fr}.dashboard-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.top{align-items:flex-start}.top-brand{flex-wrap:wrap}.top-search{max-width:none;flex-basis:100%}}
+@media(max-width:720px){.layout{display:block}.side{position:sticky;top:0;z-index:20;width:100%;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:9px 12px;border-right:0;border-bottom:1px solid #183250;background:#061225f5;backdrop-filter:blur(18px);gap:5px}.side .brand-logo{flex:0 0 135px;width:135px;min-width:135px;margin:0 8px 0 0!important;padding:5px 7px!important}.side .brand-logo img{max-height:39px}.side-label{display:none}.side .nav{flex:0 0 auto;width:auto;min-height:39px;margin:0;padding:7px 10px;white-space:nowrap;font-size:10px;gap:6px}.side .nav i{width:22px;height:22px;flex-basis:22px;font-size:13px}.side-footer{display:none}.main{padding:16px 13px 28px}.top{flex-direction:column;gap:12px;padding-bottom:14px;margin-bottom:17px}.top-brand{width:100%;display:grid;grid-template-columns:1fr;gap:10px}.top-logo-image{display:none}.top-search{flex-basis:auto;width:100%;max-width:none}.user-menu{width:100%;justify-content:flex-end}.banner{align-items:flex-start;padding:19px;gap:13px;border-radius:16px}.hero-icon{width:42px;height:42px;flex-basis:42px;font-size:20px}.banner h2{font-size:21px}.banner p{font-size:11px}.dashboard-main .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat-card{padding:14px!important}.stat-card .metric{font-size:27px}.platform-stats{gap:9px}.platform-stat{padding:12px!important}.platform-stat strong{font-size:18px}.dashboard-side{grid-template-columns:1fr}.create-shortcut,.queue-card,.side-panel{padding:16px!important}.section-heading{align-items:flex-start;flex-wrap:wrap}.section-heading .primary{width:100%}#conteudos .work>.card{padding:17px!important}#conteudos .work>.card:last-child{position:static}.calendar-card{padding:15px!important}.calendar-controls{width:100%}.calendar-controls button{flex:1;font-size:10px;padding:8px 7px}.schedule-calendar{overflow-x:auto}.calendar-day{min-width:118px}.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.analytics-panels{grid-template-columns:1fr}}
+@media(max-width:420px){.side .brand-logo{flex-basis:110px;width:110px;min-width:110px}.side .brand-logo img{max-height:32px}.side .nav{padding:6px 8px;font-size:9px}.side .nav i{display:none}.main{padding-left:10px;padding-right:10px}.user-menu .notification{display:none}.banner{padding:16px}.banner h2{font-size:19px}.stat-label{font-size:10px}.stat-card .metric{font-size:24px}.platform-stats{grid-template-columns:1fr}.quick-destinations{display:grid;grid-template-columns:1fr}.calendar-controls button{font-size:9px}}
+
+.video-analytics-panel{margin:16px 0!important}.video-analytics-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 16px}.video-analytics-toolbar label{font-size:12px;color:#c3dcff;font-weight:700}.video-analytics-toolbar .field{width:auto;min-width:150px;margin:0;padding:9px 12px}.video-analytics-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}.video-analytics-kpi{padding:15px;border:1px solid #164779;border-radius:11px;background:#061b35}.video-analytics-kpi small,.video-analytics-kpi strong{display:block}.video-analytics-kpi small{font-size:11px;color:#9ab9df}.video-analytics-kpi strong{font-size:24px;color:#fff;margin-top:7px}.video-analytics-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.video-analytics-item{display:flex;gap:13px;min-width:0;padding:13px;border:1px solid #143c68;border-radius:12px;background:#04162d}.video-analytics-thumb{width:112px;aspect-ratio:16/9;object-fit:cover;flex-shrink:0;border-radius:7px;background:#0a2b50}.video-analytics-thumb-placeholder{display:grid;place-items:center;width:112px;aspect-ratio:16/9;flex-shrink:0;border-radius:7px;background:#0a2b50;font-size:25px}.video-analytics-content{min-width:0;flex:1}.video-analytics-content b{display:block;color:#f1f7ff;font-size:13px;line-height:1.4;overflow-wrap:anywhere}.video-analytics-meta{font-size:10px;color:#91b5df;margin-top:5px}.video-analytics-numbers{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.video-analytics-numbers span{font-size:11px;color:#bcd6f5}.video-analytics-numbers strong{color:#fff}.video-analytics-link{display:inline-block;font-size:11px;margin-top:8px}.video-analytics-empty{grid-column:1/-1;padding:20px;text-align:center;border:1px dashed #24527f;border-radius:10px;color:#a4c2e8;font-size:12px}.video-analytics-status{margin-top:12px;font-size:12px;line-height:1.6;white-space:pre-wrap}@media(max-width:850px){.video-analytics-list{grid-template-columns:1fr}}@media(max-width:520px){.video-analytics-summary{grid-template-columns:1fr}.video-analytics-item{gap:9px;padding:10px}.video-analytics-thumb,.video-analytics-thumb-placeholder{width:88px}.video-analytics-content b{font-size:12px}.video-analytics-panel .section-heading{align-items:flex-start}.video-analytics-panel .section-heading .primary{font-size:11px;padding:10px}}
+
+/* POSTFLOW3 DARK PREMIUM REDESIGN — visual-only overrides, no app logic changes */
+:root{
+  color-scheme:dark;
+  --pf-bg:#080a12;
+  --pf-surface:#10131f;
+  --pf-surface-2:#151a2a;
+  --pf-surface-3:#1b2134;
+  --pf-line:#272d43;
+  --pf-text:#f3f5ff;
+  --pf-muted:#9ba6c2;
+  --pf-purple:#8b5cf6;
+  --pf-blue:#4f8cff;
+  --pf-glow:rgba(139,92,246,.18);
+}
+html,body{background:#080a12;color:var(--pf-text)}
+body{background:radial-gradient(ellipse at 76% -12%,rgba(84,63,177,.19),transparent 37%),radial-gradient(ellipse at 5% 25%,rgba(39,95,186,.08),transparent 33%),#080a12}
+.layout{background:transparent}
+.side{
+  background:linear-gradient(180deg,#0d101a 0%,#0a0d16 100%);
+  border-right:1px solid #20263a;
+  box-shadow:12px 0 36px rgba(0,0,0,.2);
+}
+.side .brand-logo,.top-logo-image{
+  background:linear-gradient(145deg,#111627 0%,#0d1425 62%,#1b1234 100%);
+  border:1px solid #30334f;
+  box-shadow:0 12px 30px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035);
+}
+.side .brand-logo{padding:15px 10px!important;border-radius:17px}
+.side .brand-logo img{max-height:66px;filter:drop-shadow(0 5px 12px rgba(0,0,0,.22))}
+.side-label{color:#707b9c}
+.nav{color:#aeb8d2;border-radius:11px}
+.nav i{color:#8c98ba;transition:color .18s,transform .18s}
+.nav:not(.active):hover{background:#151a2a;border-color:#2b3350;color:#fff;transform:translateX(2px)}
+.nav:not(.active):hover i{color:#a78bfa}
+.nav.active{
+  color:#fff;
+  background:linear-gradient(105deg,rgba(124,87,255,.2),rgba(65,119,255,.09));
+  border:1px solid rgba(139,92,246,.38);
+  box-shadow:inset 3px 0 #8b5cf6,0 5px 18px rgba(0,0,0,.12);
+}
+.nav.active i{color:#b9a4ff}
+.side-footer{background:linear-gradient(135deg,#12182a,#101321);border:1px solid #282e45;border-radius:14px}
+.side-footer-mark{color:#c4b5fd}
+.side-footer small{color:#8d9ab8}
+.main{color:var(--pf-text)}
+.top{border-bottom:1px solid rgba(44,53,79,.62)}
+.top-logo-image{border-radius:14px}
+.top-logo-image small{color:#a6b4d3}
+.top-search{background:#101421;border:1px solid #2a3046;color:#e7ebfa}
+.top-search input{color:#f4f6ff}
+.top-search input::placeholder{color:#7884a3}
+.top-search kbd{background:#1b2133;border:1px solid #303750;color:#a8b4d0}
+.user-menu{color:#e5e9f8}
+.user-menu small{color:#8f9bb8}
+.notification,.user-avatar{background:#151a2b;border:1px solid #2c3450;color:#dce4ff}
+.user-avatar{box-shadow:0 0 0 3px rgba(79,140,255,.12)}
+.banner{
+  background:radial-gradient(circle at 88% 0%,rgba(111,76,235,.27),transparent 34%),linear-gradient(115deg,#151a2b 0%,#111728 58%,#101a2c 100%);
+  border:1px solid #303550;
+  box-shadow:0 18px 45px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.025);
+}
+.banner h2{color:#f5f3ff}
+.banner p{color:#aab6d3}
+.banner:after{background:rgba(139,92,246,.06);border:1px solid rgba(181,163,255,.12)}
+.hero-icon{background:linear-gradient(140deg,#7654e9,#3478e8);box-shadow:0 8px 25px rgba(103,79,225,.26)}
+.card,.stat-card,.platform-stat,.side-panel,.create-shortcut,.queue-card,.calendar-card,.analytics-panel,.analytics-kpi,.video-analytics-kpi{
+  background:linear-gradient(145deg,#121725 0%,#101421 100%);
+  border:1px solid #282f46;
+  color:#edf1ff;
+  box-shadow:0 12px 32px rgba(0,0,0,.13),inset 0 1px rgba(255,255,255,.018);
+}
+.card h3,.section-heading h3{color:#f0f2ff}
+.section-heading p,.muted{color:var(--pf-muted)}
+.stat-label{color:#9aa7c7}
+.metric,.stat-card .metric,.platform-stat strong{color:#f6f7ff}
+.platform-stat{border-radius:15px}
+.platform-stat-icon{box-shadow:0 6px 16px rgba(0,0,0,.14)}
+.primary{
+  background:linear-gradient(110deg,#8057f5 0%,#6758ef 52%,#477ff2 100%);
+  border:1px solid rgba(190,174,255,.2);
+  box-shadow:0 8px 22px rgba(107,83,235,.23),inset 0 1px rgba(255,255,255,.16);
+}
+.primary:hover{filter:brightness(1.08);box-shadow:0 12px 28px rgba(107,83,235,.3)}
+.outline-button{background:#171d2e;border-color:#343c57;color:#d9e1f8}
+.outline-button:hover{background:#22233f;border-color:#7160c8;color:#fff}
+.text-button{color:#b8a7ff}
+.field,#conteudos input:not([type=checkbox]):not([type=file]),#conteudos textarea,#conteudos select,
+#configuracoes input,#configuracoes textarea,#configuracoes select,
+#authGate input{
+  background:#0c101b;
+  border:1px solid #303750;
+  color:#edf1ff;
+  border-radius:11px;
+}
+.field::placeholder,#conteudos input::placeholder,#conteudos textarea::placeholder,#authGate input::placeholder{color:#6f7b99}
+.field:focus,#conteudos input:focus,#conteudos textarea:focus,#conteudos select:focus,#configuracoes input:focus,#configuracoes textarea:focus,#configuracoes select:focus,#authGate input:focus{
+  border-color:#8b70f2;box-shadow:0 0 0 3px rgba(139,92,246,.14);outline:none
+}
+#conteudos label,#configuracoes label,.auth-form label{color:#c8d0e7}
+.upload{background:linear-gradient(145deg,#111a2b,#13152a);border-color:#4b4775;color:#d9d4ff}
+.upload:hover{border-color:#8b70f2;background:#171a31}
+.storage-hint,.settings-note{background:linear-gradient(120deg,#111a2c,#151426);border-color:#303b5b}
+.storage-hint-icon{background:#26214a;color:#c8baff}
+.storage-hint b,.settings-note b{color:#f2f1ff}
+.storage-hint p,.settings-note p{color:#a5b3d1}
+#preview{background:#080b13;border-color:#303750;border-radius:13px}
+.checks label{background:#111726;border:1px solid #2c344b;border-radius:11px;color:#dce3f8}
+.checks label:has(input:checked){background:rgba(111,82,225,.14);border-color:#7b65db}
+.social-row{border-color:#272e43!important;border-radius:12px}
+.social-row:hover{background:#171c2b}
+.social-info strong,.post-row-title{color:#eef1ff}
+.social-info small,.post-row-meta,.post-row-time{color:#96a3c2}
+.calendar-day{background:#0d1220;border-color:#2a3249}
+.calendar-day-head{color:#b7c2dc}
+.calendar-event{background:rgba(125,91,238,.16);border-color:rgba(139,92,246,.34);color:#ddd4ff}
+.calendar-range{color:#aeb7ff}
+.calendar-legend,.analytics-note,.empty-state{color:#9ca9c8}
+.video-analytics-item{background:#0d1220;border-color:#29334b}
+.video-analytics-thumb-placeholder{background:#171d30}
+.post-status,.tag{border-radius:8px}
+.auth-screen{background:radial-gradient(ellipse at 16% 0%,rgba(49,101,210,.2),transparent 38%),radial-gradient(ellipse at 86% 10%,rgba(123,71,230,.2),transparent 38%),#080a12!important}
+.auth-card{background:linear-gradient(145deg,#131827,#0f1320)!important;border:1px solid #303650!important;box-shadow:0 30px 90px rgba(0,0,0,.4)!important}
+.auth-card h1{color:#f5f3ff}
+.auth-card>p,.auth-foot{color:#a2aecb}
+.auth-tabs{background:#0a0e18;border:1px solid #282f45;border-radius:12px;padding:4px}
+.auth-tabs button{border-radius:9px}
+.auth-tabs button.active{background:linear-gradient(110deg,#7655e9,#4c72e8);color:#fff;box-shadow:0 4px 14px rgba(102,81,222,.22)}
+.auth-form input{background:#0a0e18!important;border-color:#303750!important;color:#f4f6ff!important}
+.auth-foot{border-color:#282f45}
+::selection{background:#6d4ed8;color:#fff}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #9e8bff;outline-offset:3px}
+@media(hover:none){.stat-card:hover,.platform-stat:hover{transform:none;box-shadow:inherit}}
+@media(max-width:720px){
+  .side{background:rgba(10,13,22,.97);border-bottom:1px solid #2b3047;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .side .brand-logo{background:linear-gradient(145deg,#111627,#111328);border-color:#303550}
+  .side .nav.active{box-shadow:inset 0 -2px #8b5cf6}
+  .main{background:transparent}
+  .top{border-bottom-color:#242b40}
+  .banner{background:radial-gradient(circle at 100% 0%,rgba(111,76,235,.2),transparent 42%),linear-gradient(115deg,#151a2b,#111728)}
+  .auth-card{padding:25px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+
+/* POSTFLOW3 SIDEBAR REDESIGN — stronger navigation styling */
+.layout{align-items:stretch}
+.side{
+  box-sizing:border-box;
+  flex:0 0 258px;
+  width:258px;
+  min-width:258px;
+  min-height:100vh;
+  height:100vh;
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:7px;
+  padding:22px 15px 16px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  border-right:1px solid #252b42;
+  border-bottom:0;
+  border-radius:0 20px 20px 0;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(109,72,229,.20),transparent 42%),
+    linear-gradient(180deg,#101423 0%,#0b0e18 58%,#0a0c15 100%);
+  box-shadow:12px 0 40px rgba(0,0,0,.22);
+}
+.side .brand-logo{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  margin:0 0 18px!important;
+  padding:17px 12px!important;
+  border-radius:17px;
+  background:linear-gradient(135deg,rgba(139,92,246,.17),rgba(79,140,255,.07) 60%,rgba(17,20,35,.96));
+  border:1px solid #343251;
+  box-shadow:inset 0 1px rgba(255,255,255,.05),0 12px 26px rgba(0,0,0,.18);
+}
+.side .brand-logo img{display:block;width:100%;max-width:190px;max-height:58px;object-fit:contain}
+.side-label{
+  display:block;
+  margin:13px 10px 4px;
+  padding:0;
+  color:#747f9e;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.7px;
+}
+.side .nav{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-height:46px;
+  flex:0 0 auto;
+  margin:0;
+  padding:9px 12px;
+  border:1px solid transparent;
+  border-radius:12px;
+  color:#aab4ce;
+  background:transparent;
+  font-size:13px;
+  font-weight:650;
+  text-align:left;
+  white-space:normal;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.side .nav i{
+  display:grid;
+  place-items:center;
+  width:29px;
+  height:29px;
+  flex:0 0 29px;
+  border:1px solid #2a3047;
+  border-radius:9px;
+  background:#151a2a;
+  color:#a8b4d2;
+  font-size:16px;
+  font-style:normal;
+}
+.side .nav:hover{
+  color:#f4f5ff;
+  border-color:#303650;
+  background:rgba(255,255,255,.035);
+  transform:translateX(2px);
+}
+.side .nav.active{
+  color:#fff;
+  border-color:rgba(139,92,246,.42);
+  background:linear-gradient(100deg,rgba(124,78,238,.25),rgba(66,104,214,.12));
+  box-shadow:inset 3px 0 #9b7bff,0 7px 18px rgba(0,0,0,.12);
+}
+.side .nav.active i{
+  color:#fff;
+  border-color:rgba(167,139,250,.42);
+  background:linear-gradient(135deg,#7c4dff,#466cf0);
+  box-shadow:0 5px 14px rgba(108,78,237,.25);
+}
+.side-footer{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:auto;
+  padding:13px 10px;
+  border:1px solid #292f48;
+  border-radius:14px;
+  background:linear-gradient(135deg,#151a2c,#101321);
+}
+.side-footer-mark{
+  flex:0 0 32px;
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:linear-gradient(135deg,#8b5cf6,#4777f5);
+  color:white;
+}
+.side-footer b{display:block;color:#f0f2ff;font-size:11px}
+.side-footer small{display:block;margin-top:4px;color:#929dbb;font-size:10px}
+.side-live{flex:0 0 7px}
+.main{min-width:0;flex:1}
+@media(max-width:720px){
+  .layout{display:block}
+  .side{
+    box-sizing:border-box;
+    position:sticky;
+    top:0;
+    z-index:100;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    width:100%;
+    min-width:0;
+    min-height:0;
+    height:auto;
+    gap:7px;
+    padding:9px 10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    border:0;
+    border-bottom:1px solid #292f48;
+    border-radius:0;
+    background:rgba(10,12,22,.97);
+    box-shadow:0 8px 24px rgba(0,0,0,.28);
+    backdrop-filter:blur(18px);
+  }
+  .side .brand-logo{
+    flex:0 0 116px;
+    width:116px;
+    min-width:116px;
+    margin:0 5px 0 0!important;
+    padding:7px!important;
+    border-radius:11px;
+  }
+  .side .brand-logo img{max-height:34px}
+  .side-label,.side-footer{display:none}
+  .side .nav{
+    flex:0 0 auto;
+    width:auto;
+    min-height:40px;
+    gap:7px;
+    padding:6px 10px;
+    border-radius:10px;
+    white-space:nowrap;
+    font-size:11px;
+  }
+  .side .nav i{width:24px;height:24px;flex-basis:24px;font-size:13px}
+  .side .nav.active{box-shadow:inset 0 -2px #a78bfa}
+}
+@media(max-width:420px){
+  .side{gap:5px;padding:8px}
+  .side .brand-logo{flex-basis:98px;width:98px;min-width:98px}
+  .side .nav{gap:5px;padding:6px 8px;font-size:10px}
+  .side .nav i{width:22px;height:22px;flex-basis:22px}
+}
+
+
+/* SIDEBAR V2 — forcefully replace prior navigation appearance */
+.layout > .side{
+  width:292px!important;min-width:292px!important;flex:0 0 292px!important;
+  padding:28px 19px 20px!important;gap:10px!important;
+  border-right:1px solid #26345a!important;border-radius:0!important;
+  background:linear-gradient(155deg,#101329 0%,#090d1e 48%,#06172b 100%)!important;
+  box-shadow:10px 0 38px rgba(0,0,0,.32)!important;
+}
+.layout > .side .brand-logo{
+  min-height:104px!important;margin:0 0 25px!important;padding:22px 14px!important;
+  border:1px solid #36406b!important;border-radius:20px!important;
+  background:linear-gradient(135deg,#1c2550 0%,#10182f 58%,#121126 100%)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.08)!important;
+}
+.layout > .side .brand-logo img{max-width:210px!important;max-height:62px!important}
+.layout > .side .side-label{
+  margin:20px 9px 5px!important;padding:0 0 8px!important;
+  border-bottom:1px solid #202b49!important;color:#7486b5!important;
+  font-size:10px!important;font-weight:900!important;letter-spacing:2.2px!important;
+}
+.layout > .side .nav{
+  position:relative!important;min-height:52px!important;margin:0!important;padding:10px 13px!important;
+  gap:13px!important;border:1px solid transparent!important;border-radius:15px!important;
+  background:transparent!important;color:#c0cce6!important;font-size:13px!important;font-weight:700!important;
+  box-shadow:none!important;transform:none!important;
+}
+.layout > .side .nav i{
+  display:grid!important;place-items:center!important;width:34px!important;height:34px!important;flex:0 0 34px!important;
+  border:1px solid #303958!important;border-radius:11px!important;background:#171e36!important;
+  color:#a8b9e8!important;font-size:17px!important;
+}
+.layout > .side .nav:hover{
+  background:#17213d!important;border-color:#2c3b63!important;color:#fff!important;transform:translateX(3px)!important;
+}
+.layout > .side .nav.active{
+  border:1px solid #7561ff!important;
+  background:linear-gradient(105deg,#633cff 0%,#394dff 55%,#087fe9 100%)!important;
+  color:#fff!important;box-shadow:0 9px 25px rgba(67,75,255,.3),inset 0 1px rgba(255,255,255,.16)!important;
+}
+.layout > .side .nav.active i{
+  background:rgba(255,255,255,.17)!important;border-color:rgba(255,255,255,.25)!important;color:#fff!important;box-shadow:none!important;
+}
+.layout > .side .side-footer{
+  margin-top:auto!important;padding:15px 12px!important;border:1px solid #2c3a5f!important;border-radius:15px!important;
+  background:linear-gradient(120deg,#141d37,#101629)!important;
+}
+.layout > .side .side-footer-mark{width:39px!important;height:39px!important;border-radius:12px!important}
+@media(max-width:720px){
+ .layout > .side{width:100%!important;min-width:0!important;flex:0 0 auto!important;padding:10px 12px!important;gap:6px!important;border-radius:0!important}
+ .layout > .side .brand-logo{min-height:0!important;width:150px!important;min-width:150px!important;margin:0 8px 0 0!important;padding:8px!important;border-radius:12px!important}
+ .layout > .side .brand-logo img{max-height:34px!important}
+ .layout > .side .side-label{display:none!important}
+ .layout > .side .nav{min-height:42px!important;padding:7px 10px!important;gap:7px!important;border-radius:11px!important;font-size:12px!important}
+ .layout > .side .nav i{width:28px!important;height:28px!important;flex-basis:28px!important;font-size:14px!important}
+ .layout > .side .side-footer{display:none!important}
+}
+@media(max-width:480px){
+ .layout > .side .brand-logo{width:112px!important;min-width:112px!important}
+ .layout > .side .nav{padding:7px 8px!important;font-size:11px!important}
+ .layout > .side .nav i{display:none!important}
+}
+
+.destination-accounts{display:grid;gap:12px;margin:14px 0 18px;padding:14px;border:1px solid var(--line,#e7eaf4);border-radius:14px;background:rgba(118,85,246,.035)}
+.destination-group{display:grid;gap:8px}
+.destination-group>b{font-size:13px;color:var(--ink,#18213d)}
+.destination-group .checks{display:flex;flex-wrap:wrap;gap:8px}
+.destination-group .checks label{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line,#e7eaf4);border-radius:10px;background:#fff;font-size:13px}
+.destination-group .checks input{accent-color:var(--purple,#7655f6)}
+#socialAccountsList .entry{gap:14px}
+#socialAccountsList .outline-button{white-space:nowrap}
+.social-account-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.social-account-stat{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--line,#e7eaf4);border-radius:14px;background:rgba(118,85,246,.045);min-width:0}
+.social-account-stat span{font-size:13px;font-weight:600}
+.social-account-stat strong{font-size:30px;line-height:1.1;color:var(--purple,#7655f6)}
+.social-account-stat small{font-size:11px;line-height:1.4;color:var(--muted,#7a8198)}
+@media(max-width:600px){.social-account-summary{grid-template-columns:1fr}.social-account-stat{padding:12px}.social-account-stat strong{font-size:26px}}
+
+/* POSTFLOW3 LAYOUT FINISH — visual-only, preserve existing behavior */
+:root{--pf-border:#1a3b61;--pf-panel:#071a31;--pf-panel-hi:#0a2241;--pf-blue:#1678ff;--pf-cyan:#18d9e8;--pf-violet:#7147ff}
+body{background:radial-gradient(ellipse at 78% 0%,#102b55 0,transparent 32%),radial-gradient(ellipse at 0% 48%,#091b35 0,transparent 28%),#030916!important;color:#edf5ff}
+.main{max-width:1800px;padding-left:clamp(18px,2.7vw,46px);padding-right:clamp(18px,2.7vw,46px)}
+.top{margin-bottom:26px}
+.top h1{letter-spacing:-.8px}
+.muted{color:#91a9ca;line-height:1.65}
+.card{background:linear-gradient(145deg,#081d37,#051329)!important;border:1px solid #17385d!important;border-radius:17px!important;box-shadow:0 12px 34px #00000024!important}
+.card h3{letter-spacing:-.25px}
+.stats,.accounts,.work,.dashboard-grid,.analytics-panels{gap:16px}
+.stat-card,.platform-stat,.analytics-kpi{border-radius:15px!important}
+.stat-card{position:relative;overflow:hidden}
+.stat-card:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#1678ff,#14d9e8,#7147ff);opacity:.8}
+.metric{letter-spacing:-1px}
+.banner{border-radius:18px!important;box-shadow:0 18px 44px #00000024!important}
+.section-heading{gap:14px}
+.section-heading h3{letter-spacing:-.25px}
+.primary{box-shadow:0 8px 22px #126bff2b!important}
+.primary:hover{filter:brightness(1.08)}
+.outline-button{min-height:38px}
+.field,select,textarea,input:not([type=checkbox]):not([type=radio]){border-radius:11px}
+.field:focus,select:focus,textarea:focus,input:focus{border-color:#2689ff!important;box-shadow:0 0 0 3px #1478ff1c!important}
+.upload{border-radius:16px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.checks label{transition:border-color .18s,background .18s,transform .18s}
+.checks label:hover{border-color:#2a6ba9;background:#09294e;transform:translateY(-1px)}
+#conteudos .work>.card{padding:clamp(17px,2vw,25px)}
+#conteudos .work>.card:first-child{border-top:2px solid #1678ff}
+#contas .social-account-summary,#contas .social-account-stat{border-radius:14px}
+#contas .entry{gap:14px;padding:16px 0}
+#contas .entry>div{min-width:0}
+#contas .outline-button{width:auto;min-width:105px}
+#agendamentos .card,#publicacoes .card,#estatisticas .card,#configuracoes .card{border-radius:16px!important}
+.calendar-day{border-radius:12px}
+.calendar-event{border-radius:9px}
+.analytics-kpi strong{letter-spacing:-.7px}
+.entry{gap:14px}
+.tag,.post-status{letter-spacing:.1px}
+button:active{transform:translateY(1px)}
+a{transition:color .18s}
+a:hover{color:#8bdfff!important}
+:focus-visible{outline-color:#61c7ff!important}
+@media(min-width:1400px){.dashboard-grid{grid-template-columns:minmax(0,1.8fr) minmax(300px,.78fr);gap:19px}.dashboard-main .stats{gap:14px}.card{padding:22px}}
+@media(max-width:1150px){.main{padding-left:22px;padding-right:22px}.side{flex-basis:238px;width:238px}.dashboard-side{gap:14px}}
+@media(max-width:720px){.main{padding:15px 13px 30px}.top{margin-bottom:17px}.card{border-radius:14px!important}.dashboard-main .stats{gap:9px}.dashboard-main .banner{border-radius:15px!important}.nav{min-height:39px}.side .brand-logo{flex-shrink:0}}
+@media(max-width:420px){.main{padding-left:10px;padding-right:10px}.section-heading{gap:8px}.analytics-kpi{min-width:0}.post-row{align-items:flex-start}}
+
+
+/* POSTFLOW3 PREMIUM DASHBOARD — final refinement */
+:root{--pf-bg:#020918;--pf-panel:#061a32;--pf-panel-2:#08203d;--pf-border:#173c67;--pf-blue:#1674ff;--pf-violet:#7038ff;--pf-text:#edf5ff;--pf-muted:#91afd4}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.layout{background:radial-gradient(ellipse at 85% 0%,#112a61 0,transparent 35%),#020918}
+.side{width:258px;padding:25px 15px;background:linear-gradient(180deg,#04152c,#031024 72%,#020918)!important}
+.side .brand-logo img{width:100%;max-width:190px;height:auto;max-height:58px;object-fit:contain}
+.side-label{color:#6388b8!important;letter-spacing:1.6px;font-size:10px;font-weight:850;margin:23px 12px 9px}
+.nav{border:1px solid transparent;border-radius:12px;padding:13px 14px;margin:4px 0;color:#a9c4e6!important;transition:background .18s,border-color .18s,transform .18s}
+.nav i{color:#7eb5ff}
+.nav:hover{background:#0b2a4e!important;border-color:#164b7d;transform:translateX(2px)}
+.nav.active{background:linear-gradient(105deg,#096bff,#5834e9)!important;border-color:#438bff;box-shadow:0 8px 25px #075fff38!important}
+.main{max-width:1800px;padding:26px clamp(18px,2.6vw,42px) 46px}
+.top{position:relative;gap:20px;padding:12px 0 22px}
+.top h1{color:#f4f8ff}
+.top-search{background:#061a32!important;border:1px solid #173c67!important;border-radius:13px}
+.top-search input{background:transparent!important;border:0!important;min-width:0}
+.user-menu{gap:10px}
+.user-avatar{background:linear-gradient(135deg,#1478ff,#793dff)!important;border:1px solid #6a9eff;color:white!important}
+.banner{border-radius:18px!important;box-shadow:0 18px 50px #0003;min-height:126px;display:flex;align-items:center;gap:18px}
+.hero-icon{display:grid;place-items:center;flex:0 0 54px;width:54px;height:54px;border-radius:16px;background:#ffffff12;border:1px solid #ffffff20;font-size:25px}
+.hero-slogan{margin-left:auto;padding-left:20px;border-left:1px solid #ffffff30;color:#e4edff;font-size:13px;font-weight:800;line-height:1.5}
+.stats{gap:14px}
+.stat-card{position:relative;overflow:hidden;min-height:136px}
+.stat-card:after{content:"";position:absolute;right:-28px;bottom:-44px;width:110px;height:110px;border-radius:50%;background:#126bff12;pointer-events:none}
+.stat-label{font-size:12px;font-weight:750;color:#9dbce0}
+.metric{font-variant-numeric:tabular-nums}
+.platform-stats{gap:14px}
+.platform-stat{border-radius:14px}
+.dashboard-grid{gap:20px}
+.dashboard-side{gap:14px}
+.side-panel{border-radius:15px}
+.social-row{border-bottom:1px solid #12365d;padding:13px 0}
+.social-icon,.platform-stat-icon{border-radius:12px!important}
+.create-shortcut{border-color:#1a4b7c!important}
+.section-heading{gap:14px}
+.outline-button{background:#082344!important;color:#bcd8ff!important;border:1px solid #1d4d7c!important;border-radius:10px;padding:10px 13px;font-weight:750}
+.outline-button:hover{background:#0b3260!important;border-color:#398bff!important}
+.text-button{color:#75b6ff!important}
+.calendar-card{margin-top:20px}
+.calendar-controls{display:flex;gap:8px;flex-wrap:wrap}
+.field{border-radius:12px!important}
+.upload{border-radius:15px!important;transition:all .2s ease}
+.upload:hover{transform:translateY(-1px);box-shadow:0 10px 30px #006bff14}
+.checks label{transition:border-color .18s,background .18s}
+.checks label:hover{border-color:#2d7ee0;background:#092749}
+#configuracoes .card{max-width:1000px}
+.settings-note{border:1px solid #1c4d7c!important;background:linear-gradient(135deg,#082345,#0a1b3b)!important;border-radius:14px!important;padding:20px!important;margin-top:20px}
+.settings-note b{color:#d8eaff;font-size:15px}
+.settings-note p{color:#9bb9df;line-height:1.7;margin-bottom:0}
+#contas .social-account-stat{background:linear-gradient(145deg,#082345,#06172e)!important;border:1px solid #17436f!important;border-radius:14px!important}
+#contas #socialAccountsList{overflow-wrap:anywhere}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4b9bff!important;outline-offset:3px}
+@media(max-width:900px){.side{width:225px}.hero-slogan{display:none}.top-search{width:min(42vw,360px);min-width:180px}}
+@media(max-width:720px){.side{width:100%;padding:10px 12px;gap:5px}.side .brand-logo img{width:115px;max-width:115px;max-height:36px}.side-label{display:none}.nav{padding:10px 11px}.main{padding:17px 13px 30px}.top{align-items:flex-start}.top-brand{gap:12px;flex-wrap:wrap}.top-logo{font-size:22px}.top-search{order:3;width:100%;min-width:100%}.banner{padding:20px;align-items:flex-start}.hero-icon{flex-basis:44px;width:44px;height:44px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-controls{width:100%}.calendar-controls button{flex:1}}
+@media(max-width:430px){.side .brand-logo img{width:92px;max-width:92px}.nav{font-size:11px;padding:9px}.nav i{display:inline-block}.main{padding-left:10px;padding-right:10px}.stats{gap:9px}.stat-card{padding:13px;min-height:120px}.metric{font-size:24px}.banner{gap:12px}.section-heading{align-items:flex-start;flex-wrap:wrap}}
+
+/* Recent content and scheduled-post cards with covers and honest metrics */
+.post-row{align-items:center;gap:13px;padding:14px 0}
+.post-cover{width:88px;height:62px;object-fit:cover;flex:0 0 88px;border-radius:9px;border:1px solid #204d7a;background:#071a31}
+.post-cover-empty{display:grid;place-items:center;color:#8ebfff;font-size:24px;background:linear-gradient(135deg,#0b2a51,#24105b)}
+.post-row-main{min-width:0}
+.post-row-title{font-size:13px;line-height:1.45}
+.post-row-meta{font-size:10px;line-height:1.5;margin-top:4px;color:#8eb6e5}
+.post-row-time{font-size:11px;color:#c0d8f7;margin-top:6px}
+.post-metrics{display:flex;gap:10px;flex-wrap:wrap;margin-top:7px}
+.post-metric{font-size:10px;color:#a9c8ed;background:#0a2748;border:1px solid #16436d;border-radius:7px;padding:4px 7px}
+.post-metric.unavailable{color:#7799be;background:transparent;border-style:dashed}
+.post-status{flex-shrink:0}
+@media(max-width:480px){.post-cover{width:66px;height:52px;flex-basis:66px}.post-row{gap:9px}.post-status{font-size:9px;padding:5px 7px}}
+\n.calendar-summary{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;color:#a9c7ed;font-size:11px}.calendar-summary span{padding:8px 10px;border:1px solid #143b66;border-radius:8px;background:#061a34}.calendar-summary b{color:#f5f9ff}.calendar-summary .summary-scheduled b{color:#79b7ff}.calendar-summary .summary-published b{color:#24e0bd}.calendar-summary .summary-failed b{color:#ff9292}.calendar-filter-row{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}.calendar-filter{padding:8px 12px;border-radius:8px;border:1px solid #174574;background:#061a34;color:#a9c7ed;font-size:11px;font-weight:750}.calendar-filter.active{background:linear-gradient(100deg,#0867ff,#652cff);border-color:#398bff;color:#fff;box-shadow:0 4px 12px #0867ff30}.calendar-event{overflow-wrap:anywhere}.calendar-event.published{border-left:3px solid #18d8b2}.calendar-event.scheduled{border-left:3px solid #2585ff}.calendar-event.failed{border-left:3px solid #ff6969}
+/* FUTURISTIC NEON refresh — presentation-only, keeps current logo and workflows */
+:root{--neon-blue:#187bff;--neon-cyan:#18e8f2;--neon-violet:#8a4dff;--neon-green:#25f0c2}
+html,body{background-color:#030711!important}
+body{background-image:radial-gradient(ellipse at 78% -8%,#10255b 0,transparent 36%),radial-gradient(ellipse at 4% 55%,#071b36 0,transparent 34%),linear-gradient(135deg,#030711,#050d1d 55%,#030711)!important}
+.side{background:linear-gradient(180deg,#050b19,#07162b 56%,#030711)!important;border-right:1px solid #163d68!important;box-shadow:10px 0 34px #0005!important}
+.brand-logo img,.top-logo-image img{filter:drop-shadow(0 0 12px #167cff40)}
+.nav{border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s,box-shadow .18s!important}
+.nav:hover{border-color:#1b4d7d!important;box-shadow:inset 0 0 18px #087bff0b!important}
+.nav.active{background:linear-gradient(105deg,#0759c9,#5630d9 72%,#7436e8)!important;border-color:#328dff!important;box-shadow:0 0 0 1px #2a82ff20,0 8px 26px #075dff38,inset 0 1px #ffffff25!important}
+.top{border-bottom-color:#16385e!important}
+.top-search:focus-within{border-color:#238bff!important;box-shadow:0 0 0 3px #087bff1c,0 0 24px #087bff12!important}
+.card{position:relative;background:linear-gradient(145deg,#07172c 0%,#061226 58%,#071126 100%)!important;border-color:#153b63!important;box-shadow:0 12px 32px #0003,inset 0 1px #b9dcff08!important;transition:border-color .2s,transform .2s,box-shadow .2s}
+.card:hover{border-color:#1d5b8b!important;box-shadow:0 14px 36px #0004,0 0 20px #087bff0b,inset 0 1px #b9dcff0b!important}
+.banner{background:linear-gradient(112deg,#061b3c,#11145a 48%,#351080)!important;border-color:#1b6dca!important;box-shadow:inset 0 1px #ffffff12,0 12px 35px #0003!important}
+.banner:after{background:radial-gradient(circle,#2b9cff30,transparent 70%)!important}
+.primary{background:linear-gradient(105deg,#087bff,#6535f5)!important;border:1px solid #4a9bff!important;box-shadow:0 0 0 1px #237cff20,0 7px 22px #075bff30!important}
+.primary:hover{box-shadow:0 0 24px #187bff40!important}
+.field,.auth-form input,select,textarea,input:not([type=checkbox]):not([type=radio]){border-color:#1b426c!important}
+.field:focus,input:focus,textarea:focus,select:focus{border-color:#258aff!important;box-shadow:0 0 0 3px #087bff1b!important}
+.upload{background:linear-gradient(145deg,#06152b,#071c36)!important;border-color:#287ff0!important;box-shadow:inset 0 0 28px #087bff09!important}
+.upload:hover{border-color:#22ddeb!important;box-shadow:inset 0 0 28px #087bff15,0 0 22px #087bff10!important}
+.stat-card,.platform-stat{overflow:hidden}
+.stat-card:before,.platform-stat:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#087bff,#19e5ed,#8347ff);opacity:.7}
+.stat-card .metric,.platform-stat strong{ text-shadow:0 0 22px #168cff25}
+.section-icon,.platform-stat-icon,.settings-icon{box-shadow:0 0 20px #167bff20}
+.tag{background:#0a2b50!important;border:1px solid #174b79!important;color:#82c5ff!important}
+.pill{background:#063c3a!important;border-color:#117b72!important;color:#5af5d4!important}
+.outline-button{transition:background .18s,border-color .18s,box-shadow .18s!important}
+.outline-button:hover{border-color:#248bff!important;box-shadow:0 0 18px #087bff19!important}
+.side-footer{border-top-color:#14375c!important}
+.settings-hero{display:flex;align-items:center;gap:18px;padding:25px;margin:20px 0;border:1px solid #1c5b9b;border-radius:16px;background:radial-gradient(ellipse at 95% 0%,#3c24a344,transparent 44%),linear-gradient(115deg,#071b37,#0a1740 62%,#15113a);box-shadow:inset 0 1px #ffffff0d,0 14px 35px #0003}
+.settings-hero-mark{display:grid;place-items:center;flex-shrink:0;width:58px;height:58px;border:1px solid #298bff;border-radius:16px;background:linear-gradient(145deg,#087bff,#7337f5);font-size:29px;color:white;box-shadow:0 0 28px #147dff3d}
+.settings-eyebrow{font-size:10px;letter-spacing:2px;font-weight:850;color:#43d9f1}
+.settings-hero h2{margin:5px 0 7px;font-size:clamp(22px,3vw,30px);letter-spacing:-.8px;color:#fff}
+.settings-hero p{margin:0;color:#a8c4e8;font-size:13px;line-height:1.6}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:start}
+.settings-card{padding:22px!important}
+.settings-title{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.settings-title h3{margin:0 0 5px!important}
+.settings-title p{margin:0}
+.settings-icon{display:grid;place-items:center;flex-shrink:0;width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#087bff,#5d35e9);color:#fff;font-size:22px}
+.preference-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-top:1px solid #153657;color:#eaf4ff}
+.preference-row>span{display:block;min-width:0}
+.preference-row b,.preference-row small{display:block}
+.preference-row b{font-size:12px}
+.preference-row small{font-size:10px;line-height:1.5;color:#8eafd6;margin-top:5px}
+.pref-toggle{appearance:none;position:relative;flex-shrink:0;width:42px;height:24px;border:1px solid #28517a!important;border-radius:20px;background:#102744!important;cursor:pointer;transition:background .2s,border-color .2s}
+.pref-toggle:before{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#91afd2;transition:transform .2s,background .2s}
+.pref-toggle:checked{background:linear-gradient(90deg,#087bff,#6a38f4)!important;border-color:#438fff!important}
+.pref-toggle:checked:before{transform:translateX(18px);background:white;box-shadow:0 0 9px #fff8}
+.pref-select{width:min(48%,210px);margin:0!important;padding:10px!important;font-size:11px!important}
+.settings-card>.primary{margin-top:15px}
+.preferences-status{min-height:18px;font-size:11px;color:#75e9d4;margin:10px 0 0}
+.settings-note{padding:14px!important;border:1px solid #1b5683!important;border-radius:12px!important;background:linear-gradient(135deg,#071e39,#0a1b36)!important;color:#e9f5ff!important;font-size:12px;line-height:1.6}
+.settings-note p{color:#a8c3e5!important;margin:7px 0 0}
+.settings-safety{display:flex;gap:10px;align-items:flex-start;padding:14px 0 0;margin-top:15px;border-top:1px solid #153657}
+.settings-safety-dot{width:8px;height:8px;flex-shrink:0;margin-top:4px;border-radius:50%;background:#23edc2;box-shadow:0 0 12px #23edc266}
+.settings-safety b{font-size:12px;color:#9bf5df}
+.settings-safety p{font-size:11px;line-height:1.6;color:#9bb9de;margin:5px 0 0}
+body.compact-ui .card{padding:14px!important}
+body.compact-ui .stats{gap:10px!important;margin:15px 0!important}
+body.compact-ui .entry{padding:9px 0!important}
+body.reduce-motion *,body.reduce-motion *:before,body.reduce-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media(max-width:850px){.settings-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){.settings-hero{padding:18px;align-items:flex-start;gap:13px}.settings-hero-mark{width:45px;height:45px;font-size:23px;border-radius:13px}.settings-hero h2{font-size:22px}.settings-card{padding:17px!important}.preference-row{gap:10px}.pref-select{width:48%;max-width:180px}.nav{min-height:40px}.main{min-width:0}.top-search{border-radius:12px}.primary{min-height:42px}}
+@media(prefers-reduced-motion:reduce){.card,.nav,.primary,.outline-button{transition:none!important}}
+
+/* Creation studio: Futurista Neon */
+.create-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:18px;margin:20px 0 12px;padding:25px;border:1px solid #1a5da0;border-radius:18px;background:radial-gradient(ellipse at 90% 0%,#6327c544,transparent 40%),radial-gradient(ellipse at 0% 100%,#087bff25,transparent 48%),linear-gradient(115deg,#061831,#0b1740 58%,#171039);box-shadow:0 15px 36px #0004,inset 0 1px #ffffff12}
+.create-hero-symbol{display:grid;place-items:center;flex-shrink:0;width:58px;height:58px;border:1px solid #2b91ff;border-radius:16px;background:linear-gradient(140deg,#087bff,#6938ed);color:#fff;font-size:30px;box-shadow:0 0 28px #087bff45}
+.create-eyebrow{font-size:10px;font-weight:850;letter-spacing:2px;color:#49dcf3}
+.create-hero h2{margin:6px 0 8px;color:#f3f8ff;font-size:clamp(21px,3vw,29px);letter-spacing:-.8px;line-height:1.15}
+.create-hero p{max-width:650px;margin:0;color:#a7c4e8;font-size:13px;line-height:1.65}
+.create-hero-orbit{margin-left:auto;flex-shrink:0;font-size:52px;color:#67bfff;text-shadow:0 0 24px #167bff;opacity:.85}
+.create-steps{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 18px}
+.create-step{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #163b61;border-radius:999px;background:#06152a;color:#8eafd3;font-size:11px;font-weight:700}
+.create-step i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#0d2b4c;color:#70c8ff;font-style:normal;font-size:10px}
+.create-step.active{border-color:#2475c4;background:linear-gradient(100deg,#082b52,#171543);color:#d9efff}
+.create-step.active i{background:linear-gradient(140deg,#087bff,#6938ed);color:#fff}
+#conteudos .work{gap:18px;align-items:start}
+#conteudos .work>.card{padding:clamp(16px,2.3vw,25px)!important}
+#conteudos .work>.card:first-child{border-color:#1b5484!important}
+#conteudos .work>.card>h3{font-size:18px;letter-spacing:-.3px}
+#conteudos .upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:170px;padding:25px 18px!important;text-align:center;border:1px dashed #258bfa!important;border-radius:16px!important;background:radial-gradient(ellipse at 50% 0%,#0d65a82a,transparent 65%),linear-gradient(145deg,#06152b,#071a32)!important;color:#8ed8ff;font-size:26px}
+#conteudos .upload strong{font-size:14px;color:#f0f7ff}
+#conteudos .upload .muted{max-width:470px;font-size:11px;line-height:1.6}
+#conteudos .upload input{width:100%;max-width:380px}
+#conteudos .work>.card:first-child>label:not(.upload){display:block;margin-top:17px;color:#d9eaff;font-size:12px;font-weight:750}
+#conteudos .work .field{margin-top:8px;border-radius:11px!important;background:#040d1d!important;color:#f0f7ff!important}
+#conteudos .work textarea.field{min-height:112px;resize:vertical}
+#conteudos .checks.neon-destination-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:13px 0}
+#conteudos .destination-choice{display:flex;align-items:center;gap:10px;min-width:0;padding:13px;border:1px solid #194568;border-radius:13px;background:linear-gradient(145deg,#071a30,#081328);cursor:pointer;transition:border-color .18s,box-shadow .18s,background .18s}
+#conteudos .destination-choice:has(input:checked){border-color:#258cff;background:linear-gradient(145deg,#09254a,#11173c);box-shadow:inset 0 0 22px #087bff0b,0 0 18px #087bff0d}
+#conteudos .destination-choice input{flex-shrink:0;accent-color:#278dff;width:16px;height:16px}
+#conteudos .destination-brand-icon{display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border:1px solid #245681;border-radius:10px;background:#0b2440;color:#65c8ff;font-size:19px}
+#conteudos .instagram-choice .destination-brand-icon{color:#f0a0ff;background:#241638;border-color:#613a76}
+#conteudos .destination-choice b,#conteudos .destination-choice small{display:block}
+#conteudos .destination-choice b{font-size:12px;color:#f0f7ff}
+#conteudos .destination-choice small{margin-top:4px;font-size:10px;color:#8faed2}
+#conteudos .destination-live{margin-left:auto;font-size:9px;font-weight:800;color:#72f2d4;white-space:nowrap}
+#conteudos .destination-choice:not(:has(input:checked)) .destination-live{color:#8da1bc}
+#conteudos #publishButton{width:100%;margin-top:16px;min-height:48px;font-size:13px}
+#conteudos .note{margin-top:13px;padding:13px;border:1px solid #1b4569;border-radius:11px;background:#06162a;color:#9ebcdd;font-size:11px;line-height:1.65}
+#conteudos .ai-caption-card{border-color:#2c467d!important;background:linear-gradient(145deg,#0b1732,#0a1024)!important}
+#conteudos .ai-caption-button{width:100%;min-height:43px}
+#conteudos .work>.card:last-child video{outline:1px solid #17466e;box-shadow:0 0 30px #087bff12}
+@media(max-width:760px){.create-hero{padding:18px;gap:12px;align-items:flex-start}.create-hero-symbol{width:45px;height:45px;border-radius:13px;font-size:23px}.create-hero-orbit{display:none}.create-hero h2{font-size:22px}.create-steps{gap:6px}.create-step{padding:7px 9px;font-size:10px}#conteudos .work{grid-template-columns:minmax(0,1fr)!important}#conteudos .checks.neon-destination-checks{grid-template-columns:minmax(0,1fr)}#conteudos .destination-choice{padding:12px}}
+
+/* Official-style vector marks in the publishing destination selector */
+#conteudos .destination-brand-icon.youtube-logo-icon,#conteudos .destination-brand-icon.instagram-logo-icon{width:38px;height:38px;padding:4px;border-radius:10px;background:#081a32;border-color:#21466d}
+#conteudos .destination-brand-icon.youtube-logo-icon svg,#conteudos .destination-brand-icon.instagram-logo-icon svg{display:block;width:100%;height:100%}
+#conteudos .youtube-choice .destination-brand-icon{color:#fff}
+#conteudos .instagram-choice .destination-brand-icon{color:#fff;background:#1b1733;border-color:#5a3977}
+
+/* PostFlow3 Dark Premium — visual layer only */
+:root{color-scheme:dark;--ink:#edf2ff;--muted:#9aa9c4;--line:#263650;--purple:#8b5cf6;--cyan:#38bdf8}
+html,body{background:#080b14!important;color:#e8eefb}
+body{background:radial-gradient(ellipse at 75% -10%,#35206a55,transparent 34%),radial-gradient(ellipse at 0% 45%,#0c376022,transparent 35%),#080b14!important}
+::selection{background:#5b21b6;color:#fff}
+.side{background:linear-gradient(180deg,#0d1220,#090e19)!important;color:#dce6fb!important;border-right:1px solid #202b40!important;box-shadow:8px 0 30px #0003!important}
+.brand{color:#f4f7ff!important}
+.nav{color:#9aa9c4!important;border:1px solid transparent!important;border-radius:10px!important;transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease!important}
+.nav:hover{background:#151d30!important;color:#f0f5ff!important}
+.nav.active{background:linear-gradient(100deg,#22204b,#14263d)!important;color:#c9c7ff!important;border-color:#38366c!important;box-shadow:inset 3px 0 #8b5cf6,0 4px 18px #0002!important}
+.main{background:transparent!important}
+.topbar{background:#0d1322e8!important;border-color:#202b40!important;backdrop-filter:blur(14px)}
+.card,.panel,.settings-card,.stat-card,.metric-card,.queue-card,.side-panel,.calendar-card{background:linear-gradient(145deg,#111a2a,#0d1422)!important;color:#e5edfc!important;border:1px solid #25334b!important;border-radius:16px!important;box-shadow:0 8px 28px #0002!important}
+.card:hover,.settings-card:hover,.stat-card:hover{border-color:#39466a!important;box-shadow:0 12px 32px #0004,0 0 18px #6d28d90a!important}
+h1,h2,h3,h4,.card h3,.settings-card h3{color:#eef3ff}
+p,.muted,.card .muted{color:#9aa9c4}
+button,.primary,.outline-button{transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease!important}
+button:hover,.primary:hover,.outline-button:hover{transform:translateY(-1px)}
+.primary,.btn-primary{background:linear-gradient(110deg,#6d4aff,#2878dc)!important;color:#fff!important;border-color:#6e69f5!important;box-shadow:0 5px 18px #5436d52b!important}
+.primary:hover,.btn-primary:hover{box-shadow:0 7px 22px #5436d544!important}
+.outline-button{background:#111b2c!important;color:#c5d7fa!important;border:1px solid #30415e!important}
+input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select,.field,.pref-select{background:#080f1c!important;color:#eaf1ff!important;border-color:#2a3a55!important;box-shadow:inset 0 1px 2px #0002!important;border-radius:10px!important}
+input:focus,textarea:focus,select:focus,.field:focus{border-color:#6962d9!important;box-shadow:0 0 0 3px #7165f51f!important;outline:none!important}
+input::placeholder,textarea::placeholder{color:#72819d!important}
+label{color:#c2cde1}
+table{border-color:#273650}
+th{color:#9aa9c4}
+td{border-color:#202d43}
+.badge,.tag{box-shadow:none!important}
+.create-hero{background:radial-gradient(ellipse at 90% 0%,#7138d32c,transparent 43%),radial-gradient(ellipse at 0% 100%,#087bff20,transparent 45%),linear-gradient(115deg,#101b30,#10152c 60%,#1b1234)!important;border:1px solid #2c4264!important;box-shadow:0 12px 32px #0003,inset 0 1px #ffffff0a!important}
+.create-hero-symbol{background:linear-gradient(140deg,#1677f8,#7547ed)!important;border:1px solid #568bff!important;color:#fff!important;box-shadow:0 0 24px #2878e52e!important}
+.create-eyebrow{color:#69d8f5!important}
+.create-hero h2{color:#f0f5ff!important}
+.create-hero p{color:#a8bbda!important}
+.create-hero-orbit{color:#75bfff!important;text-shadow:0 0 22px #167bff88!important}
+.create-step{background:#0d1728!important;border-color:#253b59!important;color:#a0b5d4!important}
+.create-step i{background:#142b49!important;color:#7bc8ff!important}
+.create-step.active{background:linear-gradient(100deg,#122c50,#21183f)!important;border-color:#3a5e9c!important;color:#e3edff!important}
+.create-step.active i{background:linear-gradient(140deg,#087bff,#6938ed)!important;color:#fff!important}
+#conteudos .work>.card:first-child{border-color:#2a4b70!important}
+#conteudos .upload{border:1px dashed #337fc0!important;background:radial-gradient(ellipse at 50% 0%,#0d65a82a,transparent 65%),linear-gradient(145deg,#0b1728,#0b1423)!important;color:#8ed8ff!important}
+#conteudos .upload strong{color:#f0f7ff!important}
+#conteudos .work>.card:first-child>label:not(.upload){color:#d9e6fb!important}
+#conteudos .work .field{background:#080f1c!important;color:#eaf1ff!important;border-color:#2a3a55!important}
+#conteudos .destination-choice{background:linear-gradient(145deg,#0d1b2e,#0c1424)!important;border-color:#25415f!important;box-shadow:none!important}
+#conteudos .destination-choice:has(input:checked){background:linear-gradient(145deg,#10294a,#19183a)!important;border-color:#3d8fe5!important;box-shadow:0 0 0 1px #278dff19,inset 0 0 22px #087bff0b!important}
+#conteudos .destination-choice b{color:#f0f6ff!important}
+#conteudos .destination-choice small{color:#91a7c7!important}
+#conteudos .destination-live{color:#72f2d4!important}
+#conteudos .destination-brand-icon.youtube-logo-icon,#conteudos .destination-brand-icon.instagram-logo-icon{background:#101d31!important;border-color:#2b4a6c!important}
+#conteudos .note{background:#0b192b!important;border-color:#244260!important;color:#a5bedc!important}
+#conteudos .ai-caption-card{background:linear-gradient(145deg,#111b32,#0d1425)!important;border-color:#3a3a72!important}
+#conteudos .work>.card:last-child video{outline:1px solid #24517b!important;box-shadow:0 0 28px #087bff14!important}
+#conteudos .destination-choice input{accent-color:#4e9cff!important}
+.settings-hero{background:radial-gradient(ellipse at 100% 0%,#6738cb2b,transparent 45%),linear-gradient(115deg,#111b30,#15152d)!important;border-color:#2b3e60!important;box-shadow:0 10px 28px #0003!important}
+.settings-hero h2{color:#f0f5ff!important}
+.settings-hero p{color:#a2b4d1!important}
+.settings-hero-mark{background:linear-gradient(140deg,#1b6ed6,#7045df)!important;color:#fff!important;box-shadow:0 0 22px #4d55d12b!important}
+@keyframes premiumFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.card,.settings-card,.stat-card,.metric-card{animation:premiumFadeIn .32s ease both}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(max-width:760px){.side{box-shadow:0 5px 20px #0003!important}.create-hero{box-shadow:0 8px 24px #0003!important}}
+</style></head><body><div id="authGate" class="auth-screen"><div class="auth-card"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><h1 id="authTitle">Crie sua conta</h1><p>Organize suas publicações do Instagram e YouTube em um só lugar. As contas e os conteúdos ficam separados por usuário.</p><div class="auth-tabs"><button id="tabRegister" class="active" type="button" onclick="setAuthMode('register')">Criar conta</button><button id="tabLogin" type="button" onclick="setAuthMode('login')">Entrar</button></div><form id="registerForm" class="auth-form" onsubmit="submitRegister(event)"><label for="registerName">Seu nome</label><input id="registerName" autocomplete="name" maxlength="80" required placeholder="Como podemos te chamar?"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="registerPassword">Senha (mínimo 10 caracteres)</label><input id="registerPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Crie uma senha forte"><button class="primary" type="submit">Criar minha conta</button><div id="registerMessage" class="auth-message" role="status"></div></form><form id="loginForm" class="auth-form hidden" onsubmit="submitLogin(event)"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Sua senha"><button class="primary" type="submit">Entrar no PostFlow3</button><div id="loginMessage" class="auth-message" role="status"></div></form><div class="auth-foot">Cadastro inicial limitado a 10 usuários. Não use senha de outros serviços.</div></div></div><div class="layout"><aside class="side"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><div class="side-label">PAINEL</div><button class="nav active" data-page="inicio"><i>⌂</i> Início</button><div class="side-label">CONTEÚDO</div><button class="nav" data-page="conteudos"><i>▣</i> Criar conteúdo</button><button class="nav" data-page="agendamentos"><i>▦</i> Calendário</button><button class="nav" data-page="publicacoes"><i>↗</i> Publicações</button><button class="nav" data-page="estatisticas"><i>▥</i> Estatísticas</button><div class="side-label">CONTA</div><button class="nav" data-page="contas"><i>♧</i> Redes conectadas</button><button class="nav" data-page="configuracoes"><i>⚙</i> Configurações</button><div class="side-footer"><span class="side-footer-mark">✦</span><div><b>PostFlow Ultra</b><small>Central de publicações</small></div><span class="side-live" title="Painel carregado"></span></div></aside><main class="main"><div class="top"><div class="top-brand"><div class="top-logo top-logo-image"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"><small>Seu conteúdo em todos os lugares</small></div><label class="top-search" for="globalSearch"><span class="search-glyph">⌕</span><input id="globalSearch" type="search" placeholder="Buscar publicações, vídeos e contas..." aria-label="Buscar no PostFlow3"><kbd>BUSCAR</kbd></label></div><div class="user-menu"><span class="notification">♧</span><span class="user-avatar">D</span><span><b id="userGreeting">Olá!</b><small>Plano Gratuito</small></span><button class="nav" style="width:auto;margin:0" onclick="logoutUser()">Sair</button></div></div><section id="inicio"><div class="dashboard-grid"><div class="dashboard-main"><div class="banner"><div class="hero-icon">🚀</div><div><h2>Seu conteúdo, em movimento.</h2><p>Gerencie, agende e publique seus vídeos no YouTube e Instagram em um só lugar.</p></div><div class="hero-slogan">Mais alcance<br>para o seu conteúdo!</div></div><div class="stats"><div class="card stat-card"><div class="stat-label">▶ Conteúdos preparados</div><div class="metric" id="count">0</div><span class="positive">Sua biblioteca</span></div><div class="card stat-card"><div class="stat-label">▦ Próximos agendamentos</div><div class="metric" id="scheduled">0</div><span class="muted">Na sua fila</span></div><div class="card stat-card"><div class="stat-label">♧ Contas conectadas</div><div class="metric" id="connectedCount">0/2</div><span class="positive">YouTube e Instagram</span></div><div class="card stat-card"><div class="stat-label">↗ Publicações confirmadas</div><div class="metric" id="publishedCount">0</div><span class="muted">Com base no histórico disponível</span></div></div><div class="platform-stats"><div class="card platform-stat"><div class="platform-stat-icon yt-icon">▶</div><div><small>YouTube · Inscritos</small><strong id="youtubeFollowers">—</strong><span>Dados da conta conectada</span></div></div><div class="card platform-stat"><div class="platform-stat-icon ig-icon">◎</div><div><small>Instagram · Seguidores</small><strong id="instagramFollowers">—</strong><span>Dados da conta conectada</span></div></div></div><div class="card create-shortcut"><div class="section-heading"><span class="section-icon">▣</span><div><h3>Criar nova publicação</h3><p class="muted">Envie um vídeo, escreva a legenda e escolha onde publicar.</p></div><button class="primary" onclick="show('conteudos')">＋ Criar conteúdo</button></div><div class="quick-destinations"><span class="destination-chip">▶ YouTube <small id="ytQuickStatus">Verificando conexão</small></span><span class="destination-chip">◎ Instagram <small id="igQuickStatus">Verificando conexão</small></span><span class="destination-chip muted">♪ TikTok <small>Em breve</small></span></div><p class="muted">Os vídeos enviados pelo computador ou celular podem ser preparados aqui. Para agendar, escolha a data e o horário na tela de criação.</p></div><div class="card queue-card"><div class="section-heading"><div><h3>Publicações recentes</h3><p class="muted">Status dos seus conteúdos no PostFlow3</p></div><button class="text-button" onclick="show('publicacoes')">Ver todas →</button></div><div id="homeQueue" class="muted">Carregando publicações...</div></div></div><aside class="dashboard-side"><div class="card side-panel"><div class="section-heading"><h3>Contas conectadas</h3><span class="live-dot">● Verificando</span></div><div class="social-row"><div class="social-icon yt-icon">▶</div><div class="social-info"><b>YouTube</b><small id="youtubeStatusText">Verificando conexão...</small><small id="youtubeAccountExtra">Conta conectada via Google</small></div><span class="social-arrow">›</span></div><div class="social-row"><div class="social-icon ig-icon">◎</div><div class="social-info"><b>Instagram</b><small id="instagramStatusText">Verificando conexão...</small><small id="instagramAccountExtra">Conta profissional</small></div><span class="social-arrow">›</span></div><div class="social-row"><div class="social-icon tt-icon">♪</div><div class="social-info"><b>TikTok</b><small id="tiktokStatusText">Em breve</small><small>Integração pausada</small></div><span class="social-arrow">›</span></div><button class="outline-button" onclick="show('contas')">Gerenciar conexões</button></div><div class="card side-panel"><div class="section-heading"><h3>Próximas publicações</h3><button class="text-button" onclick="show('agendamentos')">Ver todas →</button></div><div id="upcomingQueue" class="muted">Nenhum agendamento planejado.</div></div><div class="card side-panel"><div class="section-heading"><h3>Uso do Google Drive</h3><span class="drive-icon">▲</span></div><p class="muted">O Drive pode ser usado como origem/armazenamento dos vídeos compatíveis. O espaço disponível não é exibido pela integração atual.</p><div class="drive-note">Armazenamento externo · sem números inventados</div></div><div class="card side-panel"><div class="section-heading"><h3>Atividade recente</h3></div><div id="recentActivity" class="muted">As atividades aparecerão conforme os envios e publicações forem registrados.</div></div></aside></div><div class="card calendar-card"><div class="section-heading"><div><h3>▦ Calendário de agendamentos</h3><p class="muted">Veja o que está programado e o que já foi publicado.</p></div><div class="calendar-controls"><button class="outline-button" onclick="changeCalendar(-7)">← Semana anterior</button><button class="outline-button" onclick="resetCalendar()">Hoje</button><button class="outline-button" onclick="changeCalendar(7)">Próxima semana →</button></div></div><div id="calendarRange" class="calendar-range"></div><div id="calendarSummary" class="calendar-summary" aria-live="polite"></div><div class="calendar-filter-row" role="group" aria-label="Filtrar calendário"><button class="calendar-filter active" data-calendar-filter="all" onclick="setCalendarFilter('all')">Todos</button><button class="calendar-filter" data-calendar-filter="scheduled" onclick="setCalendarFilter('scheduled')">Agendados</button><button class="calendar-filter" data-calendar-filter="published" onclick="setCalendarFilter('published')">Publicados</button><button class="calendar-filter" data-calendar-filter="failed" onclick="setCalendarFilter('failed')">Com falha</button></div><div id="scheduleCalendar" class="schedule-calendar"><p class="muted">Carregando calendário...</p></div><div class="calendar-legend"><span><i class="legend-published"></i> Publicado</span><span><i class="legend-scheduled"></i> Agendado</span><span><i class="legend-failed"></i> Falha</span></div></div></section><section id="conteudos" class="hidden"><div class="create-hero"><div class="create-hero-symbol">↗</div><div><span class="create-eyebrow">STUDIO DE PUBLICAÇÃO</span><h2>Crie uma vez. Publique em todo lugar.</h2><p>Prepare seu vídeo, personalize a legenda e escolha exatamente onde e quando publicar.</p></div><div class="create-hero-orbit">✦</div></div><div class="create-steps"><span class="create-step active"><i>01</i> Conteúdo</span><span class="create-step"><i>02</i> Destinos</span><span class="create-step"><i>03</i> Agendamento</span></div><div class="work"><div class="card"><h3>Novo conteúdo</h3><label class="upload" for="localVideo">📁<strong>Escolher vídeo do computador ou celular</strong><span class="muted">Clique para abrir seus arquivos. MP4, MOV, WebM e outros formatos de vídeo aceitos pelo YouTube.</span><input id="localVideo" type="file" accept="video/*" class="field" style="margin-top:14px"><div id="driveStatus" class="muted">O vídeo será enviado apenas aos destinos marcados: YouTube, Instagram ou ambos.</div></label><div class="storage-hint"><span class="storage-hint-icon">✦</span><div><b>Armazenamento automático</b><p>Envie o vídeo pelo seu dispositivo. O PostFlow3 cuida do processamento e da publicação agendada na nuvem.</p></div></div><label>Título<input id="title" class="field" placeholder="Título do seu vídeo"></label><label>Descrição e hashtags<textarea id="description" class="field" rows="4" placeholder="Escreva a legenda..."></textarea></label><div class="ai-caption-card"><div class="ai-caption-head"><span class="ai-caption-icon">✦</span><div><b>Assistente de conteúdo com IA</b><p>Analisa alguns quadros do vídeo e sugere título, legenda e hashtags.</p></div></div><label class="ai-context-label">O que você quer destacar? (opcional)<input id="aiContext" class="field" placeholder="Ex.: vídeo de vendas, humor, tutorial, produto..."></label><button id="aiCaptionButton" type="button" class="primary ai-caption-button" onclick="generateAICaption()">✦ Gerar título, legenda e hashtags com IA</button><div id="aiCaptionStatus" class="muted ai-caption-status" aria-live="polite"></div><div id="aiCaptionResult" class="ai-caption-result hidden"><b>Prévia gerada</b><p id="aiCaptionRationale"></p><button type="button" class="outline-button" onclick="applyAICaption()">Usar sugestões no conteúdo</button></div></div><b>Destinos</b><p class="muted">Escolha onde publicar: você pode enviar para as duas plataformas ou desmarcar o YouTube e publicar somente no Instagram. Você pode agendar somente o Instagram, somente o YouTube ou os dois, independentemente.</p><div class="checks neon-destination-checks"><label class="destination-choice youtube-choice"><input type="checkbox" id="targetYouTube" checked> <span class="destination-brand-icon youtube-logo-icon" aria-label="Logo do YouTube"><svg viewBox="0 0 24 24" role="img" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="5" fill="#ff0033"/><path d="M10 8.2 16 12l-6 3.8z" fill="#fff"/></svg></span><span><b>YouTube</b><small>Vídeo e título</small></span><span class="destination-live" id="youtubeDestinationState">Selecionado</span></label><label class="destination-choice instagram-choice"><input type="checkbox" id="targetInstagram" checked> <span class="destination-brand-icon instagram-logo-icon" aria-label="Logo do Instagram"><svg viewBox="0 0 24 24" role="img" aria-hidden="true"><defs><linearGradient id="igLogoGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffb13d"/><stop offset=".5" stop-color="#f12e83"/><stop offset="1" stop-color="#783eff"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="6" fill="url(#igLogoGradient)"/><rect x="6.2" y="6.2" width="11.6" height="11.6" rx="3.5" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="7.3" r="1.1" fill="#fff"/></svg></span><span><b>Instagram</b><small>Reels e legenda</small></span><span class="destination-live" id="instagramDestinationState">Selecionado</span></label></div><div id="destinationAccounts" class="destination-accounts"><p class="muted">Carregando suas contas para escolher os destinos...</p></div><label>Quando publicar<select id="publicationMode" class="field" onchange="togglePublicationMode()"><option value="scheduled" selected>Agendar para uma data e horário</option><option value="immediate">Publicar assim que o envio terminar</option></select></label><div id="scheduledDateField"><label>Data e horário planejados<input type="datetime-local" class="field" id="date"></label></div><button id="publishButton" class="primary" onclick="save()">Agendar publicação no YouTube e Instagram</button><div class="note">Para publicar nas duas plataformas, marque YouTube e Instagram. Publicações agendadas são acompanhadas pela rotina na nuvem; o vídeo original permanece armazenado até que todos os destinos selecionados confirmem a publicação.</div></div><div class="card"><h3>Pré-visualização</h3><video id="preview" controls playsinline style="width:100%;max-height:440px;border-radius:14px;background:#111638"></video><p class="muted">Confira o vídeo antes de preparar a postagem.</p></div></div></section><section id="agendamentos" class="hidden"><div class="card"><div class="section-heading"><div><h3>Agendamentos planejados</h3><p class="muted">Cancele os conteúdos que ainda estão aguardando publicação.</p></div><button id="clearSchedulesButton" class="outline-button danger-button" onclick="clearScheduledPosts()">Limpar agendamentos</button></div><div id="agendaList"></div></div></section><section id="publicacoes" class="hidden"><div class="card"><h3>Fila de conteúdos</h3><div id="publishList"></div></div></section><section id="estatisticas" class="hidden">
+ <div class="analytics-header"><div><h2>Visão geral do desempenho</h2><p class="muted">Resumo calculado a partir do histórico registrado no PostFlow3.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline-button" onclick="loadServerPosts()">↻ Atualizar dados</button><button id="clearHistoryButton" class="outline-button danger-button" onclick="clearPostHistory()">Limpar histórico</button></div></div>
+ <div class="analytics-grid">
+  <div class="card analytics-kpi"><div class="analytics-kpi-icon blue">▣</div><div><span>Total de conteúdos</span><strong id="analyticsTotal">0</strong><small>Registros no histórico</small></div></div>
+  <div class="card analytics-kpi"><div class="analytics-kpi-icon green">✓</div><div><span>Publicados</span><strong id="analyticsPublished">0</strong><small>Com confirmação registrada</small></div></div>
+  <div class="card analytics-kpi"><div class="analytics-kpi-icon purple">◷</div><div><span>Agendados</span><strong id="analyticsScheduled">0</strong><small>Aguardando publicação</small></div></div>
+  <div class="card analytics-kpi"><div class="analytics-kpi-icon red">!</div><div><span>Com falha</span><strong id="analyticsFailed">0</strong><small>Precisam de atenção</small></div></div>
+ </div>
+ <div class="analytics-panels">
+  <div class="card analytics-panel"><div class="section-heading"><div><h3>Atividade nos últimos 7 dias</h3><p class="muted">Conteúdos publicados por dia, com base nas datas salvas.</p></div></div><div id="analyticsWeekly" class="weekly-chart"></div></div>
+  <div class="card analytics-panel"><div class="section-heading"><div><h3>Distribuição por plataforma</h3><p class="muted">Conteúdos associados a cada destino.</p></div></div><div id="analyticsPlatforms" class="platform-breakdown"></div></div>
+ </div>
+ <div class="card analytics-panel video-analytics-panel">
+  <div class="section-heading"><div><h3>Visualizações dos vídeos publicados</h3><p class="muted">Métricas atuais consultadas diretamente nas APIs das redes sociais.</p></div><button class="primary" id="refreshVideoAnalytics" onclick="loadVideoAnalytics()">↻ Atualizar métricas</button></div>
+  <div class="video-analytics-toolbar"><label for="videoAnalyticsPlatform">Plataforma</label><select id="videoAnalyticsPlatform" class="field" onchange="renderVideoAnalytics()"><option value="all">Todas</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option></select><span id="videoAnalyticsUpdated" class="muted">Ainda não consultado</span></div>
+  <div class="video-analytics-summary" id="videoAnalyticsSummary"><div class="video-analytics-empty">Carregue as métricas para ver o desempenho real dos seus vídeos.</div></div>
+  <div id="videoAnalyticsList" class="video-analytics-list"></div>
+  <div id="videoAnalyticsStatus" class="video-analytics-status muted">As visualizações são reais quando a plataforma e as permissões permitem consultá-las. Nenhum número é estimado.</div>
+ </div>
+ <div class="card analytics-panel analytics-note"><b>Sobre estas métricas</b><p class="muted">Os números refletem os registros disponíveis no histórico do PostFlow3, não visualizações, curtidas ou alcance das redes sociais. Essas métricas externas serão exibidas quando as APIs e permissões de cada plataforma estiverem integradas. Se um conteúdo antigo não estiver registrado no histórico, ele não entra nestes totais.</p></div>
+</section><section id="contas" class="hidden"><div class="accounts" style="margin-top:20px"><div class="card"><h3>📸 Instagram</h3><p class="muted">Conecte várias contas profissionais e escolha em quais publicar cada conteúdo.</p><button class="primary" onclick="connectInstagram()">＋ Adicionar conta Instagram</button></div><div class="card"><h3>▶️ YouTube</h3><p class="muted">Cada canal conectado fica separado e pode receber publicações próprias.</p><button class="primary" onclick="connectYouTube()">＋ Adicionar conta YouTube</button></div></div><div class="card" style="margin-top:18px"><div class="section-heading"><h3>Suas contas conectadas</h3><button class="outline-button" onclick="loadSocialAccounts()">↻ Atualizar</button></div><p class="muted">As conexões são guardadas separadamente. Use “Adicionar conta” para autorizar outro perfil ou canal.</p><div class="social-account-summary" id="socialAccountSummary">
+<div class="social-account-stat"><span>Instagram conectado</span><strong id="instagramAccountCount">—</strong><small>Sem limite numérico fixado no sistema</small></div>
+<div class="social-account-stat"><span>YouTube conectado</span><strong id="youtubeAccountCount">—</strong><small>Sem limite numérico fixado no sistema</small></div>
+<div class="social-account-stat"><span>Total de contas</span><strong id="totalSocialAccountCount">—</strong><small>Conexões desta conta PostFlow3</small></div>
+</div>
+<p class="muted" id="socialAccountLimitNote">A quantidade possível também depende das permissões e dos limites de cada plataforma.</p>
+<div id="socialAccountsList"><p class="muted">Carregando contas...</p></div></div></section><section id="configuracoes" class="hidden">
+<div class="settings-hero"><div class="settings-hero-mark">✦</div><div><span class="settings-eyebrow">CENTRAL DE PREFERÊNCIAS</span><h2>Seu espaço. Seu fluxo.</h2><p>Personalize a experiência do PostFlow3 sem alterar suas conexões ou publicações.</p></div></div>
+<div class="settings-grid">
+<div class="card settings-card"><div class="settings-title"><span class="settings-icon">◈</span><div><h3>Aparência</h3><p class="muted">Ajuste a densidade da interface.</p></div></div>
+<label class="preference-row"><span><b>Modo compacto</b><small>Reduz espaçamentos para exibir mais conteúdo.</small></span><input id="prefCompact" type="checkbox" class="pref-toggle"></label>
+<label class="preference-row"><span><b>Reduzir animações</b><small>Prefere transições mais discretas.</small></span><input id="prefMotion" type="checkbox" class="pref-toggle"></label>
+<div class="preference-row"><span><b>Fuso horário</b><small>Usado para exibir datas nesta tela.</small></span><select id="prefTimezone" class="field pref-select"><option value="America/Sao_Paulo">Brasília (GMT−3)</option><option value="UTC">UTC</option><option value="America/Manaus">Manaus (GMT−4)</option><option value="America/Rio_Branco">Rio Branco (GMT−5)</option></select></div>
+<button class="primary" id="savePreferences" type="button">Salvar preferências</button><p id="preferencesStatus" class="preferences-status" role="status">As preferências ficam salvas neste navegador.</p></div>
+<div class="card settings-card"><div class="settings-title"><span class="settings-icon">⌁</span><div><h3>Publicações e alertas</h3><p class="muted">Escolha como acompanhar a atividade.</p></div></div>
+<label class="preference-row"><span><b>Alertas visuais</b><small>Exibe mensagens de confirmação e erros na tela.</small></span><input id="prefAlerts" type="checkbox" class="pref-toggle" checked></label>
+<div class="settings-note"><b>Instagram e YouTube independentes</b><p>Na tela Criar conteúdo, escolha cada rede separadamente ou selecione as duas. As preferências visuais não alteram suas contas conectadas nem seus agendamentos.</p></div>
+<div class="settings-safety"><span class="settings-safety-dot"></span><div><b>Dados protegidos</b><p>Estas opções alteram somente a experiência visual neste navegador. Não removem vídeos, contas ou registros.</p></div></div>
+</div></div></section></main></div><script>
+let posts=[];const $=id=>document.getElementById(id);function searchContent(query){const q=String(query||"").trim().toLocaleLowerCase("pt-BR");const items=[...document.querySelectorAll(".post-row,.activity-row,.entry,.calendar-event,.social-row")];let matches=0;items.forEach(el=>{const hit=!q||el.textContent.toLocaleLowerCase("pt-BR").includes(q);el.style.display=hit?"":"none";if(q&&hit)matches++;});const input=$("globalSearch");let status=$("globalSearchStatus");if(!status&&input){status=document.createElement("div");status.id="globalSearchStatus";status.setAttribute("role","status");status.style.cssText="position:absolute;top:calc(100% + 7px);left:0;right:0;z-index:100;background:#06172e;border:1px solid #174574;border-radius:9px;padding:9px 12px;color:#a9c9f2;font-size:11px;box-shadow:0 12px 28px #0005;display:none";input.closest(".top-search").style.position="relative";input.closest(".top-search").appendChild(status);}if(status){status.textContent=!q?"":matches?matches+" resultado(s) encontrado(s)": "Nenhum resultado encontrado. Tente outro termo.";status.style.display=q?"block":"none";}}document.addEventListener("DOMContentLoaded",()=>{const input=document.getElementById("globalSearch");if(input){input.addEventListener("input",()=>searchContent(input.value));input.addEventListener("keydown",event=>{if(event.key==="Escape"){input.value="";searchContent("");input.blur();}});}document.addEventListener("keydown",event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();input?.focus();}else if(event.key==="/"&& !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||"")){event.preventDefault();input?.focus();}});});let url;let selectedVideo=null;let selectedDriveFile=null;let driveFiles=[];function show(p){document.querySelectorAll('main section').forEach(e=>e.classList.toggle('hidden',e.id!==p));document.querySelectorAll('.nav').forEach(e=>e.classList.toggle('active',e.dataset.page===p));const heading=$('heading');if(heading)heading.textContent=({inicio:'Olá! 👋',conteudos:'Criar conteúdo',agendamentos:'Agendamentos',publicacoes:'Publicações',estatisticas:'Estatísticas',contas:'Conectar contas',configuracoes:'Configurações'})[p]||'PostFlow3';render();if(p==='estatisticas')loadVideoAnalytics()}document.querySelectorAll('.nav').forEach(e=>e.onclick=()=>show(e.dataset.page));
+$('localVideo').addEventListener('change',()=>{selectedVideo=$('localVideo').files&&$('localVideo').files[0]||null;selectedDriveFile=null;if($('driveFileSelect'))$('driveFileSelect').value='';const status=$('driveStatus');if(url){URL.revokeObjectURL(url);url=null}if(selectedVideo){url=URL.createObjectURL(selectedVideo);$('preview').src=url;status.textContent=selectedVideo.name+' · '+(selectedVideo.size/1024/1024).toFixed(1)+' MB. Pronto para enviar.';}else{$('preview').removeAttribute('src');$('preview').load();status.textContent='Escolha um vídeo do computador ou celular.';}});
+async function loadDriveFiles(){const status=$("drivePickerStatus"),select=$("driveFileSelect");status.textContent="Carregando vídeos do Google Drive...";try{const r=await fetch("/api/drive-files",{credentials:"same-origin",cache:"no-store"});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Não foi possível listar vídeos do Google Drive.");driveFiles=data.files||[];select.innerHTML='<option value="">Selecione um vídeo do Drive</option>'+driveFiles.map(f=>'<option value="'+escapeHtml(f.id)+'">'+escapeHtml(f.name)+' ('+(f.size?((Number(f.size)/1024/1024).toFixed(1)+' MB'):'tamanho indisponível')+')</option>').join('');select.classList.remove("hidden");status.textContent=driveFiles.length?"Encontrados "+driveFiles.length+" vídeos. Escolha um; o envio pelo Drive é para o YouTube.":"Nenhum vídeo encontrado na conta Google conectada.";if(!driveFiles.length)select.classList.add("hidden");}catch(e){status.textContent=e.message||"Erro ao carregar vídeos do Drive.";}}
+function selectDriveVideo(id){selectedDriveFile=driveFiles.find(f=>f.id===id)||null;if(selectedDriveFile){selectedVideo=null;$("localVideo").value="";if(url){URL.revokeObjectURL(url);url=null;}$("preview").removeAttribute("src");$("preview").load();$("driveStatus").textContent="Vídeo selecionado do Google Drive: "+selectedDriveFile.name;$("drivePickerStatus").textContent="Selecionado: "+selectedDriveFile.name+". Marque apenas YouTube para publicar sem R2.";$("targetInstagram").checked=false;togglePublicationMode();}}
+function togglePublicationMode(){const immediate=$('publicationMode').value==='immediate';const yt=$('targetYouTube').checked;const ig=$('targetInstagram').checked;$('scheduledDateField').classList.toggle('hidden',immediate);$('publishButton').textContent=immediate?(yt&&ig?'Publicar agora no YouTube + Instagram':yt?'Publicar agora no YouTube':ig?'Publicar agora somente no Instagram':'Escolha uma plataforma'):(yt&&ig?'Agendar YouTube + Instagram':yt?'Agendar publicação no YouTube':ig?'Agendar somente no Instagram':'Escolha uma plataforma')}
+$('targetInstagram').addEventListener('change',togglePublicationMode);$('targetYouTube').addEventListener('change',togglePublicationMode);togglePublicationMode();
+async function save(){
+ const title=$("title").value.trim(),file=selectedVideo,mode=$("publicationMode").value,scheduledAt=$("date").value;
+ const youtubeAccountIds=selectedAccountIds("youtube"),instagramAccountIds=selectedAccountIds("instagram");
+ const publishYouTube=$("targetYouTube").checked&&youtubeAccountIds.length>0;
+ const publishInstagram=$("targetInstagram").checked&&instagramAccountIds.length>0;
+ if(!publishYouTube&&!publishInstagram){alert("Marque uma ou mais contas conectadas do YouTube ou Instagram como destino.");return;}
+ if(!title||(!file&&!selectedDriveFile)||(mode==="scheduled"&&!scheduledAt)){alert(mode==="immediate"?"Escolha um vídeo e digite um título.":"Escolha um vídeo, digite um título e escolha a data e o horário.");return;}
+ if(file&&!file.type.startsWith("video/")){alert("Escolha um arquivo de vídeo válido.");return;}
+ if($("targetYouTube").checked&&!youtubeAccountIds.length){alert("Conecte ou selecione pelo menos um canal do YouTube na lista de destinos.");return;}
+ if($("targetInstagram").checked&&!instagramAccountIds.length){alert("Conecte ou selecione pelo menos uma conta do Instagram na lista de destinos.");return;}
+ const button=document.querySelector('#conteudos .primary[onclick="save()"]');
+ if(button){button.disabled=true;button.textContent="Preparando publicação...";}
+ const status=$("driveStatus"),description=$("description").value;
+ const youtubeSuccess=[],instagramSuccess=[],warnings=[];
+ try{
+  if(selectedDriveFile){
+   const driveCleanupGroup=crypto.randomUUID();
+   if(publishInstagram)throw new Error("Para publicar também no Instagram, selecione o vídeo do computador/celular. O envio direto do Drive está disponível somente para YouTube.");
+   for(let i=0;i<youtubeAccountIds.length;i++){
+    const accountId=youtubeAccountIds[i];status.textContent="Enviando do Google Drive para o canal "+(i+1)+" de "+youtubeAccountIds.length+"...";
+    const response=await fetch("/api/drive-schedule",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileId:selectedDriveFile.id,title,description,publicationMode:mode,scheduledAt:mode==="scheduled"?new Date(scheduledAt).toISOString():null,youtubeAccountId:accountId,driveCleanupGroup})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok){warnings.push("YouTube ("+accountId+"): "+(data.error||"falha no envio"));continue;}
+    youtubeSuccess.push(data.message||"YouTube: envio confirmado");
+   }
+   await loadServerPosts();
+   const message="Concluído: "+youtubeSuccess.length+" canal(is) do YouTube processado(s)."+(warnings.length?" Avisos: "+warnings.join(" | "):"");
+   status.textContent=message;alert(message);show(youtubeSuccess.length?"publicacoes":"conteudos");return;
+  }
+  let instagramVideoKey=null,instagramDriveFileId=null;
+  if(publishInstagram){
+   status.textContent="Preparando o vídeo para as contas do Instagram...";
+   const form=new FormData();form.append("video",file);
+   const response=await fetch("/api/instagram-media-upload",{method:"POST",credentials:"same-origin",body:form});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok||!data.videoKey)throw new Error(data.error||"Não foi possível preparar o vídeo para o Instagram.");
+   instagramVideoKey=data.videoKey;instagramDriveFileId=data.driveFileId||null;
+  }
+  if(publishYouTube){
+   for(let accountIndex=0;accountIndex<youtubeAccountIds.length;accountIndex++){
+    const accountId=youtubeAccountIds[accountIndex];
+    status.textContent="Preparando YouTube "+(accountIndex+1)+" de "+youtubeAccountIds.length+"...";
+    const init=await fetch("/api/youtube-upload-session",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,description,filename:file.name,mimeType:file.type||"application/octet-stream",size:file.size,publicationMode:mode,scheduledAt:mode==="scheduled"?new Date(scheduledAt).toISOString():null,youtubeAccountId:accountId,publishInstagram:false})});
+    const session=await init.json().catch(()=>({}));
+    if(!init.ok){
+     const quota=/uploadlimitexceeded|exceeded the number of videos|upload limit|daily.*quota|quota.*exceed/i.test(String(session.error||""));
+     if(quota&&publishInstagram){warnings.push("YouTube atingiu o limite de uploads; continuarei com Instagram.");break;}
+     warnings.push("YouTube ("+accountId+"): "+(session.error||"não foi possível iniciar o envio"));continue;
+    }
+    const uploadId=session.uploadId;let offset=0,attempts=0,complete=false,quotaReached=false;const chunkSize=session.chunkSize||8388608;
+    while(offset<file.size){
+     const chunkEnd=Math.min(offset+chunkSize,file.size),chunk=file.slice(offset,chunkEnd);
+     status.textContent="Enviando para o canal "+(accountIndex+1)+"/"+youtubeAccountIds.length+": "+Math.min(100,Math.floor(offset/file.size*100))+"%";
+     if(button)button.textContent="Enviando "+Math.floor(offset/file.size*100)+"%...";
+     let response,data;
+     try{response=await fetch("/api/youtube-upload-chunk",{method:"POST",credentials:"same-origin",headers:{"X-PostFlow-Upload-Id":uploadId,"X-Chunk-Start":String(offset),"X-Chunk-End":String(chunkEnd-1),"X-Upload-Total":String(file.size),"Content-Type":"application/octet-stream"},body:chunk});data=await response.json().catch(()=>({}));}
+     catch(error){attempts++;if(attempts>4){warnings.push("YouTube ("+accountId+"): conexão interrompida durante o envio.");break;}await new Promise(resolve=>setTimeout(resolve,Math.min(8000,1000*attempts)));continue;}
+     if(!response.ok){
+      const quota=/uploadlimitexceeded|exceeded the number of videos|upload limit|daily.*quota|quota.*exceed/i.test(String(data.error||""));
+      if(quota&&publishInstagram){warnings.push("YouTube atingiu o limite de uploads; continuarei com Instagram.");quotaReached=true;break;}
+      warnings.push("YouTube ("+accountId+"): "+(data.error||"o envio falhou"));break;
+     }
+     attempts=0;
+     if(data.complete){complete=true;youtubeSuccess.push(data.message||"YouTube: envio confirmado");break;}
+     const next=Number(data.nextOffset);if(!Number.isSafeInteger(next)||next<=offset||next>file.size){warnings.push("YouTube ("+accountId+"): o avanço do envio não foi confirmado.");break;}offset=next;
+    }
+    if(quotaReached)break;
+    if(!complete)continue;
+   }
+  }
+  if(publishInstagram){
+   for(let i=0;i<instagramAccountIds.length;i++){
+    const accountId=instagramAccountIds[i];
+    try{
+     if(mode==="scheduled"){
+      status.textContent="Agendando Instagram "+(i+1)+" de "+instagramAccountIds.length+"...";
+      const response=await fetch("/api/instagram-schedule",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({videoKey:instagramVideoKey,driveFileId:instagramDriveFileId,title,caption:description,filename:file.name,size:file.size,scheduledAt:new Date(scheduledAt).toISOString(),accountId})});
+      const data=await response.json().catch(()=>({}));if(!response.ok||!data.scheduled)throw new Error(data.error||"não foi possível agendar");
+      instagramSuccess.push("Agendado no Instagram "+(i+1));
+     }else{
+      status.textContent="Publicando no Instagram "+(i+1)+" de "+instagramAccountIds.length+"...";
+      let response=await fetch("/api/instagram-publish",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({videoKey:instagramVideoKey,driveFileId:instagramDriveFileId,title,caption:description,filename:file.name,size:file.size,postId:"",accountId})});
+      let data=await response.json().catch(()=>({}));
+      for(let attempt=0;response.ok&&data.pending&&attempt<5;attempt++){status.textContent="Instagram "+(i+1)+": processando vídeo ("+(attempt+1)+"/5)...";await new Promise(resolve=>setTimeout(resolve,2500));response=await fetch("/api/instagram-publish",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({videoKey:instagramVideoKey,driveFileId:instagramDriveFileId,title,caption:description,filename:file.name,size:file.size,postId:"",accountId})});data=await response.json().catch(()=>({}));}
+      if(!response.ok||!data.published){warnings.push("Instagram ("+accountId+"): "+(data.error||"processamento ainda pendente"));continue;}
+      instagramSuccess.push("Publicado no Instagram "+(i+1));
+     }
+    }catch(error){warnings.push("Instagram ("+accountId+"): "+(error.message||"falha"));}
+   }
+  }
+  await loadServerPosts();
+  const summary=[];
+  if(publishYouTube)summary.push(youtubeSuccess.length+" envio(s) YouTube confirmado(s)");
+  if(publishInstagram)summary.push(instagramSuccess.length+" destino(s) Instagram concluído(s)");
+  const message="Resultado: "+summary.join("; ")+". "+(warnings.length?"Avisos: "+warnings.join(" | "):"Todos os destinos selecionados foram processados.");
+  status.textContent=message;alert(message);show(warnings.length&&youtubeSuccess.length+instagramSuccess.length===0?"conteudos":mode==="scheduled"?"agendamentos":"publicacoes");
+ }catch(error){status.textContent=error.message||"Erro ao publicar o vídeo.";alert(error.message||"Erro ao publicar o vídeo.");}
+ finally{if(button){button.disabled=false;togglePublicationMode();}}
+}
+async function cancelScheduledPost(id){
+ if(!id){alert("Não foi possível identificar este agendamento.");return;}
+ if(!confirm("Deseja cancelar este agendamento? Ele não será publicado."))return;
+ try{
+  const response=await fetch("/api/posts",{method:"DELETE",credentials:"same-origin",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({id})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"Não foi possível cancelar este agendamento.");
+  await loadServerPosts();
+  alert("Agendamento cancelado com sucesso.");
+ }catch(error){alert(error.message||"Erro ao cancelar o agendamento.");}
+}
+async function clearScheduledPosts(){
+ const button=$("clearSchedulesButton");
+ if(!confirm("Deseja cancelar TODOS os agendamentos pendentes? Publicações já concluídas não serão removidas."))return;
+ if(button){button.disabled=true;button.textContent="Limpando...";}
+ try{
+  const response=await fetch("/api/posts",{method:"DELETE",credentials:"same-origin",headers:{"Accept":"application/json"}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"Não foi possível cancelar os agendamentos.");
+  await loadServerPosts();
+  alert(data.cancelled?data.cancelled+" agendamento(s) cancelado(s).":(data.message||"Nenhum agendamento pendente encontrado.")+(data.failed?" "+data.failed+" item(ns) não puderam ser removidos.":""));
+ }catch(error){alert(error.message||"Erro ao limpar os agendamentos.");}
+ finally{if(button){button.disabled=false;button.textContent="Limpar agendamentos";}}
+}
+async function clearPostHistory(){
+ const button=$("clearHistoryButton");
+ if(!confirm("Tem certeza que deseja apagar TODO o histórico do PostFlow3, incluindo registros de publicações e agendamentos? Essa ação não pode ser desfeita."))return;
+ if(button){button.disabled=true;button.textContent="Limpando histórico...";}
+ try{
+  const response=await fetch("/api/posts",{method:"DELETE",credentials:"same-origin",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({action:"clear_history"})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"Não foi possível limpar o histórico.");
+  await loadServerPosts();
+  alert((data.message||"Histórico limpo.")+(data.failed?" "+data.failed+" item(ns) não puderam ser removidos.":""));
+ }catch(error){alert(error.message||"Erro ao limpar o histórico.");}
+ finally{if(button){button.disabled=false;button.textContent="Limpar histórico";}}
+}
+async function loadServerPosts(){try{const r=await fetch('/api/posts',{credentials:'same-origin',cache:'no-store'});if(r.ok){const d=await r.json();posts=d.posts||[];render()}}catch(e){const a=document.getElementById('recentActivity');if(a)a.innerHTML='<p class="muted">Não foi possível carregar o histórico agora.</p>'}}function render(){const statusOf=p=>String(p.status||'Rascunho');const when=p=>p.scheduledAt||p.scheduled_at||p.date||p.publishedAt||p.published_at||p.createdAt||p.created_at||'';const dtOf=p=>{const v=when(p);if(!v)return null;const d=new Date(v);return Number.isNaN(d.getTime())?null:d};const isPublished=p=>/publicad|published|success|conclu[ií]d/i.test(statusOf(p))&&!/agendad|scheduled|falha|erro/i.test(statusOf(p));const isFailed=p=>/falha|erro|failed/i.test(statusOf(p));const isScheduled=p=>!!(p.scheduledAt||p.scheduled_at||p.date)&&!isPublished(p)&&!isFailed(p)&&/agendad|scheduled|pendente|fila|queued|rascunho/i.test(statusOf(p));const fmt=v=>{if(!v)return'Horário não informado';const d=new Date(v);return Number.isNaN(d.getTime())?escapeHtml(String(v).replace('T',' ').slice(0,16)):escapeHtml(d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))};const platformText=p=>(p.platforms||p.nets||[p.platform||'Plataforma']).map(String).join(' · ');const statusLabel=p=>isPublished(p)?'Publicado':isScheduled(p)?'Agendado':isFailed(p)?'Falha':statusOf(p);const row=(p,mode)=>{const d=dtOf(p);const title=escapeHtml(p.title||p.filename||'Vídeo sem título');const platforms=escapeHtml(platformText(p));const status=statusLabel(p);const cls=isPublished(p)?'published':isScheduled(p)?'scheduled':isFailed(p)?'failed':'draft';const time=d?fmt(d):'Sem data registrada';const icon=String(platformText(p)).toLowerCase().includes('instagram')?'◎':String(platformText(p)).toLowerCase().includes('youtube')?'▶':'▣';const cover=p.coverUrl||p.thumbnailUrl||p.thumbnail_url||p.cover||p.thumbnail||p.videoThumbnail||'';const views=p.views??p.viewCount??p.view_count??p.metrics?.views;const likes=p.likes??p.likeCount??p.like_count??p.metrics?.likes;const accountsRaw=p.accounts||p.accountIds||p.account_ids||p.destinationAccounts||p.destination_accounts;const accountCount=Array.isArray(accountsRaw)?accountsRaw.length:(Number.isFinite(Number(p.accountCount??p.account_count))?Number(p.accountCount??p.account_count):null);const metric=(v,label)=>v!==undefined&&v!==null&&v!==''?'<span class="post-metric">'+label+' '+escapeHtml(Number(v).toLocaleString('pt-BR'))+'</span>':'';const accountLabel=accountCount!==null?' · '+accountCount+' conta'+(accountCount===1?'':'s'):' · contas selecionadas';return '<article class="post-row '+cls+'">'+(cover?'<img class="post-cover" src="'+escapeHtml(cover)+'" alt="Capa do vídeo" loading="lazy">':'<div class="post-cover post-cover-empty">'+icon+'</div>')+'<div class="post-row-main"><div class="post-row-title">'+title+'</div><div class="post-row-meta">'+platforms+(mode==='upcoming'?escapeHtml(accountLabel):'')+'</div><div class="post-row-time"><span class="post-time-icon">◷</span> '+time+'</div>'+(isPublished(p)?'<div class="post-metrics">'+metric(views,'▶')+metric(likes,'♥')+((views===undefined||views===null)&&(likes===undefined||likes===null)?'<span class="post-metric unavailable">Visualizações e likes não fornecidos pela plataforma</span>':'')+'</div>':'')+(p.error?'<div class="post-row-error">'+escapeHtml(p.error)+'</div>':'')+'</div><span class="post-status '+cls+'">'+status+'</span></article>'};const list=posts.length?posts.slice().sort((a,b)=>(dtOf(b)?.getTime()||0)-(dtOf(a)?.getTime()||0)).map(p=>'<div class="entry"><div><b>'+escapeHtml(p.title||p.filename||'Vídeo')+'</b><div class="muted">'+escapeHtml(p.filename||'Vídeo')+' · '+escapeHtml(platformText(p))+' · '+fmt(when(p))+' '+(p.youtubeUrl?'· <a href="'+escapeHtml(p.youtubeUrl)+'" target="_blank" rel="noopener">Ver publicação</a>':'')+(p.error?'· Falha: '+escapeHtml(p.error):'')+'</div></div><span class="tag">'+escapeHtml(statusLabel(p))+'</span></div>').join(''):'<p class="muted">Nenhum conteúdo registrado ainda.</p>';$('publishList').innerHTML=list;$('agendaList').innerHTML=posts.filter(isScheduled).sort((a,b)=>(dtOf(a)?.getTime()||Infinity)-(dtOf(b)?.getTime()||Infinity)).map(p=>'<div class="entry"><div><b>'+escapeHtml(p.title||p.filename||'Vídeo')+'</b><div class="muted">'+escapeHtml(platformText(p))+' · '+fmt(when(p))+'</div></div><div class="agenda-actions"><span class="tag">Agendado</span><button class="outline-button danger-button cancel-one-button" onclick="cancelScheduledPost(\''+escapeHtml(p.id||'')+'\')">Cancelar</button></div></div>').join('')||'<p class="muted">Nenhuma publicação agendada no histórico disponível.</p>';const latest=posts.slice().sort((a,b)=>(dtOf(b)?.getTime()||0)-(dtOf(a)?.getTime()||0));$('homeQueue').innerHTML=latest.length?latest.slice(0,4).map(p=>row(p,'recent')).join(''):'<div class="empty-state"><span>▣</span><b>Nenhuma publicação recente</b><small>Seus envios e publicações aparecerão aqui.</small></div>';$('count').textContent=posts.length;$('scheduled').textContent=posts.filter(isScheduled).length;const pubCount=document.getElementById('publishedCount');if(pubCount)pubCount.textContent=posts.filter(isPublished).length;const upcoming=document.getElementById('upcomingQueue');if(upcoming){const now=Date.now();const future=posts.filter(p=>isScheduled(p)&&dtOf(p)&&dtOf(p).getTime()>=now).sort((a,b)=>dtOf(a).getTime()-dtOf(b).getTime());const queued=posts.filter(p=>isScheduled(p)&&!dtOf(p)).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));const next=[...future,...queued].slice(0,5);upcoming.innerHTML=next.length?next.map(p=>row(p,'upcoming')).join(''):'<div class="empty-state"><span>◷</span><b>Nenhum próximo agendamento</b><small>Quando você programar uma publicação, ela aparecerá aqui com data, horário e plataforma.</small></div>'}const activity=document.getElementById('recentActivity');if(activity){const recent=latest.slice(0,5);activity.innerHTML=recent.length?recent.map(p=>'<article class="activity-row"><span class="activity-dot '+(isPublished(p)?'published':isScheduled(p)?'scheduled':isFailed(p)?'failed':'draft')+'">'+(isPublished(p)?'✓':isScheduled(p)?'◷':isFailed(p)?'!':'•')+'</span><div class="activity-main"><b>'+(isPublished(p)?'Publicação confirmada':isScheduled(p)?'Publicação agendada':isFailed(p)?'Falha na publicação':'Conteúdo atualizado')+'</b><small>'+escapeHtml(p.title||p.filename||'Vídeo')+' · '+fmt(when(p))+'</small></div></article>').join(''):'<div class="empty-state"><span>↻</span><b>Sem atividade recente</b><small>O histórico aparecerá conforme você usar o PostFlow3.</small></div>'}renderCalendar();renderStatistics()}function renderStatistics(){const el=id=>document.getElementById(id);const status=p=>String(p.status||"").toLowerCase();const published=p=>/published|publicad|success|conclu[ií]d/.test(status(p))||String(p.instagramStatus||"").toLowerCase()==="published"||!!p.publishedAt||!!p.instagramPublishedAt;const failed=p=>/falha|erro|failed/.test(status(p))||/falha|erro|failed/.test(String(p.instagramStatus||"").toLowerCase());const scheduled=p=>!published(p)&&!failed(p)&&(/scheduled|agendad|queued|pending|fila/.test(status(p))||!!(p.scheduledAt||p.scheduled_at)&&new Date(p.scheduledAt||p.scheduled_at).getTime()>Date.now());const put=(id,n)=>{const node=el(id);if(node)node.textContent=Number(n).toLocaleString("pt-BR")};put("analyticsTotal",posts.length);put("analyticsPublished",posts.filter(published).length);put("analyticsScheduled",posts.filter(scheduled).length);put("analyticsFailed",posts.filter(failed).length);const weekly=el("analyticsWeekly");if(weekly){const today=new Date();today.setHours(0,0,0,0);const days=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(today.getDate()-6+i);return d});const counts=days.map(d=>posts.filter(p=>{if(!published(p))return false;const raw=p.publishedAt||p.published_at||p.instagramPublishedAt||p.uploadedAt||p.createdAt||p.created_at;const date=raw?new Date(raw):null;return date&&!Number.isNaN(date.getTime())&&date.getFullYear()===d.getFullYear()&&date.getMonth()===d.getMonth()&&date.getDate()===d.getDate()}).length);const max=Math.max(1,...counts);weekly.innerHTML=days.map((d,i)=>'<div class="weekly-day"><span class="weekly-count">'+counts[i]+'</span><div class="weekly-track"><div class="weekly-bar" style="height:'+Math.max(counts[i]?5:2,counts[i]/max*100)+'%"></div></div><small>'+d.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","")+'</small></div>').join("");}const platformRoot=el("analyticsPlatforms");if(platformRoot){const destinations=[{name:"YouTube",key:"youtube",className:""},{name:"Instagram",key:"instagram",className:"instagram"}];const totals=destinations.map(d=>({...d,count:posts.filter(p=>(Array.isArray(p.platforms)?p.platforms: Array.isArray(p.nets)?p.nets:[p.platform||""]).some(x=>String(x).toLowerCase().includes(d.key))).length}));const max=Math.max(1,...totals.map(x=>x.count));platformRoot.innerHTML=totals.map(p=>'<div class="platform-breakdown-row"><div class="platform-breakdown-label"><span>'+p.name+'</span><strong>'+p.count+'</strong></div><div class="platform-track"><div class="platform-fill '+p.className+'" style="width:'+(p.count/max*100)+'%"></div></div></div>').join("")+(posts.length?'':'<p class="analytics-empty">Ainda não há conteúdos no histórico para calcular a distribuição por plataforma.</p>')}}let calendarOffset=0;let calendarFilter='all';function changeCalendar(days){calendarOffset+=days;renderCalendar()}function resetCalendar(){calendarOffset=0;renderCalendar()}function setCalendarFilter(filter){calendarFilter=['all','scheduled','published','failed'].includes(filter)?filter:'all';document.querySelectorAll('[data-calendar-filter]').forEach(b=>b.classList.toggle('active',b.dataset.calendarFilter===calendarFilter));renderCalendar()}function calendarStatus(p){const status=String(p.status||'Agendado');if(/falha|erro|failed/i.test(status))return'failed';if(/publicad|published|success|conclu[ií]d/i.test(status)&&!/agendad|scheduled/i.test(status))return'published';return'scheduled'}function renderCalendar(){const root=document.getElementById('scheduleCalendar');const range=document.getElementById('calendarRange');if(!root)return;const today=new Date();today.setHours(0,0,0,0);const monday=new Date(today);monday.setDate(today.getDate()-((today.getDay()+6)%7)+calendarOffset);const days=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d});if(range)range.textContent=days[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' — '+days[6].toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});const dayNames=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];const dated=posts.filter(p=>p.scheduledAt||p.scheduled_at||p.date||p.publishedAt||p.published_at||p.createdAt||p.created_at);const eventFor=(p,d)=>{const raw=p.scheduledAt||p.scheduled_at||p.date||p.publishedAt||p.published_at||p.createdAt||p.created_at;const dt=new Date(raw);return !isNaN(dt)&&dt.getFullYear()===d.getFullYear()&&dt.getMonth()===d.getMonth()&&dt.getDate()===d.getDate()};const events=dated.filter(p=>days.some(d=>eventFor(p,d)));const counts={scheduled:0,published:0,failed:0};events.forEach(p=>counts[calendarStatus(p)]++);const summary=document.getElementById('calendarSummary');if(summary)summary.innerHTML='<span><b>'+events.length+'</b> conteúdo(s) nesta semana</span><span class="summary-scheduled"><b>'+counts.scheduled+'</b> agendado(s)</span><span class="summary-published"><b>'+counts.published+'</b> publicado(s)</span><span class="summary-failed"><b>'+counts.failed+'</b> com falha</span>';const filtered=events.filter(p=>calendarFilter==='all'||calendarStatus(p)===calendarFilter);root.innerHTML='<div class="calendar-days">'+days.map((d,i)=>{const items=filtered.filter(p=>eventFor(p,d)).sort((a,b)=>new Date(a.scheduledAt||a.scheduled_at||a.date||a.publishedAt||a.published_at||a.createdAt||a.created_at)-new Date(b.scheduledAt||b.scheduled_at||b.date||b.publishedAt||b.published_at||b.createdAt||b.created_at));const isToday=d.getTime()===today.getTime();return '<div class="calendar-day'+(isToday?' is-today':'')+'"><div class="calendar-day-head"><span>'+dayNames[i]+'</span><b>'+d.getDate()+'</b></div><div class="calendar-events">'+(items.length?items.map(p=>{const raw=p.scheduledAt||p.scheduled_at||p.date||p.publishedAt||p.published_at||p.createdAt||p.created_at;const dt=new Date(raw);const cls=calendarStatus(p);const plats=(p.platforms||p.nets||[p.platform||'Post']).map(String).join(' + ');return '<div class="calendar-event '+cls+'" title="'+escapeHtml(p.title||p.filename||'Vídeo')+'"><b>'+escapeHtml(plats)+'</b><span>'+escapeHtml(dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))+'</span><small>'+escapeHtml(p.title||p.filename||'Vídeo')+'</small></div>'}).join(''):'<span class="calendar-empty">—</span>')+'</div></div>'}).join('')+'</div>'+(filtered.length?'':'<p class="calendar-empty-note">'+(events.length?'Nenhum item corresponde a este filtro nesta semana.':'Nenhum conteúdo com data registrada nesta semana. Seus agendamentos reais aparecerão aqui.')+'</p>')}function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}let socialAccounts=[];
+function accountLabel(a){const platform=a.platform==="instagram"?"Instagram":"YouTube";const name=String(a.username||a.accountId||"Conta conectada");return platform+" · "+name;}
+async function loadSocialAccounts(){
+ const list=document.getElementById("socialAccountsList"),targets=document.getElementById("destinationAccounts");
+ try{
+  const r=await fetch("/api/social-accounts",{credentials:"same-origin",cache:"no-store"}),d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||"Não foi possível carregar as contas.");
+  socialAccounts=Array.isArray(d.accounts)?d.accounts:[];
+  const instagramCount=socialAccounts.filter(a=>a.platform==="instagram").length;
+  const youtubeCount=socialAccounts.filter(a=>a.platform==="youtube").length;
+  const instagramCounter=document.getElementById("instagramAccountCount"),youtubeCounter=document.getElementById("youtubeAccountCount"),totalCounter=document.getElementById("totalSocialAccountCount");
+  if(instagramCounter)instagramCounter.textContent=String(instagramCount);
+  if(youtubeCounter)youtubeCounter.textContent=String(youtubeCount);
+  if(totalCounter)totalCounter.textContent=String(socialAccounts.length);
+  if(list)list.innerHTML=socialAccounts.length?socialAccounts.map(a=>'<div class="entry"><div><b>'+escapeHtml(a.platform==="instagram"?"📸 Instagram":"▶️ YouTube")+'</b><div class="muted">'+escapeHtml(a.username||a.accountId)+'</div></div><button class="outline-button" onclick="removeSocialAccount(\''+escapeHtml(a.platform)+'\',\''+escapeHtml(a.accountId)+'\')">Desconectar</button></div>').join(""):'<p class="muted">Nenhuma conta conectada ainda. Use um dos botões acima para adicionar sua primeira conta.</p>';
+  renderDestinationAccounts();
+ }catch(e){if(list)list.innerHTML='<p class="muted">'+escapeHtml(e.message||"Erro ao carregar contas.")+'</p>';if(targets)targets.innerHTML='<p class="muted">Não foi possível carregar as contas conectadas.</p>';}
+}
+function renderDestinationAccounts(){
+ const root=document.getElementById("destinationAccounts");if(!root)return;
+ const previous=new Set([...root.querySelectorAll("input[data-platform-account]:checked")].map(x=>x.dataset.platform+":"+x.dataset.platformAccount));
+ const hadCheckboxes=root.querySelectorAll("input[data-platform-account]").length>0;
+ if(!socialAccounts.length){root.innerHTML='<p class="muted">Conecte uma ou mais contas na seção “Contas” para selecionar destinos específicos.</p>';document.getElementById("targetYouTube").checked=false;document.getElementById("targetInstagram").checked=false;togglePublicationMode();return;}
+ const platforms=["youtube","instagram"];
+ root.innerHTML=platforms.map(platform=>{
+  const list=socialAccounts.filter(a=>a.platform===platform);
+  if(!list.length)return "";
+  const title=platform==="instagram"?"📸 Contas Instagram":"▶️ Canais YouTube";
+  return '<div class="destination-group"><b>'+title+'</b><div class="checks">'+list.map(a=>{
+   const id=String(a.accountId),checked=hadCheckboxes?previous.has(platform+":"+id):true;
+   return '<label><input type="checkbox" data-platform-account="'+escapeHtml(id)+'" data-platform="'+platform+'" '+(checked?'checked':'')+'> '+escapeHtml(a.username||id)+'</label>';
+  }).join("")+'</div></div>';
+ }).join("");
+ for(const platform of platforms){const master=document.getElementById(platform==="youtube"?"targetYouTube":"targetInstagram");const choices=[...root.querySelectorAll('input[data-platform="'+platform+'"]')];if(master)master.checked=choices.some(x=>x.checked);}
+ root.querySelectorAll("input[data-platform-account]").forEach(input=>input.addEventListener("change",()=>{
+  const platform=input.dataset.platform,master=document.getElementById(platform==="youtube"?"targetYouTube":"targetInstagram");
+  const any=[...root.querySelectorAll('input[data-platform="'+platform+'"]')].some(x=>x.checked);
+  if(master)master.checked=any;togglePublicationMode();
+ }));
+ for(const platform of platforms){
+  const master=document.getElementById(platform==="youtube"?"targetYouTube":"targetInstagram");
+  if(master&&!master.dataset.accountToggleBound){master.dataset.accountToggleBound="1";master.addEventListener("change",()=>{root.querySelectorAll('input[data-platform="'+platform+'"]').forEach(x=>x.checked=master.checked);togglePublicationMode();});}
+ }
+}
+function selectedAccountIds(platform){const root=document.getElementById("destinationAccounts");return root?[...root.querySelectorAll('input[data-platform="'+platform+'"]:checked')].map(x=>x.dataset.platformAccount):[];}
+async function removeSocialAccount(platform,accountId){
+ if(!confirm("Deseja desconectar esta conta do PostFlow3? Os agendamentos já existentes não serão apagados."))return;
+ try{const r=await fetch("/api/social-accounts",{method:"DELETE",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform,accountId})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Não foi possível desconectar a conta.");await loadSocialAccounts();refreshInstagramStatus();refreshYouTubeStatus();}catch(e){alert(e.message||"Não foi possível desconectar a conta.");}
+}
+function openConnectPopup(url,name){const w=window.open(url,name,"popup=yes,width=620,height=760");if(!w)window.location.href=url;}
+async function connectInstagram(){openConnectPopup("/api/instagram-auth","postflow3-instagram-connect");}
+async function connectYouTube(){openConnectPopup("/api/youtube-auth","postflow3-youtube-connect");}
+window.addEventListener("message",event=>{if(event.origin!==window.location.origin)return;if(["postflow3-instagram-connected","postflow3-youtube-connected"].includes(event.data?.type)){loadSocialAccounts();refreshInstagramStatus();refreshYouTubeStatus();}});
+async function refreshInstagramStatus(){try{const r=await fetch("/api/instagram-status",{credentials:"same-origin",cache:"no-store"});const d=await r.json().catch(()=>({}));const connected=r.ok&&d.connected===true;const small=document.getElementById("instagramStatusText");const pill=document.getElementById("instagramStatusPill");const count=document.getElementById("connectedCount");if(small)small.textContent=connected?(d.username?"@"+d.username:"Conectado"):"Não conectado";const quick=document.getElementById("igQuickStatus");if(quick)quick.textContent=connected?"Conectado":"Não conectado";const igFollowers=d.followersCount??d.followerCount??d.followers??d.account?.followers_count;const igMetric=document.getElementById("instagramFollowers");if(igMetric&&connected&&igFollowers!==undefined)igMetric.textContent=Number(igFollowers).toLocaleString("pt-BR");const extra=document.getElementById("instagramAccountExtra");if(extra&&connected&&igFollowers!==undefined)extra.textContent=Number(igFollowers).toLocaleString("pt-BR")+" seguidores";if(pill){pill.textContent=connected?"Conectado":"Pendente";pill.style.background=connected?"#e4f8ed":"#fff5d8";pill.style.color=connected?"#087443":"#a07a12"}if(count){const yt=document.getElementById("youtubeStatusText");updateConnectedCount()}}catch(e){const small=document.getElementById("instagramStatusText");if(small)small.textContent="Não foi possível verificar";}}async function refreshYouTubeStatus(){try{const r=await fetch("/api/youtube-status",{credentials:"same-origin",cache:"no-store"});const d=await r.json().catch(()=>({}));const connected=r.ok&&d.connected===true;const text=connected?"Conectado":"Não conectado";const small=document.getElementById("youtubeStatusText");const pill=document.getElementById("youtubeStatusPill");const count=document.getElementById("connectedCount");if(small)small.textContent=text;const quick=document.getElementById("ytQuickStatus");if(quick)quick.textContent=text;const extra=document.getElementById("youtubeAccountExtra");const subs=d.subscriberCount??d.subscribers??d.statistics?.subscriberCount??d.channel?.statistics?.subscriberCount;const ytMetric=document.getElementById("youtubeFollowers");if(ytMetric&&connected&&subs!==undefined)ytMetric.textContent=Number(subs).toLocaleString("pt-BR");if(extra&&connected&&subs!==undefined)extra.textContent=Number(subs).toLocaleString("pt-BR")+" inscritos";if(pill){pill.textContent=connected?"Conectado":"Pendente";pill.style.background=connected?"#e4f8ed":"#fff5d8";pill.style.color=connected?"#087443":"#a07a12"}updateConnectedCount()}catch(e){const small=document.getElementById("youtubeStatusText");if(small)small.textContent="Não foi possível verificar";}}async function connectYouTube(){window.location.href='/api/youtube-auth';}function updateConnectedCount(){const ids=["instagramStatusPill","youtubeStatusPill"];const n=ids.reduce((sum,id)=>sum+(document.getElementById(id)?.textContent==="Conectado"?1:0),0);const count=document.getElementById("connectedCount");if(count)count.textContent=n+"/2"}async function connectTikTok(){alert("A integração TikTok está pausada. Use Instagram ou YouTube.");}async function refreshTikTokStatus(){try{const r=await fetch("/api/tiktok-status",{credentials:"same-origin",cache:"no-store"});const d=await r.json().catch(()=>({}));const connected=r.ok&&d.connected===true;const small=document.getElementById("tiktokStatusText");const pill=document.getElementById("tiktokStatusPill");if(small)small.textContent=connected?(d.username||"Conectado"):"Não conectado";if(pill){pill.textContent=connected?"Conectado":"Pendente";pill.style.background=connected?"#e4f8ed":"#fff5d8";pill.style.color=connected?"#087443":"#a07a12"}updateConnectedCount();}catch(e){const small=document.getElementById("tiktokStatusText");if(small)small.textContent="Não foi possível verificar";updateConnectedCount();}}function setAuthMode(mode){const reg=mode==="register";document.getElementById("registerForm").classList.toggle("hidden",!reg);document.getElementById("loginForm").classList.toggle("hidden",reg);document.getElementById("tabRegister").classList.toggle("active",reg);document.getElementById("tabLogin").classList.toggle("active",!reg);document.getElementById("authTitle").textContent=reg?"Crie sua conta":"Bem-vindo de volta";}
+async function submitRegister(event){event.preventDefault();const message=document.getElementById("registerMessage");message.textContent="Criando sua conta...";const body={name:document.getElementById("registerName").value,email:document.getElementById("registerEmail").value,password:document.getElementById("registerPassword").value};try{const r=await fetch("/api/register",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error((d.error||"Não foi possível criar a conta.")+(d.detail?" Detalhe técnico: "+d.detail:""));document.getElementById("authGate").style.display="none";startApp();}catch(e){message.textContent=e.message||"Erro no cadastro.";}}
+async function submitLogin(event){event.preventDefault();const message=document.getElementById("loginMessage");message.textContent="Entrando...";const body={email:document.getElementById("loginEmail").value,password:document.getElementById("loginPassword").value};try{const r=await fetch("/api/login",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Não foi possível entrar.");document.getElementById("authGate").style.display="none";startApp();}catch(e){message.textContent=e.message||"Erro no login.";}}
+async function initAuth(){try{const r=await fetch("/api/me",{credentials:"same-origin",cache:"no-store"});const d=await r.json();if(r.ok&&d.authenticated){document.getElementById("authGate").style.display="none";startApp();}else{document.getElementById("authGate").style.display="flex";}}catch{document.getElementById("authGate").style.display="flex";}}
+async function logoutUser(){try{await fetch("/api/logout",{method:"POST",credentials:"same-origin"});}finally{location.reload();}}
+let aiCaptionDraft=null;
+async function extractVideoFrames(file){
+ const url=URL.createObjectURL(file),video=document.createElement("video");
+ video.muted=true;video.preload="metadata";video.playsInline=true;video.src=url;
+ try{
+  await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=()=>reject(new Error("Não consegui abrir este vídeo no navegador."));});
+  const duration=Number.isFinite(video.duration)?video.duration:0;
+  if(!duration)throw new Error("O vídeo não tem duração válida.");
+  const times=[Math.min(0.5,duration/4),duration*0.35,duration*0.7,duration>2?duration-0.5:duration*0.9];
+  const frames=[];
+  for(const time of [...new Set(times.map(t=>Math.max(0,Math.min(t,Math.max(0,duration-0.1))))) ]){
+   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error("Tempo esgotado ao analisar o vídeo.")),10000);video.onseeked=()=>{clearTimeout(timer);resolve()};video.currentTime=time;});
+   const canvas=document.createElement("canvas");const scale=Math.min(1,640/(video.videoWidth||640));canvas.width=Math.max(1,Math.round((video.videoWidth||640)*scale));canvas.height=Math.max(1,Math.round((video.videoHeight||360)*scale));
+   canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);frames.push(canvas.toDataURL("image/jpeg",0.68));
+  }
+  return frames;
+ }finally{URL.revokeObjectURL(url);video.remove();}
+}
+async function generateAICaption(){
+ const file=document.getElementById("localVideo")?.files?.[0],button=document.getElementById("aiCaptionButton"),status=document.getElementById("aiCaptionStatus"),result=document.getElementById("aiCaptionResult");
+ if(!file){status.textContent="Primeiro escolha o vídeo que deseja analisar.";return;}
+ if(!file.type.startsWith("video/")){status.textContent="Escolha um arquivo de vídeo válido.";return;}
+ button.disabled=true;button.textContent="Analisando o vídeo...";status.textContent="Extraindo alguns quadros do vídeo com segurança no seu navegador. Isso pode levar alguns segundos.";result.classList.add("hidden");
+ try{
+  const frames=await extractVideoFrames(file);status.textContent="A IA está analisando o conteúdo e preparando as sugestões...";
+  const response=await fetch("/api/ai-caption",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename:file.name,context:document.getElementById("aiContext")?.value||document.getElementById("description")?.value||"",frames})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error((data.error||"Não foi possível gerar sugestões.")+(data.detail?"\nDetalhe do Gemini: "+data.detail:""));
+  aiCaptionDraft=data;document.getElementById("aiCaptionRationale").textContent=data.rationale||"Confira as sugestões antes de publicar.";result.classList.remove("hidden");status.textContent="Sugestões prontas. Revise e escolha se deseja usá-las.";
+ }catch(error){status.textContent=error.message||"Falha ao analisar o vídeo.";}
+ finally{button.disabled=false;button.textContent="✦ Gerar título, legenda e hashtags com IA";}
+}
+function applyAICaption(){
+ if(!aiCaptionDraft)return;
+ const title=document.getElementById("title"),description=document.getElementById("description");
+ if(title&&aiCaptionDraft.title)title.value=aiCaptionDraft.title;
+ if(description){const tags=(aiCaptionDraft.hashtags||[]).map(x=>"#"+String(x).replace(/^#+/,"")).join(" ");description.value=[aiCaptionDraft.caption||"",tags].filter(Boolean).join("\\n\\n");}
+ document.getElementById("aiCaptionStatus").textContent="Sugestões aplicadas. Você ainda pode editar tudo antes de publicar.";
+}
+function startApp(){render();refreshYouTubeStatus();refreshInstagramStatus();loadSocialAccounts();loadServerPosts();}
+initAuth();
+let videoAnalyticsData=null;
+const metricNumber=v=>v===null||v===undefined?"—":Number(v).toLocaleString("pt-BR");
+function renderVideoAnalytics(){
+ const summary=$("videoAnalyticsSummary"),list=$("videoAnalyticsList"),status=$("videoAnalyticsStatus"),select=$("videoAnalyticsPlatform");
+ if(!summary||!list||!status)return;
+ if(!videoAnalyticsData){summary.innerHTML='<div class="video-analytics-empty">Clique em “Atualizar métricas” para consultar as redes sociais.</div>';list.innerHTML="";return;}
+ const all=Object.values(videoAnalyticsData.platforms||{}),filter=select?.value||"all";
+ const visible=all.filter(p=>filter==="all"||(filter==="YouTube"&&p===videoAnalyticsData.platforms.youtube)||(filter==="Instagram"&&p===videoAnalyticsData.platforms.instagram));
+ const videos=visible.flatMap(p=>p.videos||[]);
+ const views=videos.filter(v=>v.views!==null&&v.views!==undefined).reduce((sum,v)=>sum+Number(v.views||0),0);
+ const yt=visible.includes(videoAnalyticsData.platforms.youtube)?(videoAnalyticsData.platforms.youtube.videos||[]):[];
+ const ig=visible.includes(videoAnalyticsData.platforms.instagram)?(videoAnalyticsData.platforms.instagram.videos||[]):[];
+ const totalLikes=videos.reduce((sum,v)=>sum+Number(v.likes||0),0);
+ summary.innerHTML='<div class="video-analytics-kpi"><small>Visualizações informadas pelas APIs</small><strong>'+metricNumber(videos.some(v=>v.views!==null&&v.views!==undefined)?views:null)+'</strong></div><div class="video-analytics-kpi"><small>Vídeos com métricas disponíveis</small><strong>'+metricNumber(videos.length)+'</strong></div><div class="video-analytics-kpi"><small>Curtidas disponíveis</small><strong>'+metricNumber(videos.some(v=>v.likes!==null&&v.likes!==undefined)?totalLikes:null)+'</strong></div>';
+ const items=videos.slice().sort((a,b)=>Number(b.views||0)-Number(a.views||0));
+ list.innerHTML=items.length?items.map(v=>'<article class="video-analytics-item">'+(v.thumbnail?'<img class="video-analytics-thumb" src="'+escapeHtml(v.thumbnail)+'" alt="" loading="lazy">':'<div class="video-analytics-thumb-placeholder">'+(v.platform==="YouTube"?"▶":"◎")+'</div>')+'<div class="video-analytics-content"><b>'+escapeHtml(v.postTitle||v.title||"Vídeo publicado")+'</b><div class="video-analytics-meta">'+escapeHtml(v.platform||"")+(v.publishedAt?" · "+escapeHtml(new Date(v.publishedAt).toLocaleDateString("pt-BR")):"")+'</div><div class="video-analytics-numbers"><span>Visualizações <strong>'+metricNumber(v.views)+'</strong></span>'+(v.reach!==undefined&&v.reach!==null?'<span>Alcance <strong>'+metricNumber(v.reach)+'</strong></span>':"")+(v.likes!==undefined&&v.likes!==null?'<span>Curtidas <strong>'+metricNumber(v.likes)+'</strong></span>':"")+(v.comments!==undefined&&v.comments!==null?'<span>Comentários <strong>'+metricNumber(v.comments)+'</strong></span>':"")+(v.saved!==undefined&&v.saved!==null?'<span>Salvos <strong>'+metricNumber(v.saved)+'</strong></span>':"")+(v.shares!==undefined&&v.shares!==null?'<span>Compartilhamentos <strong>'+metricNumber(v.shares)+'</strong></span>':"")+'</div>'+(v.url?'<a class="video-analytics-link" href="'+escapeHtml(v.url)+'" target="_blank" rel="noopener noreferrer">Abrir publicação ↗</a>':"")+'</div></article>').join(""):'<div class="video-analytics-empty">Nenhuma métrica retornada para este filtro. Verifique se há vídeos publicados no histórico e se a conta permite leitura de insights.</div>';
+ status.textContent=visible.map(p=>(p===videoAnalyticsData.platforms.youtube?"YouTube":"Instagram")+": "+(p.message||"Sem detalhes.")).join("\n");
+ if(videoAnalyticsData.updatedAt&&$("videoAnalyticsUpdated"))$("videoAnalyticsUpdated").textContent="Atualizado em "+new Date(videoAnalyticsData.updatedAt).toLocaleString("pt-BR");
+}
+async function loadVideoAnalytics(){
+ const button=$("refreshVideoAnalytics"),status=$("videoAnalyticsStatus");
+ if(button){button.disabled=true;button.textContent="Consultando...";}
+ if(status)status.textContent="Consultando as APIs das redes sociais...";
+ try{
+  const response=await fetch("/api/analytics-metrics",{credentials:"same-origin",cache:"no-store"});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"Não foi possível consultar as métricas.");
+  videoAnalyticsData=data;renderVideoAnalytics();
+ }catch(error){if(status)status.textContent=error.message||"Erro ao consultar as métricas.";}
+ finally{if(button){button.disabled=false;button.textContent="↻ Atualizar métricas";}}
+}
+
+/* Local preferences: visual-only; does not touch publishing integrations or stored posts. */
+function initPostFlowPreferences(){
+ const ids=["prefCompact","prefMotion","prefTimezone","prefAlerts"];
+ const defaults={prefCompact:false,prefMotion:false,prefTimezone:"America/Sao_Paulo",prefAlerts:true};
+ let saved={};
+ try{saved=JSON.parse(localStorage.getItem("postflow3.preferences")||"{}")||{};}catch(e){}
+ const values={...defaults,...saved};
+ for(const id of ids){const el=$(id);if(!el)continue;if(el.type==="checkbox")el.checked=Boolean(values[id]);else el.value=values[id];}
+ document.body.classList.toggle("compact-ui",Boolean(values.prefCompact));
+ document.body.classList.toggle("reduce-motion",Boolean(values.prefMotion));
+ const button=$("savePreferences"),status=$("preferencesStatus");
+ if(button&&!button.dataset.bound){button.dataset.bound="1";button.addEventListener("click",()=>{
+  const next={prefCompact:$("prefCompact").checked,prefMotion:$("prefMotion").checked,prefTimezone:$("prefTimezone").value,prefAlerts:$("prefAlerts").checked};
+  try{localStorage.setItem("postflow3.preferences",JSON.stringify(next));document.body.classList.toggle("compact-ui",next.prefCompact);document.body.classList.toggle("reduce-motion",next.prefMotion);if(status)status.textContent="Preferências salvas neste navegador."; }
+  catch(e){if(status)status.textContent="Não foi possível salvar neste navegador. Verifique as permissões de armazenamento.";}
+ });}
+}
+initPostFlowPreferences();
+
+function syncDestinationChoices(){
+ const yt=$("targetYouTube"),ig=$("targetInstagram");
+ const ys=$("youtubeDestinationState"),is=$("instagramDestinationState");
+ if(ys&&yt)ys.textContent=yt.checked?"Selecionado":"Desativado";
+ if(is&&ig)is.textContent=ig.checked?"Selecionado":"Desativado";
+ const btn=$("publishButton");
+ if(btn&&yt&&ig){const names=[yt.checked?"YouTube":"",ig.checked?"Instagram":""].filter(Boolean);const mode=$("publicationMode")?.value;btn.disabled=names.length===0;btn.style.opacity=names.length?"1":".55";if(names.length){btn.textContent=(mode==="immediate"?"Publicar agora em ":"Agendar publicação no ")+names.join(" e ");}else btn.textContent="Selecione pelo menos um destino";}
+}
+["targetYouTube","targetInstagram"].forEach(id=>$(id)?.addEventListener("change",syncDestinationChoices));
+$("publicationMode")?.addEventListener("change",syncDestinationChoices);
+syncDestinationChoices();
+</script></body></html>

@@ -1,0 +1,1 @@
+export async function onRequest(){return new Response(JSON.stringify({connected:false,paused:true}),{status:200,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});}

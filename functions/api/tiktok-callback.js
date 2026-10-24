@@ -1,0 +1,1 @@
+export async function onRequest(){return new Response(JSON.stringify({error:"A integração TikTok está pausada nesta versão."}),{status:410,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});}
