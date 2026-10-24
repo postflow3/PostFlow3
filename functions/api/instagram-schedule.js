@@ -61,6 +61,7 @@ export async function onRequestPost({ request, env }) {
       size,
       driveFileId,
       driveCleanupPending: true,
+      driveCleanupGroup: videoKey,
       platforms: ["Instagram"],
       publicationMode: "scheduled",
       scheduledAt: date.toISOString(),
