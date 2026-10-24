@@ -8,7 +8,7 @@ const hasPlatform = (post, platform) => Array.isArray(post.platforms) ? post.pla
 async function googleAccessToken(env, userId, accountId = "") {
   let tokens = await getSocialAccount(env, userId, "youtube", accountId);
   if (!tokens) throw new Error("Conecte novamente a conta YouTube selecionada.");
-  const key = accountId ? socialAccountKey(userId, "youtube", accountId) : userKey(userId, "youtube-owner");
+  const key = accountId && accountId !== "primary" ? socialAccountKey(userId, "youtube", accountId) : userKey(userId, "youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A conexão Google não tem token de renovação.");
