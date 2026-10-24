@@ -1,6 +1,7 @@
 import { getSession, userKey } from "../_lib/security.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 const safe=(v,max)=>String(v||"").trim().slice(0,max);
+const isPendingPost=post=>{const status=String(post?.status||"").trim().toLowerCase();if(/publicad|published|success|conclu[ií]d|falha|erro|failed|cancelad/.test(status))return false;return ["scheduled","agendado","queued","pending","pendente","na fila","em fila","rascunho","draft","processing","in_progress"].includes(status)||!!(post?.scheduledAt||post?.scheduled_at)&&!post?.publishedAt&&!post?.published_at;};
 export async function onRequestGet({request,env}){
  const session=await getSession(request,env);if(!session)return json({error:"Faça login novamente."},401);
  if(!env.POSTFLOW3_KV)return json({error:"Armazenamento KV não configurado."},503);
@@ -41,8 +42,7 @@ export async function onRequestDelete({request,env}){
    const key=userKey(session.userId,"post:"+requestedId);
    const post=await env.POSTFLOW3_KV.get(key,"json");
    if(!post)return json({error:"Esse agendamento não foi encontrado."},404);
-   const status=String(post.status||"").toLowerCase();
-   const pending=["scheduled","agendado","queued","pending","pendente","na fila","em fila"].includes(status);
+   const pending=isPendingPost(post);
    if(!pending)return json({error:"Só é possível cancelar itens que ainda estão aguardando publicação."},409);
    if(env.POSTFLOW3_MEDIA&&post.videoKey)await env.POSTFLOW3_MEDIA.delete(post.videoKey);
    await env.POSTFLOW3_KV.delete(key);
@@ -54,8 +54,7 @@ export async function onRequestDelete({request,env}){
    const key=item.name;
    const post=await env.POSTFLOW3_KV.get(key,"json");
    if(!post)continue;
-   const status=String(post.status||"").toLowerCase();
-   const pending=(status==="scheduled"||status==="agendado"||status==="queued"||status==="pending"||status==="pendente"||status==="na fila"||status==="em fila");
+   const pending=isPendingPost(post);
    if(!pending)continue;
    try{
     if(env.POSTFLOW3_MEDIA&&post.videoKey)await env.POSTFLOW3_MEDIA.delete(post.videoKey);
