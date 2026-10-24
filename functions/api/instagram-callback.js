@@ -1,4 +1,5 @@
-import { getSession, verifyStateCookie, encryptJson, userKey } from "../_lib/security.js";
+import { getSession, verifyStateCookie } from "../_lib/security.js";
+import { saveSocialAccount } from "../_lib/social-accounts.js";
 function page(title,message,success=false){const t=title.replace(/[&<>"]/g,""),m=message.replace(/[&<>"]/g,"");return `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t} — PostFlow3</title><body style="font:16px system-ui;max-width:640px;margin:12vh auto;padding:24px;color:#171735"><h1>${t}</h1><p>${m}</p><p><a href="/">Voltar ao PostFlow3</a></p><script>if(${success}){try{if(window.opener)window.opener.postMessage({type:"postflow3-instagram-connected"},window.location.origin)}catch(e){}}</script></body></html>`;}
 export async function onRequestGet({request,env}){
  const url=new URL(request.url),p=url.searchParams;
@@ -33,8 +34,8 @@ export async function onRequestGet({request,env}){
   const pr=await fetch(profileUrl),profile=await pr.json();
   if(!pr.ok||!profile.user_id)return respond("Autorização incompleta","Não foi possível ler o perfil. Verifique os produtos e permissões da Instagram API no painel da Meta.",502);
   stage="criptografando e salvando a conexão";
-  const encrypted=await encryptJson(env,{access_token:accessToken,expiry_date:Date.now()+expiresIn*1000,user_id:String(profile.user_id),username:profile.username||"",saved_at:Date.now()});
-  await env.POSTFLOW3_KV.put(userKey(session.userId,"instagram-owner"),encrypted);
+  const accountData={access_token:accessToken,expiry_date:Date.now()+expiresIn*1000,user_id:String(profile.user_id),username:profile.username||"",saved_at:Date.now()};
+  await saveSocialAccount(env,session.userId,"instagram",String(profile.user_id),profile.username||"",accountData);
   return respond("Instagram conectado!","A conta @"+(profile.username||"Instagram")+" foi autorizada e os dados foram guardados criptografados no servidor.",200,true);
  }catch(error){
   console.error("PostFlow3 Instagram callback failure", {stage,error_name:error?.name||"Error",error_message:String(error?.message||"erro desconhecido").slice(0,240)});
