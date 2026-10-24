@@ -20,11 +20,11 @@ export async function onRequestGet({ request, env }) {
         const { decryptJson } = await import("../_lib/security.js");
         data = await decryptJson(env, legacy);
       } catch { continue; }
-      const accountId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "");
+      const accountId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "primary");
       if (!accountId || accounts.some(a => a.platform === platform && String(a.accountId) === accountId)) continue;
       accounts.push({
         accountId, platform,
-        username: String(data.username || data.channel_title || ""),
+        username: String(data.username || data.channel_title || (accountId === "primary" ? "Canal principal" : "")),
         connectedAt: new Date(Number(data.saved_at || Date.now())).toISOString(),
         legacy: true
       });
