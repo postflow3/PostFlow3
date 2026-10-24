@@ -736,7 +736,7 @@ function renderDestinationAccounts(){
  const root=document.getElementById("destinationAccounts");if(!root)return;
  const previous=new Set([...root.querySelectorAll("input[data-platform-account]:checked")].map(x=>x.dataset.platform+":"+x.dataset.platformAccount));
  const hadCheckboxes=root.querySelectorAll("input[data-platform-account]").length>0;
- if(!socialAccounts.length){root.innerHTML='<p class="muted">Conecte uma ou mais contas na seção “Contas” para selecionar destinos específicos.</p>';return;}
+ if(!socialAccounts.length){root.innerHTML='<p class="muted">Conecte uma ou mais contas na seção “Contas” para selecionar destinos específicos.</p>';document.getElementById("targetYouTube").checked=false;document.getElementById("targetInstagram").checked=false;togglePublicationMode();return;}
  const platforms=["youtube","instagram"];
  root.innerHTML=platforms.map(platform=>{
   const list=socialAccounts.filter(a=>a.platform===platform);
@@ -747,6 +747,7 @@ function renderDestinationAccounts(){
    return '<label><input type="checkbox" data-platform-account="'+escapeHtml(id)+'" data-platform="'+platform+'" '+(checked?'checked':'')+'> '+escapeHtml(a.username||id)+'</label>';
   }).join("")+'</div></div>';
  }).join("");
+ for(const platform of platforms){const master=document.getElementById(platform==="youtube"?"targetYouTube":"targetInstagram");const choices=[...root.querySelectorAll('input[data-platform="'+platform+'"]')];if(master)master.checked=choices.some(x=>x.checked);}
  root.querySelectorAll("input[data-platform-account]").forEach(input=>input.addEventListener("change",()=>{
   const platform=input.dataset.platform,master=document.getElementById(platform==="youtube"?"targetYouTube":"targetInstagram");
   const any=[...root.querySelectorAll('input[data-platform="'+platform+'"]')].some(x=>x.checked);
