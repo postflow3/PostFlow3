@@ -65,7 +65,7 @@ export async function removeSocialAccount(env, userId, platform, accountId) {
   if (current) {
     try {
       const data = await decryptJson(env, current);
-      const currentId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "");
+      const currentId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "primary");
       if (currentId === id) {
         const replacement = remaining.find(a => a.platform === platform);
         const replacementRaw = replacement ? await env.POSTFLOW3_KV.get(socialAccountKey(userId, platform, replacement.accountId)) : null;
