@@ -103,6 +103,8 @@ export async function onRequestPost({ request, env }) {
       status: publicationMode === "immediate" ? "published_on_youtube" : "scheduled_on_youtube",
       youtubeVideoId: uploaded.id,
       youtubeUrl: "https://www.youtube.com/watch?v=" + uploaded.id,
+      youtubeAccountId: youtubeAccountId || null,
+      driveCleanupGroup: driveCleanupGroup || null,
       createdAt: new Date().toISOString(),
       platforms: ["YouTube"]
     };
