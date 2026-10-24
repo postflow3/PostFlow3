@@ -1,4 +1,5 @@
 import { getSession, decryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -13,6 +14,7 @@ export async function onRequestPost({ request, env }) {
   try {
     const input = await request.json();
     const videoKey = String(input.videoKey || "").trim();
+    const accountId = String(input.accountId || "").trim().slice(0,180);
     const driveFileId = String(input.driveFileId || "").trim();
     const title = String(input.title || "Vídeo do Instagram").trim().slice(0, 100);
     const description = String(input.caption || input.description || "").trim().slice(0, 2200);
@@ -34,9 +36,8 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro." }, 400);
     }
 
-    const connection = await env.POSTFLOW3_KV.get(userKey(session.userId, "instagram-owner"));
-    if (!connection) return json({ error: "Conecte sua conta profissional do Instagram antes de agendar." }, 400);
-    const account = await decryptJson(env, connection);
+    const account = await getSocialAccount(env, session.userId, "instagram", accountId);
+    if (!account) return json({ error: "Conecte ou selecione sua conta profissional do Instagram antes de agendar." }, 400);
     if (!account.access_token || !account.user_id) {
       return json({ error: "A conexão do Instagram expirou. Reconecte a conta antes de agendar." }, 401);
     }
@@ -65,6 +66,7 @@ export async function onRequestPost({ request, env }) {
       scheduledAt: date.toISOString(),
       status: "scheduled",
       instagramStatus: "queued",
+      instagramAccountId: accountId || null,
       instagramVideoKey: videoKey,
       instagramMediaId: null,
       instagramCreationId: null,
