@@ -38,6 +38,22 @@ export async function onRequestDelete({request,env}){
   const body=await request.json().catch(()=>({}));
   const requestedId=String(body.id||"").trim();
   const prefix=userKey(session.userId,"post:");
+  if(body.action==="clear_history"){
+   let cursor,removed=0,failed=0;
+   do{
+    const batch=await env.POSTFLOW3_KV.list({prefix,limit:100,...(cursor?{cursor}:{})});
+    for(const item of batch.keys){
+     try{
+      const post=await env.POSTFLOW3_KV.get(item.name,"json");
+      if(env.POSTFLOW3_MEDIA&&post?.videoKey)await env.POSTFLOW3_MEDIA.delete(post.videoKey);
+      await env.POSTFLOW3_KV.delete(item.name);
+      removed++;
+     }catch{failed++;}
+    }
+    cursor=batch.list_complete?undefined:batch.cursor;
+   }while(cursor);
+   return json({ok:true,removed,failed,message:removed?"Histórico limpo.":"O histórico já estava vazio."});
+  }
   if(requestedId){
    const key=userKey(session.userId,"post:"+requestedId);
    const post=await env.POSTFLOW3_KV.get(key,"json");
