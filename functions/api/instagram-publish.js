@@ -25,7 +25,7 @@ export async function onRequestPost({request,env}){
    }else if(pending.postRecordId){
     // The original standalone post record already exists; keep this retry idempotent.
    }else{
-    const standalone={id:crypto.randomUUID(),title:pending.title||title,description:pending.caption||caption,filename:pending.filename||filename,size:Number(pending.size||size),driveFileId:pending.driveFileId||driveFileId||null,driveCleanupPending:true,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramAccountId:accountId||null,instagramMediaId:pending.mediaId,instagramVideoKey:videoKey,instagramUrl:pending.permalink||null,instagramPublishedAt:pending.publishedAt||new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};
+    const standalone={id:crypto.randomUUID(),title:pending.title||title,description:pending.caption||caption,filename:pending.filename||filename,size:Number(pending.size||size),driveFileId:pending.driveFileId||driveFileId||null,driveCleanupPending:true,driveCleanupGroup:videoKey,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramAccountId:accountId||null,instagramMediaId:pending.mediaId,instagramVideoKey:videoKey,instagramUrl:pending.permalink||null,instagramPublishedAt:pending.publishedAt||new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};
     await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));pending.postRecordId=standalone.id;await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending),{expirationTtl:30*86400});
    }
    return json({published:true,mediaId:pending.mediaId,permalink:pending.permalink||""},200);
