@@ -628,10 +628,11 @@ async function save(){
  const youtubeSuccess=[],instagramSuccess=[],warnings=[];
  try{
   if(selectedDriveFile){
+   const driveCleanupGroup=crypto.randomUUID();
    if(publishInstagram)throw new Error("Para publicar também no Instagram, selecione o vídeo do computador/celular. O envio direto do Drive está disponível somente para YouTube.");
    for(let i=0;i<youtubeAccountIds.length;i++){
     const accountId=youtubeAccountIds[i];status.textContent="Enviando do Google Drive para o canal "+(i+1)+" de "+youtubeAccountIds.length+"...";
-    const response=await fetch("/api/drive-schedule",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileId:selectedDriveFile.id,title,description,publicationMode:mode,scheduledAt:mode==="scheduled"?new Date(scheduledAt).toISOString():null,youtubeAccountId:accountId})});
+    const response=await fetch("/api/drive-schedule",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileId:selectedDriveFile.id,title,description,publicationMode:mode,scheduledAt:mode==="scheduled"?new Date(scheduledAt).toISOString():null,youtubeAccountId:accountId,driveCleanupGroup})});
     const data=await response.json().catch(()=>({}));
     if(!response.ok){warnings.push("YouTube ("+accountId+"): "+(data.error||"falha no envio"));continue;}
     youtubeSuccess.push(data.message||"YouTube: envio confirmado");
