@@ -10,4 +10,3 @@ export async function onRequestGet({env}){
   return json({error:"Contagem indisponível."},503);
  }
 }
-export async function onRequest({request}){return request.method==="GET"?onRequestGet({env:{}}):json({error:"Método não permitido."},405,{Allow:"GET"});}
