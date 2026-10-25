@@ -1526,4 +1526,88 @@ function postFlowToast(title,message){
   postFlowToast('Central de notificações',message);
  });
 })();
-</script></body></html>
+</script>
+<!-- postflow-series-lab-v1: Planejador de séries de conteúdo -->
+<script id="postflow-series-lab-v1">
+(function(){
+ if(document.getElementById('pfSeriesLauncher')) return;
+ const css = document.createElement('style');
+ css.textContent = `
+ #pfSeriesLauncher{position:fixed;left:22px;bottom:22px;z-index:1200;display:flex;align-items:center;gap:9px;padding:13px 17px;border:1px solid #5b4be0;border-radius:15px;background:linear-gradient(135deg,#171b38,#25184b);color:#f4f3ff;font:750 13px/1.2 inherit;box-shadow:0 12px 35px #0008,0 0 25px #704cff24;cursor:pointer;transition:transform .2s,border-color .2s}
+ #pfSeriesLauncher:hover{transform:translateY(-3px);border-color:#8b7cff}
+ #pfSeriesLauncher .pf-series-spark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#6d5dfc,#168be8);font-size:17px}
+ #pfSeriesOverlay{position:fixed;inset:0;z-index:1300;background:#030712c9;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}
+ #pfSeriesOverlay.pf-open{display:flex}
+ #pfSeriesDialog{width:min(760px,100%);max-height:min(88vh,900px);overflow:auto;background:linear-gradient(145deg,#0b1427,#11142d 65%,#17113a);border:1px solid #293b61;border-radius:22px;box-shadow:0 30px 100px #000b;color:#edf3ff;padding:clamp(18px,3vw,30px)}
+ #pfSeriesDialog *{box-sizing:border-box}
+ .pf-series-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
+ .pf-series-kicker{font-size:10px;letter-spacing:1.8px;color:#a99bff;font-weight:850;text-transform:uppercase}
+ .pf-series-title{font-size:clamp(22px,4vw,30px);letter-spacing:-.8px;margin:7px 0;color:#f5f7ff}
+ .pf-series-sub{font-size:13px;line-height:1.6;color:#a6b6d4;margin:0;max-width:570px}
+ #pfSeriesClose{border:1px solid #344260;background:#141d34;color:#dce7ff;border-radius:10px;width:38px;height:38px;font-size:22px;cursor:pointer;flex-shrink:0}
+ .pf-series-form{display:grid;grid-template-columns:1fr 180px;gap:12px;margin:20px 0}
+ .pf-series-form label{display:block;font-size:11px;color:#bdc9e4;font-weight:750;margin-bottom:7px}
+ .pf-series-form input,.pf-series-form select{width:100%;min-width:0;background:#060e20;border:1px solid #2b3d60;border-radius:11px;color:#f3f6ff;padding:12px;font:inherit;font-size:13px;outline:none}
+ .pf-series-form input:focus,.pf-series-form select:focus{border-color:#8170ff;box-shadow:0 0 0 3px #8170ff22}
+ #pfSeriesGenerate{width:100%;border:0;border-radius:12px;padding:13px;background:linear-gradient(100deg,#6554f4,#147fe4);color:white;font-weight:850;cursor:pointer}
+ #pfSeriesResults{display:grid;gap:11px;margin-top:17px}
+ .pf-series-card{border:1px solid #283b5d;border-radius:14px;padding:15px;background:linear-gradient(135deg,#0b1b31,#10152b)}
+ .pf-series-card-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+ .pf-series-number{display:grid;place-items:center;min-width:27px;height:27px;border-radius:8px;background:#30255d;color:#c8bdff;font-size:12px;font-weight:900}
+ .pf-series-card h4{font-size:14px;line-height:1.4;margin:0;color:#f1f5ff}
+ .pf-series-card p{font-size:12px;line-height:1.6;color:#aebdd8;margin:7px 0}
+ .pf-series-card p strong{color:#d7dcff}
+ .pf-series-card button{margin-top:5px;border:1px solid #3b4f76;background:#17243d;color:#dce9ff;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:800;cursor:pointer}
+ .pf-series-card button:hover{border-color:#8a7bff}
+ .pf-series-note{font-size:11px;color:#8499bb;line-height:1.5;margin:14px 0 0}
+ @media(max-width:560px){#pfSeriesLauncher{left:12px;bottom:12px;padding:10px 12px;border-radius:13px;font-size:12px}#pfSeriesLauncher .pf-series-spark{width:27px;height:27px}.pf-series-form{grid-template-columns:1fr}.pf-series-top{margin-bottom:12px}#pfSeriesDialog{border-radius:17px;padding:17px}.pf-series-card{padding:12px}}
+ @media(prefers-reduced-motion:reduce){#pfSeriesLauncher{transition:none}}
+ `;
+ document.head.appendChild(css);
+ const launch=document.createElement('button');launch.id='pfSeriesLauncher';launch.type='button';launch.setAttribute('aria-haspopup','dialog');launch.innerHTML='<span class="pf-series-spark" aria-hidden="true">✦</span><span>Planejar série</span>';
+ const overlay=document.createElement('div');overlay.id='pfSeriesOverlay';overlay.innerHTML='<section id="pfSeriesDialog" role="dialog" aria-modal="true" aria-labelledby="pfSeriesHeading"><div class="pf-series-top"><div><div class="pf-series-kicker">PostFlow3 · Studio criativo</div><h2 class="pf-series-title" id="pfSeriesHeading">Transforme uma ideia em uma série</h2><p class="pf-series-sub">Monte uma sequência de cinco vídeos com ganchos diferentes para manter o público interessado e facilitar seu calendário de conteúdo.</p></div><button id="pfSeriesClose" type="button" aria-label="Fechar">×</button></div><form id="pfSeriesForm"><div class="pf-series-form"><div><label for="pfSeriesTopic">Qual é o tema da série?</label><input id="pfSeriesTopic" maxlength="120" placeholder="Ex.: dicas de beleza, receitas rápidas, achadinhos..." required></div><div><label for="pfSeriesPlatform">Foco da série</label><select id="pfSeriesPlatform"><option value="shorts">YouTube Shorts</option><option value="reels">Instagram Reels</option><option value="both">Reels + Shorts</option></select></div></div><button id="pfSeriesGenerate" type="submit">✦ Gerar 5 ideias de episódios</button></form><div id="pfSeriesResults" aria-live="polite"></div><p class="pf-series-note">As sugestões são montadas no próprio navegador. Revise cada ideia antes de publicar; nenhuma publicação é enviada automaticamente por esta ferramenta.</p></section>';
+ document.body.append(launch,overlay);
+ const close=()=>{overlay.classList.remove('pf-open');launch.focus()};
+ launch.addEventListener('click',()=>{overlay.classList.add('pf-open');setTimeout(()=>document.getElementById('pfSeriesTopic').focus(),40)});
+ document.getElementById('pfSeriesClose').addEventListener('click',close);
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('pf-open'))close()});
+ const templates=[
+  {title:'O erro que quase todo mundo comete',hook:'Comece mostrando um erro comum relacionado a {topic} e explique como evitá-lo.',cta:'Salve este vídeo para não esquecer.'},
+  {title:'3 dicas rápidas que fazem diferença',hook:'Entregue três dicas práticas sobre {topic}, indo direto ao ponto e mostrando um exemplo.',cta:'Qual dessas dicas você vai testar primeiro?'},
+  {title:'Antes e depois: veja a diferença',hook:'Mostre uma comparação visual ou um processo real relacionado a {topic}, explicando o que mudou.',cta:'Envie para alguém que precisa ver isso.'},
+  {title:'A pergunta que todo iniciante faz',hook:'Responda uma dúvida frequente sobre {topic} com uma explicação simples e um exemplo.',cta:'Deixe sua próxima dúvida nos comentários.'},
+  {title:'O desafio de colocar em prática',hook:'Proponha um pequeno desafio de 24 horas ligado a {topic} e mostre como começar hoje.',cta:'Topa o desafio? Comente “vou fazer”.'}
+ ];
+ const results=document.getElementById('pfSeriesResults');
+ document.getElementById('pfSeriesForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const topic=document.getElementById('pfSeriesTopic').value.trim();
+  const platform=document.getElementById('pfSeriesPlatform').value;
+  if(!topic)return;
+  results.replaceChildren();
+  templates.forEach((item,i)=>{
+   const title='Ep. '+(i+1)+' — '+item.title+' | '+topic;
+   const hook=item.hook.replaceAll('{topic}',topic);
+   const cta=item.cta;
+   const card=document.createElement('article');card.className='pf-series-card';
+   const head=document.createElement('div');head.className='pf-series-card-head';
+   const num=document.createElement('span');num.className='pf-series-number';num.textContent=String(i+1).padStart(2,'0');
+   const h=document.createElement('h4');h.textContent=title;head.append(num,h);
+   const p=document.createElement('p');const strong=document.createElement('strong');strong.textContent='Gancho: ';p.append(strong,document.createTextNode(hook));
+   const p2=document.createElement('p');const strong2=document.createElement('strong');strong2.textContent='Chamada: ';p2.append(strong2,document.createTextNode(cta));
+   const button=document.createElement('button');button.type='button';button.textContent='Usar no conteúdo';
+   button.addEventListener('click',()=>{
+    const titleField=document.getElementById('title'),descField=document.getElementById('description');
+    if(titleField){titleField.value=titleField.value.trim()?title:title;titleField.dispatchEvent(new Event('input',{bubbles:true}));}
+    if(descField){descField.value=hook+'\n\n'+cta+(platform==='reels'?'\n\n#Reels #Dicas':platform==='shorts'?'\n\n#Shorts #Dicas':'\n\n#Reels #Shorts #Dicas');descField.dispatchEvent(new Event('input',{bubbles:true}));}
+    close();
+    if(typeof window.postFlowToast==='function')window.postFlowToast('Ideia aplicada','Título e descrição foram preenchidos. Revise antes de agendar.');
+    else {button.textContent='Aplicado ✓';}
+   });
+   card.append(head,p,p2,button);results.appendChild(card);
+  });
+ });
+})();
+</script>
+</body></html>
