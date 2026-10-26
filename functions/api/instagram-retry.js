@@ -27,6 +27,8 @@ export async function onRequestPost({ request, env }) {
     }
 
     post.instagramError = null;
+    post.publicationMode = "immediate";
+    post.scheduledAt = new Date().toISOString();
     post.instagramStatus = post.instagramCreationId ? "processing" : "pending";
     post.instagramAttemptedAt = new Date().toISOString();
     await env.POSTFLOW3_KV.put(key, JSON.stringify(post));
