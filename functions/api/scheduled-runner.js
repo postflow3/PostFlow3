@@ -30,7 +30,7 @@ async function instagramSignature(env, key) {
   return [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function publishInstagramStep({ request, env, userId, post }) {
+export async function publishInstagramStep({ request, env, userId, post }) {
   const videoKey = String(post.instagramVideoKey || "");
   if (!new RegExp("^instagram-media/" + userId + "/[0-9a-f-]{36}$", "i").test(videoKey)) throw new Error("O vídeo salvo para o Instagram não foi encontrado.");
   const account = await getSocialAccount(env, userId, "instagram", String(post.instagramAccountId || ""));
