@@ -251,6 +251,7 @@ export async function onRequestPost({ request, env }) {
           if (before !== "published" && state === "published") post.instagramError = null;
         } catch (error) {
           post.instagramStatus = "failed";
+          post.instagramAttemptedAt = new Date().toISOString();
           post.instagramError = String(error?.message || "Falha ao publicar no Instagram.").slice(0, 250);
           changed = true;
           results.push({ id: post.id, platform: "Instagram", status: "failed", error: post.instagramError });
