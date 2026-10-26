@@ -4,6 +4,11 @@ import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 const due = post => post.publicationMode === "immediate" || !post.scheduledAt || new Date(post.scheduledAt).getTime() <= Date.now();
 const hasPlatform = (post, platform) => Array.isArray(post.platforms) ? post.platforms.includes(platform) : platform === "YouTube" ? Boolean(post.youtubeVideoId) : Boolean(post.instagramVideoKey);
+const instagramRetryReady = post => {
+  if (post.instagramStatus !== "failed") return true;
+  const attempted = Date.parse(post.instagramAttemptedAt || "");
+  return !Number.isFinite(attempted) || Date.now() - attempted >= 10 * 60 * 1000;
+};
 
 async function googleAccessToken(env, userId, accountId = "") {
   let tokens = await getSocialAccount(env, userId, "youtube", accountId);
@@ -242,7 +247,7 @@ export async function onRequestPost({ request, env }) {
       }
 
       const instagramDue = post.instagramVideoKey && hasPlatform(post, "Instagram") && isDue;
-      if (instagramDue && post.instagramStatus !== "published" && (post.instagramStatus !== "failed" || !post.instagramAttemptedAt || Date.now() - new Date(post.instagramAttemptedAt).getTime() >= 10 * 60 * 1000)) {
+      if (instagramDue && post.instagramStatus !== "published" && instagramRetryReady(post)) {
         try {
           const before = post.instagramStatus;
           const state = await publishInstagramStep({ request, env, userId, post });
