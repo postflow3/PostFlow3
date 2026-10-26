@@ -242,7 +242,7 @@ export async function onRequestPost({ request, env }) {
       }
 
       const instagramDue = post.instagramVideoKey && hasPlatform(post, "Instagram") && isDue;
-      if (instagramDue && !["published", "failed"].includes(post.instagramStatus)) {
+      if (instagramDue && post.instagramStatus !== "published" && (post.instagramStatus !== "failed" || !post.instagramAttemptedAt || Date.now() - new Date(post.instagramAttemptedAt).getTime() >= 10 * 60 * 1000)) {
         try {
           const before = post.instagramStatus;
           const state = await publishInstagramStep({ request, env, userId, post });
