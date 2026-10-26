@@ -35,6 +35,11 @@ export async function onRequestPost({ request, env }) {
       const state = await publishInstagramStep({ request, env, userId: session.userId, post });
       if (state === "failed") {
         post.status = "failed";
+      } else if (state === "processing") {
+        // Clear the stale global failure while Instagram is processing; the cloud runner
+        // will keep polling this same creation ID and will not create a duplicate container.
+        post.status = "scheduled";
+        post.instagramAttemptedAt = new Date().toISOString();
       } else if (state === "published") {
         post.instagramError = null;
         post.status = (post.youtubeVideoId && post.youtubeStatus !== "published") ? "partially_published" : "published";
