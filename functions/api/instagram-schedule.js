@@ -14,6 +14,7 @@ export async function onRequestPost({ request, env }) {
   try {
     const input = await request.json();
     const videoKey = String(input.videoKey || "").trim();
+    const requestedMediaType = String(input.mediaType || "REELS").trim().toUpperCase();
     const accountId = String(input.accountId || "").trim().slice(0,180);
     const driveFileId = String(input.driveFileId || "").trim();
     const title = String(input.title || "Vídeo do Instagram").trim().slice(0, 100);
@@ -29,8 +30,9 @@ export async function onRequestPost({ request, env }) {
     if (!/^[\w-]{10,200}$/.test(driveFileId)) {
       return json({ error: "Não foi possível identificar o vídeo salvo no Google Drive." }, 400);
     }
-    if (!Number.isSafeInteger(size) || size <= 0 || size > 80 * 1024 * 1024) {
-      return json({ error: "O tamanho do vídeo não é válido para o Instagram." }, 400);
+    if (!["REELS","IMAGE"].includes(requestedMediaType)) return json({ error: "Tipo de mídia inválido." }, 400);
+    if (!Number.isSafeInteger(size) || size <= 0 || size > (requestedMediaType === "IMAGE" ? 20 : 80) * 1024 * 1024) {
+      return json({ error: requestedMediaType === "IMAGE" ? "A foto precisa ter até 20 MB." : "O tamanho do vídeo não é válido para o Instagram." }, 400);
     }
     if (!scheduledAt || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro." }, 400);
@@ -48,8 +50,10 @@ export async function onRequestPost({ request, env }) {
     if (!mediaRaw) return json({ error: "O vídeo não está mais disponível no armazenamento. Envie-o novamente." }, 404);
     const mediaMetadata = JSON.parse(mediaRaw);
     if (String(mediaMetadata.fileId || "") !== driveFileId) {
-      return json({ error: "O arquivo do Drive não corresponde ao vídeo selecionado. Envie-o novamente." }, 409);
+      return json({ error: "O arquivo do Drive não corresponde à mídia selecionada. Envie-a novamente." }, 409);
     }
+    const storedIsPhoto = String(mediaMetadata.mimeType || "").toLowerCase() === "image/jpeg";
+    if ((requestedMediaType === "IMAGE") !== storedIsPhoto) return json({ error: "O tipo da mídia selecionada não corresponde ao arquivo armazenado." }, 409);
 
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
@@ -67,6 +71,7 @@ export async function onRequestPost({ request, env }) {
       scheduledAt: date.toISOString(),
       status: "scheduled",
       instagramStatus: "queued",
+      instagramMediaType: requestedMediaType,
       instagramAccountId: accountId || null,
       instagramVideoKey: videoKey,
       instagramMediaId: null,
