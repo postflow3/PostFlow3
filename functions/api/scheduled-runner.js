@@ -48,7 +48,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     mediaUrl.searchParams.set("sig", await instagramSignature(env, videoKey));
     const response = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
+      body: new URLSearchParams(post.instagramMediaType === "IMAGE" ? { media_type: "IMAGE", image_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token } : { media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.id) throw new Error(data.error?.message || "O Instagram recusou criar a publicação.");
@@ -168,7 +168,7 @@ async function cleanupDriveIfComplete(env, userId, post) {
     const lookup = await fetch(lookupUrl, { headers: { Authorization: "Bearer " + token } });
     const lookupData = await lookup.json().catch(() => ({}));
     const exactMatches = Array.isArray(lookupData.files)
-      ? lookupData.files.filter(file => String(file.size || "") === String(Math.floor(Number(post.size))) && String(file.mimeType || "").startsWith("video/"))
+      ? lookupData.files.filter(file => String(file.size || "") === String(Math.floor(Number(post.size))) && (String(file.mimeType || "").startsWith("video/") || String(file.mimeType || "").toLowerCase() === "image/jpeg"))
       : [];
     if (lookup.ok && !lookupData.nextPageToken && exactMatches.length === 1 && exactMatches[0].id) {
       fileId = String(exactMatches[0].id);
