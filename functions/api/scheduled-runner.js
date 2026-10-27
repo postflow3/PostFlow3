@@ -6,6 +6,11 @@ const due = post => post.publicationMode === "immediate" || !post.scheduledAt ||
 const hasPlatform = (post, platform) => Array.isArray(post.platforms) ? post.platforms.includes(platform) : platform === "YouTube" ? Boolean(post.youtubeVideoId) : Boolean(post.instagramVideoKey);
 const instagramRetryReady = post => {
   if (post.instagramStatus !== "failed") return true;
+  // Do not hammer Meta every 10 minutes for account/app access blocks or permission errors.
+  // The user can still explicitly retry from the UI after fixing the Meta configuration.
+  const error = String(post.instagramError || "").toLowerCase();
+  const needsManualFix = /api access blocked|permission|permissions|permiss[aã]o|permiss[oõ]es|access denied|not authorized|unauthorized|account is disabled|conta.*bloquead|unsupported get request/.test(error);
+  if (needsManualFix) return false;
   const attempted = Date.parse(post.instagramAttemptedAt || "");
   return !Number.isFinite(attempted) || Date.now() - attempted >= 10 * 60 * 1000;
 };
