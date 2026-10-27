@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
     client_id: env.INSTAGRAM_APP_ID,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "instagram_business_basic,instagram_business_manage_comments,instagram_business_manage_messages,instagram_business_content_publish,instagram_business_manage_insights",
+    scope: "instagram_business_basic,instagram_business_content_publish",
     state
   });
   return new Response(null, { status: 302, headers: { ...headers, "Location": `https://www.instagram.com/oauth/authorize?${params}` } });
