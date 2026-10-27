@@ -20,7 +20,7 @@ export async function onRequestPost({ request, env }) {
     const post = await env.POSTFLOW3_KV.get(key, "json");
     if (!post) return json({ error: "Publicação não encontrada." }, 404);
     if (!post.instagramVideoKey || !(Array.isArray(post.platforms) ? post.platforms.includes("Instagram") : true)) {
-      return json({ error: "Esta publicação não tem um vídeo selecionado para o Instagram." }, 409);
+      return json({ error: "Esta publicação não tem foto ou vídeo selecionado para o Instagram." }, 409);
     }
     if (post.instagramStatus === "published" || post.instagramMediaId) {
       return json({ error: "O Instagram já confirmou esta publicação. Não vou enviá-la novamente." }, 409);
