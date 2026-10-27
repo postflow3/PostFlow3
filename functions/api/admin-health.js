@@ -23,7 +23,7 @@ export async function onRequestGet({request,env}){
   add("instagram-oauth","OAuth Instagram",["INSTAGRAM_APP_ID","INSTAGRAM_APP_SECRET","INSTAGRAM_REDIRECT_URI"],"Credenciais e callback presentes; publicação real depende das permissões Meta e da conta.");
   add("drive","Google Drive",["GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"],"Credenciais Google presentes; acesso ao Drive e permissões do usuário não são testados por esta verificação.");
   add("ai","Geração de legendas por IA",["GEMINI_API_KEY"],"Chave presente; disponibilidade e cota do provedor não são testadas.");
-  add("media","Armazenamento de mídia Cloudflare",["POSTFLOW3_MEDIA"],"Binding de mídia presente.");
+  add("media","Armazenamento de mídia (Google Drive)",["GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"],"O PostFlow3 usa Google Drive para a mídia; o binding POSTFLOW3_MEDIA não é obrigatório nesta configuração. O acesso real ao Drive precisa de teste com uma conta conectada.");
   add("scheduler","Execução agendada",["POSTFLOW3_SCHEDULER_SECRET"],"Segredo de execução presente; a última execução do Cron não é confirmada por esta verificação.");
   const warnings=checks.filter(x=>x.status!=="ok").length;
   return json({ok:true,checkedAt:new Date().toISOString(),summary:{total:checks.length,ok:checks.length-warnings,attention:warnings},checks,note:"Verificação de configuração, não um teste de publicação ponta a ponta. Não revela segredos nem tokens."});
