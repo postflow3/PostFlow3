@@ -59,29 +59,32 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     await env.POSTFLOW3_KV.put(userKey(userId, "post:" + post.id), JSON.stringify(post));
   }
 
-  const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(creationId));
-  statusUrl.searchParams.set("fields", "status_code,status,error_message");
-  statusUrl.searchParams.set("access_token", account.access_token);
-  const statusResponse = await fetch(statusUrl);
-  const statusData = await statusResponse.json().catch(() => ({}));
-  if (!statusResponse.ok) {
-    post.instagramStatus = "processing";
-    post.instagramError = String(statusData.error?.message || "O Instagram ainda não retornou o estado do vídeo.").slice(0, 250);
-    return "processing";
-  }
-  if (statusData.status_code === "ERROR") {
-    post.instagramStatus = "failed";
-    post.instagramError = String(statusData.error_message || statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
-    post.instagramAttemptedAt = new Date().toISOString();
-    // ERROR is terminal for this container; the scheduled retry must create a fresh one.
-    post.instagramCreationId = null;
-    post.instagramProcessingStatus = "ERROR";
-    return "failed";
-  }
-  if (statusData.status_code !== "FINISHED") {
-    post.instagramStatus = "processing";
-    post.instagramProcessingStatus = String(statusData.status_code || statusData.status || "IN_PROGRESS").slice(0, 80);
-    return "processing";
+  // Image containers are published directly; the asynchronous status polling is for Reels/video.
+  if (post.instagramMediaType !== "IMAGE") {
+    const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(creationId));
+    statusUrl.searchParams.set("fields", "status_code,status,error_message");
+    statusUrl.searchParams.set("access_token", account.access_token);
+    const statusResponse = await fetch(statusUrl);
+    const statusData = await statusResponse.json().catch(() => ({}));
+    if (!statusResponse.ok) {
+      post.instagramStatus = "processing";
+      post.instagramError = String(statusData.error?.message || "O Instagram ainda não retornou o estado do vídeo.").slice(0, 250);
+      return "processing";
+    }
+    if (statusData.status_code === "ERROR") {
+      post.instagramStatus = "failed";
+      post.instagramError = String(statusData.error_message || statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
+      post.instagramAttemptedAt = new Date().toISOString();
+      // ERROR is terminal for this container; the scheduled retry must create a fresh one.
+      post.instagramCreationId = null;
+      post.instagramProcessingStatus = "ERROR";
+      return "failed";
+    }
+    if (statusData.status_code !== "FINISHED") {
+      post.instagramStatus = "processing";
+      post.instagramProcessingStatus = String(statusData.status_code || statusData.status || "IN_PROGRESS").slice(0, 80);
+      return "processing";
+    }
   }
 
   const publishResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media_publish", {
