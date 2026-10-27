@@ -71,17 +71,20 @@ export async function onRequestPost({request,env}){
    pending.postRecordId=recordId;
    await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending),{expirationTtl:30*86400});
   }
-  let ready=false,lastStatus="";
-  for(let i=0;i<12;i++){
-   const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
-   statusUrl.searchParams.set("fields","status_code,status,error_message");statusUrl.searchParams.set("access_token",account.access_token);
-   const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
-   if(statusResponse.ok&&statusData.status_code==="FINISHED"){ready=true;break;}
-   if(statusData.status_code==="ERROR"){await env.POSTFLOW3_KV.delete(pendingKey);return json({error:String(statusData.error_message||statusData.status||"O Instagram não conseguiu processar o vídeo."),instagramStatus:statusData.status_code},502);}
-   lastStatus=statusData.status||statusData.status_code||"processando";
-   await new Promise(resolve=>setTimeout(resolve,2000));
+  // Instagram IMAGE containers can be published directly; status polling is required for video/Reels processing.
+  let ready=mediaType==="IMAGE",lastStatus="";
+  if(mediaType!=="IMAGE"){
+   for(let i=0;i<12;i++){
+    const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
+    statusUrl.searchParams.set("fields","status_code,status,error_message");statusUrl.searchParams.set("access_token",account.access_token);
+    const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
+    if(statusResponse.ok&&statusData.status_code==="FINISHED"){ready=true;break;}
+    if(statusData.status_code==="ERROR"){await env.POSTFLOW3_KV.delete(pendingKey);return json({error:String(statusData.error_message||statusData.status||"O Instagram não conseguiu processar o vídeo."),instagramStatus:statusData.status_code},502);}
+    lastStatus=statusData.status||statusData.status_code||"processando";
+    await new Promise(resolve=>setTimeout(resolve,2000));
+   }
+   if(!ready)return json({pending:true,error:"O Instagram ainda está processando o vídeo ("+lastStatus+"). O PostFlow3 continuará verificando sem criar outra publicação."},202);
   }
-  if(!ready)return json({pending:true,error:"O Instagram ainda está processando o vídeo ("+lastStatus+"). O PostFlow3 continuará verificando sem criar outra publicação."},202);
   const publishResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media_publish",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({creation_id:created.id,access_token:account.access_token})});
   const published=await publishResponse.json().catch(()=>({}));
   if(!publishResponse.ok||!published.id)return json({error:published.error?.message||"O Instagram não confirmou a publicação."},502);
