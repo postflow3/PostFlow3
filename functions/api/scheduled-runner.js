@@ -60,7 +60,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   }
 
   const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(creationId));
-  statusUrl.searchParams.set("fields", "status_code,status");
+  statusUrl.searchParams.set("fields", "status_code,status,error_message");
   statusUrl.searchParams.set("access_token", account.access_token);
   const statusResponse = await fetch(statusUrl);
   const statusData = await statusResponse.json().catch(() => ({}));
@@ -71,7 +71,10 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   }
   if (statusData.status_code === "ERROR") {
     post.instagramStatus = "failed";
-    post.instagramError = String(statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
+    post.instagramError = String(statusData.error_message || statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
+    // ERROR is terminal for this container; the scheduled retry must create a fresh one.
+    post.instagramCreationId = null;
+    post.instagramProcessingStatus = "ERROR";
     return "failed";
   }
   if (statusData.status_code !== "FINISHED") {
