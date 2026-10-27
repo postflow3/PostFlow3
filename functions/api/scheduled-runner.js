@@ -72,6 +72,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   if (statusData.status_code === "ERROR") {
     post.instagramStatus = "failed";
     post.instagramError = String(statusData.error_message || statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
+    post.instagramAttemptedAt = new Date().toISOString();
     // ERROR is terminal for this container; the scheduled retry must create a fresh one.
     post.instagramCreationId = null;
     post.instagramProcessingStatus = "ERROR";
@@ -91,6 +92,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   if (!publishResponse.ok || !published.id) {
     post.instagramStatus = "failed";
     post.instagramError = String(published.error?.message || "O Instagram não confirmou a publicação. Confira o perfil antes de tentar novamente.").slice(0, 250);
+    post.instagramAttemptedAt = new Date().toISOString();
     return "failed";
   }
   post.instagramStatus = "published";
