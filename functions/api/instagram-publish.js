@@ -45,6 +45,29 @@ export async function onRequestPost({request,env}){
    pending={creationId:created.id,videoKey,driveFileId:driveFileId||null,caption,postId,title,filename,size,createdAt:new Date().toISOString()};
    await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending));
   }
+  // Persist the immediate post before waiting for Meta processing, so the cloud
+  // scheduler can resume polling even if the browser closes or the request times out.
+  if(!pending.postRecordId){
+   const now=new Date().toISOString();
+   const recordId=/^[0-9a-f-]{36}$/i.test(postId)?postId:crypto.randomUUID();
+   const recordKey=userKey(session.userId,"post:"+recordId);
+   const stored=await env.POSTFLOW3_KV.get(recordKey,"json");
+   const platforms=Array.isArray(stored?.platforms)?[...stored.platforms]:[];
+   if(!platforms.includes("Instagram"))platforms.push("Instagram");
+   const postRecord={
+    ...(stored||{}),id:recordId,title:stored?.title||title,description:stored?.description||caption,
+    filename:stored?.filename||filename,size:Number(stored?.size||size),driveFileId:stored?.driveFileId||driveFileId||null,
+    driveCleanupPending:true,driveCleanupGroup:stored?.driveCleanupGroup||videoKey,platforms,
+    publicationMode:stored?.publicationMode||"immediate",scheduledAt:stored?.scheduledAt||null,
+    status:stored?.status||(platforms.includes("YouTube")?"published_on_youtube":"publishing"),
+    instagramStatus:"processing",instagramAccountId:accountId||null,instagramVideoKey:videoKey,
+    instagramCreationId:created.id,instagramAttemptedAt:now,instagramError:null,
+    createdAt:stored?.createdAt||now,uploadedAt:stored?.uploadedAt||now
+   };
+   await env.POSTFLOW3_KV.put(recordKey,JSON.stringify(postRecord));
+   pending.postRecordId=recordId;
+   await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending),{expirationTtl:30*86400});
+  }
   let ready=false,lastStatus="";
   for(let i=0;i<12;i++){
    const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
@@ -62,7 +85,20 @@ export async function onRequestPost({request,env}){
   let permalink="";
   try{const pUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
   pending.published=true;pending.mediaId=published.id;pending.permalink=permalink;pending.publishedAt=new Date().toISOString();await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending));
-  if(/^[0-9a-f-]{36}$/i.test(postId)){const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");if(stored){stored.instagramStatus="published";if(driveFileId)stored.driveFileId=driveFileId;stored.instagramMediaId=published.id;stored.instagramAccountId=accountId||stored.instagramAccountId||null;stored.instagramPublishedAt=new Date().toISOString();stored.instagramVideoKey=videoKey;if(permalink)stored.instagramUrl=permalink;if(!Array.isArray(stored.platforms))stored.platforms=["YouTube"];if(!stored.platforms.includes("Instagram"))stored.platforms.push("Instagram");await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}}else{const standalone={id:crypto.randomUUID(),title,description:caption,filename,size,driveFileId:driveFileId||null,driveCleanupPending:true,platforms:["Instagram"],status:"published_on_instagram",instagramStatus:"published",instagramAccountId:accountId||null,instagramMediaId:published.id,instagramVideoKey:videoKey,instagramUrl:permalink||null,instagramPublishedAt:new Date().toISOString(),createdAt:new Date().toISOString(),uploadedAt:new Date().toISOString()};await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+standalone.id),JSON.stringify(standalone));pending.postRecordId=standalone.id;}
+  if(pending.postRecordId){
+   const recordKey=userKey(session.userId,"post:"+pending.postRecordId);
+   const stored=await env.POSTFLOW3_KV.get(recordKey,"json");
+   if(stored){
+    stored.instagramStatus="published";if(driveFileId)stored.driveFileId=driveFileId;stored.instagramMediaId=published.id;
+    stored.instagramAccountId=accountId||stored.instagramAccountId||null;stored.instagramPublishedAt=new Date().toISOString();
+    stored.instagramVideoKey=videoKey;stored.instagramCreationId=null;stored.instagramError=null;
+    if(permalink)stored.instagramUrl=permalink;
+    if(!Array.isArray(stored.platforms))stored.platforms=[];
+    if(!stored.platforms.includes("Instagram"))stored.platforms.push("Instagram");
+    if(!stored.platforms.includes("YouTube"))stored.status="published_on_instagram";
+    await env.POSTFLOW3_KV.put(recordKey,JSON.stringify(stored));
+   }
+  }
   await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending),{expirationTtl:30*86400});
   return json({published:true,mediaId:published.id,permalink},200);
  }catch(e){return json({error:String(e?.message||"Falha ao publicar no Instagram.").slice(0,350)},500);}
