@@ -16,12 +16,15 @@ export async function onRequestPost({request,env}){
   const account=await getSocialAccount(env,session.userId,"instagram",accountId);if(!account)return json({error:"Conecte ou selecione uma conta profissional do Instagram antes de publicar."},400);if(!account.access_token||!account.user_id)return json({error:"A conexão do Instagram expirou. Reconecte a conta."},401);
   const mediaUrl=new URL("/api/instagram-media",request.url);mediaUrl.searchParams.set("key",videoKey);mediaUrl.searchParams.set("sig",await signature(env,videoKey));
   const videoId=videoKey.split("/").pop();
+  const mediaMetadataRaw=await env.POSTFLOW3_KV.get(userKey(session.userId,"instagram-drive:"+videoId));
+  if(!mediaMetadataRaw)return json({error:"A foto ou vídeo não está mais disponível no armazenamento. Envie-o novamente."},404);
+  const mediaMetadata=JSON.parse(mediaMetadataRaw),isPhoto=String(mediaMetadata.mimeType||"").toLowerCase()==="image/jpeg",mediaType=isPhoto?"IMAGE":"REELS";
   const pendingKey=userKey(session.userId,"instagram-pending:"+videoId+(accountId?":"+accountId:""));
   let pending=await env.POSTFLOW3_KV.get(pendingKey,"json");
   if(pending?.published){
    if(/^[0-9a-f-]{36}$/i.test(postId)){
     const stored=await env.POSTFLOW3_KV.get(userKey(session.userId,"post:"+postId),"json");
-    if(stored){stored.instagramStatus="published";stored.instagramAccountId=accountId||stored.instagramAccountId||null;if(driveFileId)stored.driveFileId=driveFileId;stored.instagramMediaId=pending.mediaId;stored.instagramPublishedAt=pending.publishedAt||new Date().toISOString();stored.instagramVideoKey=videoKey;if(pending.permalink)stored.instagramUrl=pending.permalink;if(!Array.isArray(stored.platforms))stored.platforms=["YouTube"];if(!stored.platforms.includes("Instagram"))stored.platforms.push("Instagram");await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}
+    if(stored){stored.instagramStatus="published";stored.instagramMediaType=pending.mediaType||stored.instagramMediaType||"REELS";stored.instagramAccountId=accountId||stored.instagramAccountId||null;if(driveFileId)stored.driveFileId=driveFileId;stored.instagramMediaId=pending.mediaId;stored.instagramPublishedAt=pending.publishedAt||new Date().toISOString();stored.instagramVideoKey=videoKey;if(pending.permalink)stored.instagramUrl=pending.permalink;if(!Array.isArray(stored.platforms))stored.platforms=["YouTube"];if(!stored.platforms.includes("Instagram"))stored.platforms.push("Instagram");await env.POSTFLOW3_KV.put(userKey(session.userId,"post:"+postId),JSON.stringify(stored));}
    }else if(pending.postRecordId){
     // The original standalone post record already exists; keep this retry idempotent.
    }else{
@@ -34,7 +37,7 @@ export async function onRequestPost({request,env}){
   if(pending?.creationId){
    created={id:pending.creationId};
   }else{
-   const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
+   const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(isPhoto?{media_type:"IMAGE",image_url:mediaUrl.toString(),caption,access_token:account.access_token}:{media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
    created=await createResponse.json().catch(()=>({}));
    if(!createResponse.ok||!created.id){
     const metaError=created.error||{},metaCode=metaError.code!=null?String(metaError.code):"",metaSubcode=metaError.error_subcode!=null?String(metaError.error_subcode):"";
@@ -42,7 +45,7 @@ export async function onRequestPost({request,env}){
     const blocked=/API access blocked/i.test(String(metaError.message||""))||metaCode==="200";
     return json({error:blocked?"A Meta está bloqueando o acesso da API do Instagram para esta conta ou aplicativo. O YouTube já foi enviado; não tente publicar novamente ainda. Confira os alertas e as permissões do app no Meta for Developers e, após liberar o acesso, reconecte o Instagram. Detalhe: "+detail:detail,instagramApiBlocked:blocked,metaCode:metaCode||null,metaSubcode:metaSubcode||null},502);
    }
-   pending={creationId:created.id,videoKey,driveFileId:driveFileId||null,caption,postId,title,filename,size,createdAt:new Date().toISOString()};
+   pending={creationId:created.id,videoKey,mediaType,driveFileId:driveFileId||null,caption,postId,title,filename,size,createdAt:new Date().toISOString()};
    await env.POSTFLOW3_KV.put(pendingKey,JSON.stringify(pending));
   }
   // Persist the immediate post before waiting for Meta processing, so the cloud
@@ -57,7 +60,7 @@ export async function onRequestPost({request,env}){
    const postRecord={
     ...(stored||{}),id:recordId,title:stored?.title||title,description:stored?.description||caption,
     filename:stored?.filename||filename,size:Number(stored?.size||size),driveFileId:stored?.driveFileId||driveFileId||null,
-    driveCleanupPending:true,driveCleanupGroup:stored?.driveCleanupGroup||videoKey,platforms,
+    driveCleanupPending:true,driveCleanupGroup:stored?.driveCleanupGroup||videoKey,platforms,instagramMediaType:mediaType,
     publicationMode:stored?.publicationMode||"immediate",scheduledAt:stored?.scheduledAt||null,
     status:stored?.status||(platforms.includes("YouTube")?"published_on_youtube":"publishing"),
     instagramStatus:"processing",instagramAccountId:accountId||null,instagramVideoKey:videoKey,
@@ -89,7 +92,7 @@ export async function onRequestPost({request,env}){
    const recordKey=userKey(session.userId,"post:"+pending.postRecordId);
    const stored=await env.POSTFLOW3_KV.get(recordKey,"json");
    if(stored){
-    stored.instagramStatus="published";if(driveFileId)stored.driveFileId=driveFileId;stored.instagramMediaId=published.id;
+    stored.instagramStatus="published";stored.instagramMediaType=mediaType;if(driveFileId)stored.driveFileId=driveFileId;stored.instagramMediaId=published.id;
     stored.instagramAccountId=accountId||stored.instagramAccountId||null;stored.instagramPublishedAt=new Date().toISOString();
     stored.instagramVideoKey=videoKey;stored.instagramCreationId=null;stored.instagramError=null;
     if(permalink)stored.instagramUrl=permalink;
