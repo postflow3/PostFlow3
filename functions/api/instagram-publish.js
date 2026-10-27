@@ -48,10 +48,10 @@ export async function onRequestPost({request,env}){
   let ready=false,lastStatus="";
   for(let i=0;i<12;i++){
    const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
-   statusUrl.searchParams.set("fields","status_code,status");statusUrl.searchParams.set("access_token",account.access_token);
+   statusUrl.searchParams.set("fields","status_code,status,error_message");statusUrl.searchParams.set("access_token",account.access_token);
    const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
    if(statusResponse.ok&&statusData.status_code==="FINISHED"){ready=true;break;}
-   if(statusData.status_code==="ERROR"){await env.POSTFLOW3_KV.delete(pendingKey);return json({error:statusData.status||"O Instagram não conseguiu processar o vídeo."},502);}
+   if(statusData.status_code==="ERROR"){await env.POSTFLOW3_KV.delete(pendingKey);return json({error:String(statusData.error_message||statusData.status||"O Instagram não conseguiu processar o vídeo."),instagramStatus:statusData.status_code},502);}
    lastStatus=statusData.status||statusData.status_code||"processando";
    await new Promise(resolve=>setTimeout(resolve,2000));
   }
