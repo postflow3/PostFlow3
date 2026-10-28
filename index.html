@@ -1239,6 +1239,7 @@ input,select,textarea,button{max-width:100%}
   <button class="pfpro-tab" data-pfpro-tab="business" role="tab" aria-selected="false">↗ Preparação comercial</button>
   <button class="pfpro-tab" data-pfpro-tab="planner" role="tab" aria-selected="false">✦ Planejador IA</button>
   <button class="pfpro-tab" data-pfpro-tab="series" role="tab" aria-selected="false">🎬 Séries com IA</button>
+  <button class="pfpro-tab" data-pfpro-tab="hooks" role="tab" aria-selected="false">⚡ Ganchos virais IA</button>
  </div>
  <div id="pfproPanel-planner" class="pfpro-panel hidden">
   <div class="pfpro-section-heading"><div><h3>Planejador de conteúdo com IA</h3><p>Gere um plano de 7 dias adaptado ao seu nicho. Você revisa cada ideia antes de criar ou agendar uma publicação.</p></div><span class="pfpro-ai-badge">GEMINI · IA</span></div>
@@ -1253,6 +1254,19 @@ input,select,textarea,button{max-width:100%}
   </form>
   <p id="pf3AiPlanStatus" class="pfpro-footnote" role="status" aria-live="polite">O plano será criado usando a IA configurada no servidor. Nada será publicado nem agendado automaticamente.</p>
   <div id="pf3AiPlanResults" class="pf3-ai-plan-results hidden"></div>
+ </div>
+ <div id="pfproPanel-hooks" class="pfpro-panel hidden">
+  <div class="pfpro-section-heading"><div><h3>Laboratório de ganchos com IA</h3><p>Crie aberturas fortes para os primeiros segundos do vídeo, teste ângulos diferentes e escolha uma chamada para ação.</p></div><span class="pfpro-ai-badge">HOOK LAB · IA</span></div>
+  <form id="pf3AiHooksForm" class="pf3-ai-plan-form">
+   <label>Assunto do vídeo<input id="pf3AiHooksTopic" maxlength="180" required placeholder="Ex.: produto útil, receita, curiosidade, dica rápida"></label>
+   <label>Objetivo<select id="pf3AiHooksGoal"><option value="reter atenção e gerar visualizações">Prender atenção e gerar visualizações</option><option value="gerar comentários e conversa">Gerar comentários</option><option value="vender um produto sem exageros">Apresentar/vender produto</option><option value="ensinar algo útil">Ensinar algo útil</option><option value="contar uma história curiosa">Contar uma história curiosa</option></select></label>
+   <label>Plataforma<select id="pf3AiHooksPlatform"><option value="Instagram Reels e YouTube Shorts">Instagram Reels + YouTube Shorts</option><option value="Instagram Reels">Somente Instagram Reels</option><option value="YouTube Shorts">Somente YouTube Shorts</option></select></label>
+   <label>Tom<select id="pf3AiHooksTone"><option value="natural, direto e curioso">Natural e curioso</option><option value="engraçado e descontraído">Engraçado</option><option value="surpreendente, sem clickbait enganoso">Surpreendente sem enganar</option><option value="emocional e inspirador">Emocional/inspirador</option><option value="persuasivo e focado em benefícios reais">Persuasivo para produto</option></select></label>
+   <label class="pf3-ai-context">Detalhes, público ou benefício real (opcional)<textarea id="pf3AiHooksContext" maxlength="500" rows="3" placeholder="Para quem é o vídeo? Que benefício ou informação real deve aparecer?"></textarea></label>
+   <button id="pf3AiHooksButton" class="pfpro-primary" type="submit">⚡ Gerar 10 ganchos e CTAs</button>
+  </form>
+  <p id="pf3AiHooksStatus" class="pfpro-footnote" role="status" aria-live="polite">A IA sugere opções para testar; não garante viralização nem publica automaticamente.</p>
+  <div id="pf3AiHooksResults" class="pf3-ai-plan-results hidden"></div>
  </div>
  <div id="pfproPanel-series" class="pfpro-panel hidden">
   <div class="pfpro-section-heading"><div><h3>Crie uma série inteira com IA</h3><p>Receba episódios conectados, roteiro, gancho e prompt pronto para gerar cada vídeo. Revise tudo antes de publicar.</p></div><span class="pfpro-ai-badge">SÉRIE · GEMINI</span></div>
@@ -1858,6 +1872,28 @@ function postFlowToast(title,message){
  root.querySelectorAll('[data-pfpro-go]').forEach(b=>b.addEventListener('click',()=>{if(typeof show==='function')show(b.dataset.pfproGo);}));
  const refresh=()=>{if(typeof loadServerPosts==='function'){loadServerPosts().then(()=>{renderIntelligence();renderQueue();});}else{renderIntelligence();renderQueue();}};
  $('pfproRefresh').addEventListener('click',refresh);$('pfproQueueRefresh').addEventListener('click',refresh);
+ const aiHooksForm=$('pf3AiHooksForm');
+ if(aiHooksForm)aiHooksForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const button=$('pf3AiHooksButton'),status=$('pf3AiHooksStatus'),results=$('pf3AiHooksResults');
+  const payload={action:'hooks',topic:$('pf3AiHooksTopic').value.trim(),goal:$('pf3AiHooksGoal').value,platform:$('pf3AiHooksPlatform').value,tone:$('pf3AiHooksTone').value,context:$('pf3AiHooksContext').value.trim()};
+  if(!payload.topic){status.textContent='Informe o assunto do vídeo.';return;}
+  button.disabled=true;button.textContent='⚡ Criando ganchos...';status.textContent='A IA está criando ângulos diferentes, chamadas para ação e ideias para teste.';results.classList.add('hidden');results.innerHTML='';
+  try{
+   const response=await fetch('/api/ai-caption',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+   const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Não foi possível gerar os ganchos.');
+   const hooks=Array.isArray(data.hooks)?data.hooks:[];if(!hooks.length)throw new Error('A IA não retornou ganchos válidos. Tente novamente.');
+   const escHook=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   const fullHook=x=>['Gancho: '+x.hook,'Estilo: '+x.angle,'Texto/visual na abertura: '+x.visual,'CTA: '+x.cta,'Por que testar: '+x.rationale].filter(Boolean).join('\n');
+   results.innerHTML='<div class="pf3-ai-results-head"><h4>Seus ganchos para testar</h4><div class="pf3-ai-head-actions"><span>'+hooks.length+' opções</span><button type="button" class="pfpro-secondary" id="pf3AiHooksCopyAll">Copiar todos</button></div></div>'+hooks.map((x,i)=>'<article class="pf3-ai-idea"><div class="pf3-ai-idea-top"><span class="pf3-ai-day">OPÇÃO '+(i+1)+'</span><span class="pf3-ai-format">'+escHook(x.angle||'Ângulo criativo')+'</span></div><h4>'+escHook(x.hook)+'</h4><p><strong>Abertura visual:</strong> '+escHook(x.visual)+'</p><p><strong>Chamada para ação:</strong> '+escHook(x.cta)+'</p><p class="pf3-ai-rationale">'+escHook(x.rationale)+'</p><div class="pf3-ai-card-actions"><button type="button" class="pfpro-secondary" data-pf3-hook-copy="'+i+'">Copiar opção</button><button type="button" class="pfpro-secondary" data-pf3-hook-use="'+i+'">Usar no conteúdo</button></div></article>').join('');
+   results.classList.remove('hidden');status.textContent='Pronto! Teste ganchos diferentes com vídeos semelhantes e compare a retenção real nas métricas.';
+   const copy=async value=>{try{await navigator.clipboard.writeText(value);status.textContent='Copiado para a área de transferência.';}catch(e){status.textContent='Não foi possível copiar automaticamente; selecione o texto e copie manualmente.';}};
+   const all=$('pf3AiHooksCopyAll');if(all)all.addEventListener('click',()=>copy(hooks.map((x,i)=>'OPÇÃO '+(i+1)+'\n'+fullHook(x)).join('\n\n----------------\n\n')));
+   results.querySelectorAll('[data-pf3-hook-copy]').forEach(b=>b.addEventListener('click',()=>{const x=hooks[Number(b.dataset.pf3HookCopy)];if(x)copy(fullHook(x));}));
+   results.querySelectorAll('[data-pf3-hook-use]').forEach(b=>b.addEventListener('click',()=>{const x=hooks[Number(b.dataset.pf3HookUse)];if(!x)return;const title=document.getElementById('title'),description=document.getElementById('description');if(title)title.value=String(x.hook||'').slice(0,180);if(description)description.value=[x.visual||'',x.cta||''].filter(Boolean).join('\n\n');if(typeof show==='function')show('conteudos');if(typeof window.postFlowToast==='function')window.postFlowToast('Gancho aplicado','O título e a descrição foram preenchidos. Revise antes de agendar.');}));
+  }catch(error){status.textContent=error.message||'Falha ao gerar ganchos.';}
+  finally{button.disabled=false;button.textContent='⚡ Gerar 10 ganchos e CTAs';}
+ });
  const aiSeriesForm=$('pf3AiSeriesForm');
  if(aiSeriesForm)aiSeriesForm.addEventListener('submit',async event=>{
   event.preventDefault();
