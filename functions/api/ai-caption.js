@@ -6,6 +6,35 @@ export async function onRequestPost({request,env}){
  if(!env.GEMINI_API_KEY)return json({error:"A IA ainda não está configurada. Adicione o secret GEMINI_API_KEY nas variáveis do ambiente Preview do Cloudflare Pages."},503);
  try{
   const input=await request.json();
+  const input=await request.json();
+  if(input.action==="plan"){
+   const niche=String(input.niche||"").trim().slice(0,180);
+   const audience=String(input.audience||"").trim().slice(0,180);
+   const goal=String(input.goal||"crescer audiência").slice(0,100);
+   const platforms=String(input.platforms||"Instagram e YouTube Shorts").slice(0,100);
+   const frequency=String(input.frequency||"7 ideias, uma por dia").slice(0,100);
+   const context=String(input.context||"").slice(0,600);
+   if(!niche)return json({error:"Informe seu nicho para gerar um plano personalizado."},400);
+   const prompt="Você é estrategista de conteúdo para criadores brasileiros. Crie um plano prático para "+platforms+". Nicho: "+niche+". Público: "+(audience||"público interessado no nicho")+". Objetivo: "+goal+". Frequência solicitada: "+frequency+". Contexto adicional: "+(context||"não informado")+". Retorne JSON válido com a chave ideas, um array de 3 a 7 objetos. Cada objeto deve ter day (ex. Dia 1), topic (título claro), hook (gancho inicial curto), format (Reels ou YouTube Shorts), caption (legenda natural de até 500 caracteres com chamada para ação quando adequada), hashtags (array de 4 a 8 strings sem #), best_time (apenas uma sugestão geral, diga para validar com as métricas da conta), rationale (por que a ideia combina com o objetivo). Não prometa viralização, não invente estatísticas ou resultados, não repita ideias e não faça alegações factuais não sustentadas. A resposta deve ser somente JSON.";
+   const endpoint="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY);
+   let response,data={};
+   for(let attempt=0;attempt<2;attempt++){
+    response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.75,responseMimeType:"application/json"}})});
+    data=await response.json().catch(()=>({}));
+    if(response.ok||(response.status!==429&&response.status!==503)||attempt===1)break;
+    await new Promise(resolve=>setTimeout(resolve,1200));
+   }
+   if(!response.ok){
+    const detail=String(data.error?.message||"").slice(0,240);
+    const overloaded=response.status===503&&/high demand|overload|unavailable|try again later/i.test(detail);
+    return json({error:overloaded?"O Gemini está com muita procura neste momento. Tente novamente em 1 minuto.":response.status===429?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.":"A IA não conseguiu criar o plano. Verifique a configuração da chave Gemini.",detail},502);
+   }
+   const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+   let plan;try{plan=JSON.parse(raw.replace(/^\\s*\\x60\\x60\\x60(?:json)?/i,"").replace(/\\x60\\x60\\x60\\s*$/,""));}catch{return json({error:"A IA retornou um plano que não consegui interpretar. Tente novamente."},502);}
+   const ideas=(Array.isArray(plan.ideas)?plan.ideas:[]).slice(0,7).map((idea,i)=>({day:String(idea.day||("Dia "+(i+1))).slice(0,40),topic:String(idea.topic||"").slice(0,180),hook:String(idea.hook||"").slice(0,220),format:String(idea.format||"Vídeo curto").slice(0,60),caption:String(idea.caption||"").slice(0,700),hashtags:(Array.isArray(idea.hashtags)?idea.hashtags:[]).map(x=>String(x).replace(/^#+/,"").replace(/[^\\p{L}\\p{N}_]/gu,"")).filter(Boolean).slice(0,8),best_time:String(idea.best_time||"Valide o horário com as métricas da sua conta.").slice(0,160),rationale:String(idea.rationale||"").slice(0,220)})).filter(idea=>idea.topic);
+   if(!ideas.length)return json({error:"A IA não gerou ideias utilizáveis. Tente ajustar o nicho ou o contexto."},502);
+   return json({ideas});
+  }
   const frames=Array.isArray(input.frames)?input.frames.slice(0,4):[];
   const filename=String(input.filename||"vídeo").slice(0,180);
   const context=String(input.context||"").slice(0,1200);
