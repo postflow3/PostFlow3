@@ -1805,8 +1805,21 @@ function postFlowToast(title,message){
   const conflicts=new Map();filtered.filter(scheduled).forEach(p=>{const d=dateOf(p);if(!d)return;const key=d.toISOString().slice(0,16);conflicts.set(key,(conflicts.get(key)||0)+1)});
   const conflictCount=[...conflicts.values()].filter(n=>n>1).length;
   $('pfproQueueSummary').textContent=filtered.length+' item(ns) encontrados · '+all.filter(failed).length+' falha(s) no histórico · '+conflictCount+' horário(s) com mais de um agendamento na lista filtrada.';
-  $('pfproQueueList').innerHTML=filtered.length?filtered.map(p=>{const st=queueStatus(p),dt=dateOf(p),title=p.title||p.filename||'Vídeo sem título',dest=platforms(p).join(' · '),same=dt&&conflicts.get(dt.toISOString().slice(0,16))>1;const chip=st==='published'?'good':st==='failed'?'bad':st==='scheduled'?'warn':'';return '<article class="pfpro-queue-item"><div class="pfpro-queue-item-top"><div><h4>'+esc(title)+'</h4><p>'+esc(dest)+' · '+esc(fmt(dt))+'</p></div><span class="pfpro-chip '+chip+'">'+({published:'Publicado',failed:'Falha',scheduled:'Agendado',draft:'Revisar'}[st])+'</span></div>'+(same?'<p style="color:#f3c778">⚠ Possível conflito: outro item tem o mesmo horário nesta fila.</p>':'')+(st==='failed'?'<p style="color:#ffadb7">Revise o erro na tela Publicações antes de tentar novamente.</p>':'')+'<div class="pfpro-item-actions"><button type="button" data-pfpro-open="publicacoes">Ver em Publicações</button>'+(st==='scheduled'?'<button type="button" data-pfpro-open="agendamentos">Ver calendário</button>':'')+'</div></article>'}).join(''):'<div class="pfpro-empty">Nenhum item corresponde a estes filtros. Atualize os dados ou selecione outro filtro.</div>';
+  $('pfproQueueList').innerHTML=filtered.length?filtered.map(p=>{
+   const st=queueStatus(p),dt=dateOf(p),title=p.title||p.filename||'Vídeo sem título',dest=platforms(p).join(' · '),same=dt&&conflicts.get(dt.toISOString().slice(0,16))>1;
+   const chip=st==='published'?'good':st==='failed'?'bad':st==='scheduled'?'warn':'';
+   const error=p.instagramStatus==='failed'?(p.instagramError||'O Instagram não confirmou a publicação.'):p.youtubeCheckError||p.youtubeError||p.driveCleanupError||'';
+   const attempted=p.instagramAttemptedAt||p.youtubeAttemptedAt||p.lastAttemptAt;
+   return '<article class="pfpro-queue-item"><div class="pfpro-queue-item-top"><div><h4>'+esc(title)+'</h4><p>'+esc(dest)+' · '+esc(fmt(dt))+'</p></div><span class="pfpro-chip '+chip+'">'+({published:'Publicado',failed:'Falha',scheduled:'Agendado',draft:'Revisar'}[st])+'</span></div>'
+    +(same?'<p style="color:#f3c778">⚠ Possível conflito: outro item tem o mesmo horário nesta fila.</p>':'')
+    +(st==='failed'?'<p style="color:#ffadb7"><strong>Motivo:</strong> '+esc(error||'Verifique o histórico de publicação para mais detalhes.')+'</p>'+(attempted?'<p class="muted">Última tentativa: '+esc(new Date(attempted).toLocaleString('pt-BR'))+'</p>':''):'')
+    +'<div class="pfpro-item-actions"><button type="button" data-pfpro-open="publicacoes">Ver em Publicações</button>'
+    +(st==='scheduled'?'<button type="button" data-pfpro-open="agendamentos">Ver calendário</button>':'')
+    +(st==='failed'&&p.instagramVideoKey&&p.instagramStatus!=='published'?'<button type="button" data-pfpro-retry-instagram="'+esc(p.id)+'">Tentar Instagram novamente</button>':'')
+    +'</div></article>';
+  }).join(''):'<div class="pfpro-empty">Nenhum item corresponde a estes filtros. Atualize os dados ou selecione outro filtro.</div>';
   $('pfproQueueList').querySelectorAll('[data-pfpro-open]').forEach(b=>b.addEventListener('click',()=>{if(typeof show==='function')show(b.dataset.pfproOpen)}));
+  $('pfproQueueList').querySelectorAll('[data-pfpro-retry-instagram]').forEach(b=>b.addEventListener('click',()=>retryInstagramPost(b.dataset.pfproRetryInstagram)));
  }
  $('pfproQueuePlatform').addEventListener('change',renderQueue);$('pfproQueueStatus').addEventListener('change',renderQueue);
  const libraryKey='postflow3_pfpro_library_v1';
