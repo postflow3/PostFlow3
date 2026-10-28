@@ -8,6 +8,24 @@ export async function onRequestPost({request,env}){
   const contentLength=Number(request.headers.get("content-length")||0);
   if(contentLength>16000000)return json({error:"A solicitação é muito grande. Reduza o tamanho do vídeo ou tente novamente."},413);
   const input=await request.json();
+  if(input.action==="hooks"){
+   const topic=String(input.topic||"").trim().slice(0,180);
+   const goal=String(input.goal||"reter atenção e gerar visualizações").slice(0,100);
+   const platform=String(input.platform||"Instagram Reels e YouTube Shorts").slice(0,100);
+   const tone=String(input.tone||"natural, direto e curioso").slice(0,100);
+   const context=String(input.context||"").slice(0,500);
+   if(!topic)return json({error:"Informe o assunto do vídeo."},400);
+   const prompt="Você é estrategista de vídeos curtos em português brasileiro. Crie exatamente 10 opções distintas de gancho para os primeiros 1 a 3 segundos de um vídeo sobre: "+topic+". Objetivo: "+goal+". Plataforma: "+platform+". Tom: "+tone+". Contexto e fatos fornecidos: "+(context||"não informado")+". Cada gancho deve ser claro, específico, falável e diferente em ângulo (pergunta, demonstração visual, erro comum, curiosidade, comparação, história, benefício, desafio, surpresa honesta, problema/solução). Não use clickbait enganoso, promessas de viralização, fatos inventados, medo artificial nem alegações de produto não fornecidas. Inclua uma abertura visual realizável, uma CTA natural e uma razão curta para testar o ângulo. Retorne somente JSON válido com chave hooks, array de objetos com hook, angle, visual, cta, rationale. Texto em português brasileiro, pronto para adaptar; evite repetir frases entre opções.";
+   const endpoint="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY);
+   let response,data={};
+   for(let attempt=0;attempt<2;attempt++){response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,responseMimeType:"application/json",maxOutputTokens:4500}})});data=await response.json().catch(()=>({}));if(response.ok||(response.status!==429&&response.status!==503)||attempt===1)break;await new Promise(resolve=>setTimeout(resolve,1200));}
+   if(!response.ok){const detail=String(data.error?.message||"").slice(0,240);const overloaded=response.status===503&&/high demand|overload|unavailable|try again later/i.test(detail);return json({error:overloaded?"O Gemini está com muita procura. Tente novamente em 1 minuto.":response.status===429?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.":"A IA não conseguiu criar os ganchos. Verifique a configuração da chave Gemini.",detail},502);}
+   const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+   let generated;try{generated=JSON.parse(raw);}catch{return json({error:"A IA retornou uma resposta que não consegui interpretar. Tente novamente."},502);}
+   const hooks=(Array.isArray(generated.hooks)?generated.hooks:[]).slice(0,10).map(x=>({hook:String(x.hook||"").slice(0,350),angle:String(x.angle||"").slice(0,100),visual:String(x.visual||"").slice(0,500),cta:String(x.cta||"").slice(0,250),rationale:String(x.rationale||"").slice(0,350)})).filter(x=>x.hook);
+   if(!hooks.length)return json({error:"A IA não gerou ganchos utilizáveis. Tente outro assunto."},502);
+   return json({hooks});
+  }
   if(input.action==="series"){
    const topic=String(input.topic||"").trim().slice(0,180);
    const style=String(input.style||"realista e natural").slice(0,100);
