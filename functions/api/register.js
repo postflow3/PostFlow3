@@ -16,7 +16,8 @@ export async function onRequestPost({request,env}){
   if(existing)return json({error:"Já existe uma conta com esse e-mail. Entre ou use outro endereço."},409);
   const id=crypto.randomUUID(),passwordHash=await hashPassword(password);
   try{
-   await env.POSTFLOW3_DB.prepare("INSERT INTO users (id,email,password_hash,display_name,role,status,plan) VALUES (?,?,?,?,'customer','active','free')").bind(id,email,passwordHash,name).run();
+   const role=email==="sergiouai3@gmail.com"?"admin":"customer";
+   await env.POSTFLOW3_DB.prepare("INSERT INTO users (id,email,password_hash,display_name,role,status,plan) VALUES (?,?,?,?,?,'active','free')").bind(id,email,passwordHash,name,role).run();
   }catch(e){
    const message=String(e?.message||"");
    if(message.includes("USER_CAPACITY_REACHED"))return json({error:"O PostFlow3 atingiu o limite inicial de 10 usuários. Entre em contato com o administrador."},409);
