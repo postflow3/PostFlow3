@@ -76,13 +76,16 @@ export async function publishInstagramStep({ request, env, userId, post }) {
       post.instagramError = String(statusData.error?.message || "O Instagram ainda não retornou o estado do vídeo.").slice(0, 250);
       return "processing";
     }
-    if (statusData.status_code === "ERROR") {
+    // Meta can leave a container at IN_PROGRESS even after reporting a fatal media-download error.
+    // In that case the container will never publish: clear it so the scheduled retry creates a fresh one.
+    const mediaDownloadFailed = /media download has failed|video download failed|media could not be fetched|http error code 404/i.test(String(statusData.error_message || ""));
+    if (statusData.status_code === "ERROR" || mediaDownloadFailed) {
       post.instagramStatus = "failed";
       post.instagramError = String(statusData.error_message || statusData.status || "O Instagram não conseguiu processar o vídeo.").slice(0, 250);
       post.instagramAttemptedAt = new Date().toISOString();
       // ERROR is terminal for this container; the scheduled retry must create a fresh one.
       post.instagramCreationId = null;
-      post.instagramProcessingStatus = "ERROR";
+      post.instagramProcessingStatus = String(statusData.status_code || "ERROR").slice(0, 80);
       return "failed";
     }
     if (statusData.status_code !== "FINISHED") {
