@@ -8,6 +8,24 @@ export async function onRequestPost({request,env}){
   const contentLength=Number(request.headers.get("content-length")||0);
   if(contentLength>16000000)return json({error:"A solicitação é muito grande. Reduza o tamanho do vídeo ou tente novamente."},413);
   const input=await request.json();
+  if(input.action==="repurpose"){
+   const topic=String(input.topic||"").trim().slice(0,180);
+   const goal=String(input.goal||"entreter e reter atenção").slice(0,100);
+   const tone=String(input.tone||"natural e direto").slice(0,100);
+   const platforms=String(input.platforms||"Instagram Reels e YouTube Shorts").slice(0,100);
+   const context=String(input.context||"").slice(0,900);
+   if(!topic)return json({error:"Informe o assunto do vídeo."},400);
+   const prompt="Você é especialista em conteúdo social para vídeos curtos em português brasileiro. Reaproveite esta ideia sem inventar o que não foi informado. Tema: "+topic+". Objetivo: "+goal+". Tom: "+tone+". Destinos solicitados: "+platforms+". Contexto/fatos confirmados: "+(context||"não informado")+". Crie uma versão própria para cada destino solicitado: Instagram Reels, YouTube Shorts ou ambos. Para YouTube, título conciso e pesquisável; para Instagram, legenda natural que estimule conversa. Não copie a mesma legenda para todas as plataformas. Cada versão deve conter title, hook, caption, hashtags (4 a 8 strings sem #), cta e rationale. Não invente resultados, especificações, benefícios, estatísticas ou fatos; não prometa viralização; evite clickbait enganoso. Retorne somente JSON válido com a chave versions, array de objetos com platform, title, hook, caption, hashtags, cta, rationale. Para um destino único, retorne exatamente uma versão; para ambos, retorne duas versões.";
+   const endpoint="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY);
+   let response,data={};
+   for(let attempt=0;attempt<2;attempt++){response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.75,responseMimeType:"application/json",maxOutputTokens:5000}})});data=await response.json().catch(()=>({}));if(response.ok||(response.status!==429&&response.status!==503)||attempt===1)break;await new Promise(resolve=>setTimeout(resolve,1200));}
+   if(!response.ok){const detail=String(data.error?.message||"").slice(0,240);const overloaded=response.status===503&&/high demand|overload|unavailable|try again later/i.test(detail);return json({error:overloaded?"O Gemini está com muita procura. Tente novamente em 1 minuto.":response.status===429?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.":"A IA não conseguiu adaptar o conteúdo. Verifique a configuração da chave Gemini.",detail},502);}
+   const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+   let generated;try{generated=JSON.parse(raw.replace(/^\s*\x60\x60\x60(?:json)?/i,"").replace(/\x60\x60\x60\s*$/,""));}catch{return json({error:"A IA retornou uma resposta que não consegui interpretar. Tente novamente."},502);}
+   const versions=(Array.isArray(generated.versions)?generated.versions:[]).slice(0,2).map(x=>({platform:String(x.platform||"").slice(0,80),title:String(x.title||"").slice(0,180),hook:String(x.hook||"").slice(0,350),caption:String(x.caption||"").slice(0,1200),hashtags:(Array.isArray(x.hashtags)?x.hashtags:[]).map(t=>String(t).replace(/^#+/,"").replace(/[^\p{L}\p{N}_]/gu,"")).filter(Boolean).slice(0,8),cta:String(x.cta||"").slice(0,300),rationale:String(x.rationale||"").slice(0,350)})).filter(x=>x.title&&x.caption);
+   if(!versions.length)return json({error:"A IA não gerou versões utilizáveis. Tente novamente com mais detalhes."},502);
+   return json({versions});
+  }
   if(input.action==="hooks"){
    const topic=String(input.topic||"").trim().slice(0,180);
    const goal=String(input.goal||"reter atenção e gerar visualizações").slice(0,100);
