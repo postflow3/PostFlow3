@@ -1238,6 +1238,7 @@ input,select,textarea,button{max-width:100%}
   <button class="pfpro-tab" data-pfpro-tab="library" role="tab" aria-selected="false">▣ Biblioteca</button>
   <button class="pfpro-tab" data-pfpro-tab="business" role="tab" aria-selected="false">↗ Preparação comercial</button>
   <button class="pfpro-tab" data-pfpro-tab="planner" role="tab" aria-selected="false">✦ Planejador IA</button>
+  <button class="pfpro-tab" data-pfpro-tab="series" role="tab" aria-selected="false">🎬 Séries com IA</button>
  </div>
  <div id="pfproPanel-planner" class="pfpro-panel hidden">
   <div class="pfpro-section-heading"><div><h3>Planejador de conteúdo com IA</h3><p>Gere um plano de 7 dias adaptado ao seu nicho. Você revisa cada ideia antes de criar ou agendar uma publicação.</p></div><span class="pfpro-ai-badge">GEMINI · IA</span></div>
@@ -1252,6 +1253,21 @@ input,select,textarea,button{max-width:100%}
   </form>
   <p id="pf3AiPlanStatus" class="pfpro-footnote" role="status" aria-live="polite">O plano será criado usando a IA configurada no servidor. Nada será publicado nem agendado automaticamente.</p>
   <div id="pf3AiPlanResults" class="pf3-ai-plan-results hidden"></div>
+ </div>
+ <div id="pfproPanel-series" class="pfpro-panel hidden">
+  <div class="pfpro-section-heading"><div><h3>Crie uma série inteira com IA</h3><p>Receba episódios conectados, roteiro, gancho e prompt pronto para gerar cada vídeo. Revise tudo antes de publicar.</p></div><span class="pfpro-ai-badge">SÉRIE · GEMINI</span></div>
+  <form id="pf3AiSeriesForm" class="pf3-ai-plan-form">
+   <label>Tema da série<input id="pf3AiSeriesTopic" maxlength="180" required placeholder="Ex.: curiosidades incríveis, receitas rápidas, dicas de produtos"></label>
+   <label>Estilo do vídeo<select id="pf3AiSeriesStyle"><option value="realista e natural">Realista e natural</option><option value="cinematográfico">Cinematográfico</option><option value="animação 3D">Animação 3D</option><option value="humor e ritmo acelerado">Humor e ritmo acelerado</option><option value="apresentador falando para a câmera">Apresentador falando para a câmera</option><option value="demonstração de produto">Demonstração de produto</option></select></label>
+   <label>Público-alvo<input id="pf3AiSeriesAudience" maxlength="180" placeholder="Ex.: pessoas que gostam de dicas práticas"></label>
+   <label>Plataforma<select id="pf3AiSeriesPlatform"><option value="Instagram Reels e YouTube Shorts">Instagram Reels e YouTube Shorts</option><option value="Instagram Reels">Instagram Reels</option><option value="YouTube Shorts">YouTube Shorts</option></select></label>
+   <label>Quantidade de episódios<select id="pf3AiSeriesCount"><option value="3">3 episódios</option><option value="5">5 episódios</option><option value="7">7 episódios</option></select></label>
+   <label>Formato / duração<select id="pf3AiSeriesDuration"><option value="20 a 30 segundos">20–30 segundos</option><option value="30 a 45 segundos">30–45 segundos</option><option value="45 a 60 segundos">45–60 segundos</option></select></label>
+   <label class="pf3-ai-context">Detalhes, personagem ou produto (opcional)<textarea id="pf3AiSeriesContext" maxlength="600" rows="3" placeholder="Nome do personagem, produto, tom de voz, cenário ou o que evitar"></textarea></label>
+   <button id="pf3AiSeriesButton" class="pfpro-primary" type="submit">🎬 Gerar série e prompts</button>
+  </form>
+  <p id="pf3AiSeriesStatus" class="pfpro-footnote" role="status" aria-live="polite">A IA criará uma história contínua e prompts individuais. Nada será publicado ou agendado automaticamente.</p>
+  <div id="pf3AiSeriesResults" class="pf3-ai-plan-results hidden"></div>
  </div>
  <div id="pfproPanel-intelligence" class="pfpro-panel">
   <div class="pfpro-section-heading"><div><h3>Inteligência de conteúdo</h3><p>Leitura do histórico que já está carregado no PostFlow3. Não estimamos visualizações nem inventamos resultados.</p></div><button class="pfpro-secondary" type="button" id="pfproRefresh">↻ Atualizar</button></div>
@@ -1842,6 +1858,30 @@ function postFlowToast(title,message){
  root.querySelectorAll('[data-pfpro-go]').forEach(b=>b.addEventListener('click',()=>{if(typeof show==='function')show(b.dataset.pfproGo);}));
  const refresh=()=>{if(typeof loadServerPosts==='function'){loadServerPosts().then(()=>{renderIntelligence();renderQueue();});}else{renderIntelligence();renderQueue();}};
  $('pfproRefresh').addEventListener('click',refresh);$('pfproQueueRefresh').addEventListener('click',refresh);
+ const aiSeriesForm=$('pf3AiSeriesForm');
+ if(aiSeriesForm)aiSeriesForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const button=$('pf3AiSeriesButton'),status=$('pf3AiSeriesStatus'),results=$('pf3AiSeriesResults');
+  const payload={action:'series',topic:$('pf3AiSeriesTopic').value.trim(),style:$('pf3AiSeriesStyle').value,audience:$('pf3AiSeriesAudience').value.trim(),platforms:$('pf3AiSeriesPlatform').value,count:Number($('pf3AiSeriesCount').value),duration:$('pf3AiSeriesDuration').value,context:$('pf3AiSeriesContext').value.trim()};
+  if(!payload.topic){status.textContent='Informe o tema da série.';return;}
+  button.disabled=true;button.textContent='✦ Criando episódios e prompts...';status.textContent='A IA está montando uma sequência com continuidade entre os episódios.';results.classList.add('hidden');
+  try{
+   const response=await fetch('/api/ai-caption',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(data.error||'Não foi possível gerar a série.');
+   const episodes=Array.isArray(data.episodes)?data.episodes:[];
+   if(!episodes.length)throw new Error('A IA não retornou episódios válidos. Tente novamente.');
+   const escHtml=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   const fullText=ep=>['EPISÓDIO '+ep.number,ep.title,'Objetivo: '+ep.purpose,'Gancho: '+ep.hook,'Roteiro: '+ep.script,'Prompt de vídeo: '+ep.video_prompt,'Legenda: '+ep.caption,'Hashtags: '+(ep.hashtags||[]).map(x=>'#'+String(x).replace(/^#+/,'')).join(' '),'Continuidade: '+ep.continuity].filter(x=>x&& !/^undefined$/.test(x)).join('\n\n');
+   results.innerHTML='<div class="pf3-ai-results-head"><h4>Sua série está pronta</h4><div class="pf3-ai-head-actions"><span>'+episodes.length+' episódios</span><button type="button" class="pfpro-secondary" id="pf3AiSeriesCopyAll">Copiar série completa</button></div></div>'+episodes.map((ep,i)=>'<article class="pf3-ai-idea"><div class="pf3-ai-idea-top"><span class="pf3-ai-day">EPISÓDIO '+escHtml(ep.number||i+1)+'</span><span class="pf3-ai-format">'+escHtml(payload.duration)+'</span></div><h4>'+escHtml(ep.title)+'</h4><p><strong>Objetivo:</strong> '+escHtml(ep.purpose)+'</p><p class="pf3-ai-hook"><strong>Gancho:</strong> '+escHtml(ep.hook)+'</p><p><strong>Roteiro:</strong> '+escHtml(ep.script)+'</p><p><strong>Prompt pronto para gerar o vídeo:</strong></p><p class="pf3-ai-rationale">'+escHtml(ep.video_prompt)+'</p><p><strong>Legenda:</strong> '+escHtml(ep.caption)+'</p><div class="pf3-ai-tags">'+(Array.isArray(ep.hashtags)?ep.hashtags:[]).map(t=>'<span>#'+escHtml(String(t).replace(/^#+/,''))+'</span>').join('')+'</div><p><strong>Gancho de continuidade:</strong> '+escHtml(ep.continuity)+'</p><div class="pf3-ai-card-actions"><button type="button" class="pfpro-secondary" data-pf3-series-copy="'+i+'">Copiar episódio</button><button type="button" class="pfpro-secondary" data-pf3-series-prompt="'+i+'">Copiar só o prompt</button></div></article>').join('');
+   results.classList.remove('hidden');status.textContent='Série gerada. Copie os prompts e revise cada episódio. A geração de vídeo e a publicação não são executadas automaticamente.';
+   const copy=async text=>{try{await navigator.clipboard.writeText(text);status.textContent='Copiado para a área de transferência.';}catch(e){status.textContent='Não foi possível copiar automaticamente; selecione o texto e copie manualmente.';}};
+   const all=$('pf3AiSeriesCopyAll');if(all)all.addEventListener('click',()=>copy(episodes.map(fullText).join('\n\n====================\n\n')));
+   results.querySelectorAll('[data-pf3-series-copy]').forEach(b=>b.addEventListener('click',()=>{const ep=episodes[Number(b.dataset.pf3SeriesCopy)];if(ep)copy(fullText(ep));}));
+   results.querySelectorAll('[data-pf3-series-prompt]').forEach(b=>b.addEventListener('click',()=>{const ep=episodes[Number(b.dataset.pf3SeriesPrompt)];if(ep)copy(ep.video_prompt||'');}));
+  }catch(error){status.textContent=error.message||'Falha ao gerar a série.';}
+  finally{button.disabled=false;button.textContent='🎬 Gerar série e prompts';}
+ });
  const aiPlanForm=$('pf3AiPlanForm');
  if(aiPlanForm)aiPlanForm.addEventListener('submit',async event=>{
   event.preventDefault();
