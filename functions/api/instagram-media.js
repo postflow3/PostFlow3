@@ -131,6 +131,7 @@ export async function onRequestGet({ request, env }) {
     if (contentLength) responseHeaders.set("Content-Length", contentLength);
     if (contentRange) responseHeaders.set("Content-Range", contentRange);
 
+    await recordDiagnostic({ reason: "media_stream_ok", upstreamStatus: upstream.status, contentType: responseHeaders.get("Content-Type") });
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch (error) {
     // Keep diagnostics private in KV; never expose Google tokens, Drive IDs, or exceptions to Meta.
