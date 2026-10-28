@@ -8,6 +8,31 @@ export async function onRequestPost({request,env}){
   const contentLength=Number(request.headers.get("content-length")||0);
   if(contentLength>16000000)return json({error:"A solicitação é muito grande. Reduza o tamanho do vídeo ou tente novamente."},413);
   const input=await request.json();
+  if(input.action==="series"){
+   const topic=String(input.topic||"").trim().slice(0,180);
+   const style=String(input.style||"realista e natural").slice(0,100);
+   const audience=String(input.audience||"").slice(0,180);
+   const platforms=String(input.platforms||"Instagram Reels e YouTube Shorts").slice(0,100);
+   const duration=String(input.duration||"20 a 30 segundos").slice(0,80);
+   const context=String(input.context||"").slice(0,600);
+   const count=Math.max(3,Math.min(7,[3,5,7].includes(Number(input.count))?Number(input.count):3));
+   if(!topic)return json({error:"Informe o tema para criar a série."},400);
+   const prompt="Você é roteirista e especialista em prompts para geradores de vídeo. Crie uma série coerente em português brasileiro sobre: "+topic+". Estilo visual: "+style+". Público: "+(audience||"público geral interessado no tema")+". Plataformas: "+platforms+". Duração de cada episódio: "+duration+". Detalhes extras: "+(context||"não informado")+". Gere exatamente "+count+" episódios conectados, com progressão narrativa e sem repetir o mesmo conteúdo. Cada prompt de vídeo deve ser independente e pronto para copiar em uma ferramenta de geração de vídeo: inclua personagem/objeto, cenário, ação, enquadramento, movimento de câmera, iluminação, estilo, ritmo, som/voz em português brasileiro quando adequado, proporção vertical 9:16, duração solicitada e instruções para não adicionar textos/logos aleatórios. Não diga que o vídeo foi gerado. Retorne somente JSON válido com a chave episodes, array de objetos com number, title, purpose, hook, script (fala/narração e ações visuais com começo/meio/fim), video_prompt, caption (CTA natural), hashtags (4 a 8 strings sem #), continuity (como conecta ao próximo episódio; no último, convide a acompanhar a série). Não invente dados factuais nem prometa viralização.";
+   const endpoint="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY);
+   let response,data={};
+   for(let attempt=0;attempt<2;attempt++){
+    response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.8,responseMimeType:"application/json",maxOutputTokens:6000}})});
+    data=await response.json().catch(()=>({}));
+    if(response.ok||(response.status!==429&&response.status!==503)||attempt===1)break;
+    await new Promise(resolve=>setTimeout(resolve,1200));
+   }
+   if(!response.ok){const detail=String(data.error?.message||"").slice(0,240);const overloaded=response.status===503&&/high demand|overload|unavailable|try again later/i.test(detail);return json({error:overloaded?"O Gemini está com muita procura. Tente novamente em 1 minuto.":response.status===429?"A IA atingiu o limite temporário. Aguarde um pouco e tente novamente.":"A IA não conseguiu criar a série. Verifique a configuração da chave Gemini.",detail},502);}
+   const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+   let generated;try{generated=JSON.parse(raw.replace(/^\s*\x60\x60\x60(?:json)?/i,"").replace(/\x60\x60\x60\s*$/,""));}catch{return json({error:"A IA retornou uma série que não consegui interpretar. Tente novamente."},502);}
+   const episodes=(Array.isArray(generated.episodes)?generated.episodes:[]).slice(0,count).map((ep,i)=>({number:i+1,title:String(ep.title||("Episódio "+(i+1))).slice(0,180),purpose:String(ep.purpose||"").slice(0,300),hook:String(ep.hook||"").slice(0,300),script:String(ep.script||"").slice(0,1800),video_prompt:String(ep.video_prompt||"").slice(0,3500),caption:String(ep.caption||"").slice(0,800),hashtags:(Array.isArray(ep.hashtags)?ep.hashtags:[]).map(x=>String(x).replace(/^#+/,"").replace(/[^\p{L}\p{N}_]/gu,"")).filter(Boolean).slice(0,8),continuity:String(ep.continuity||"").slice(0,300)})).filter(ep=>ep.title&&ep.video_prompt);
+   if(!episodes.length)return json({error:"A IA não gerou episódios com prompts utilizáveis. Tente outro tema."},502);
+   return json({episodes});
+  }
   if(input.action==="plan"){
    const niche=String(input.niche||"").trim().slice(0,180);
    const audience=String(input.audience||"").trim().slice(0,180);
