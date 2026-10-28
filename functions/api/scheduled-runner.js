@@ -48,7 +48,9 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   if (!account.access_token || !account.user_id) throw new Error("A conexão do Instagram está incompleta.");
   let creationId = post.instagramCreationId;
   if (!creationId) {
-    const mediaUrl = new URL("https://cloudflare-migration.postflow3.pages.dev/api/instagram-media");
+    const requestHost = new URL(request.url).hostname;
+    const mediaOrigin = requestHost === "postflow3.pages.dev" ? "https://postflow3.pages.dev" : "https://cloudflare-migration.postflow3.pages.dev";
+    const mediaUrl = new URL("/api/instagram-media", mediaOrigin);
     mediaUrl.searchParams.set("key", videoKey);
     mediaUrl.searchParams.set("sig", await instagramSignature(env, videoKey));
     const response = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media", {
