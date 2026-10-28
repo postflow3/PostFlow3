@@ -1631,6 +1631,12 @@ async function loadAdminHealth(){
   const labels={ok:"Configurado",warning:"Atenção",error:"Falha"};
   const icons={ok:"✓",warning:"!",error:"×"};
   checks.innerHTML=(data.checks||[]).map(item=>'<div class="smart-metric"><span class="smart-metric-icon scheduled">'+icons[item.status]+'</span><div><small>'+escapeHtml(item.label)+'</small><strong>'+escapeHtml(labels[item.status]||item.status)+'</strong><span>'+escapeHtml(item.detail||"")+'</span></div></div>').join("");
+  const diag=data.mediaDiagnostic;
+  if(diag){
+   const reasons={media_stream_ok:"O vídeo foi entregue com sucesso ao solicitante.",drive_download_failed:"O Google Drive retornou erro ao buscar o arquivo.",media_metadata_not_found:"Metadados do vídeo não encontrados no KV.",drive_file_id_missing:"O vídeo não tem ID do arquivo no Drive.",signature_mismatch:"A assinatura do link de mídia não confere.",invalid_request_or_missing_kv:"Requisição de mídia inválida ou KV indisponível.",exception:"Erro interno ao servir a mídia."};
+   const detail=[diag.stage?"Etapa: "+diag.stage:null,diag.upstreamStatus?"HTTP "+diag.upstreamStatus:null,diag.at?"Último registro: "+new Date(diag.at).toLocaleString("pt-BR"):null].filter(Boolean).join(" · ");
+   checks.innerHTML+='<div class="smart-metric"><span class="smart-metric-icon scheduled">'+(diag.reason==="media_stream_ok"?"✓":"!")+'</span><div><small>Último diagnóstico de mídia do Instagram</small><strong>'+escapeHtml(diag.reason==="media_stream_ok"?"Entrega de mídia confirmada":"Verificar entrega de mídia")+'</strong><span>'+escapeHtml(reasons[diag.reason]||"Existe um registro de diagnóstico.")+' '+escapeHtml(detail)+'</span></div></div>';
+  }
   status.textContent="Verificado em "+new Date(data.checkedAt).toLocaleString("pt-BR")+" · "+Number(data.summary?.ok||0)+" item(ns) configurado(s), "+Number(data.summary?.attention||0)+" com atenção.";
  }catch(error){checks.innerHTML="";status.textContent=error.message||"Falha ao verificar a saúde do sistema.";}
  finally{if(button){button.disabled=false;button.textContent="↻ Verificar";}}
