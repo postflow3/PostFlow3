@@ -5,6 +5,8 @@ export async function onRequestPost({request,env}){
  if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
  if(!env.GEMINI_API_KEY)return json({error:"A IA ainda não está configurada. Adicione o secret GEMINI_API_KEY nas variáveis do ambiente Preview do Cloudflare Pages."},503);
  try{
+  const contentLength=Number(request.headers.get("content-length")||0);
+  if(contentLength>16000000)return json({error:"A solicitação é muito grande. Reduza o tamanho do vídeo ou tente novamente."},413);
   const input=await request.json();
   if(input.action==="plan"){
    const niche=String(input.niche||"").trim().slice(0,180);
@@ -14,11 +16,11 @@ export async function onRequestPost({request,env}){
    const frequency=String(input.frequency||"7 ideias, uma por dia").slice(0,100);
    const context=String(input.context||"").slice(0,600);
    if(!niche)return json({error:"Informe seu nicho para gerar um plano personalizado."},400);
-   const prompt="Você é estrategista de conteúdo para criadores brasileiros. Crie um plano prático para "+platforms+". Nicho: "+niche+". Público: "+(audience||"público interessado no nicho")+". Objetivo: "+goal+". Frequência solicitada: "+frequency+". Contexto adicional: "+(context||"não informado")+". Retorne JSON válido com a chave ideas, um array de 3 a 7 objetos. Cada objeto deve ter day (ex. Dia 1), topic (título claro), hook (gancho inicial curto), format (Reels ou YouTube Shorts), caption (legenda natural de até 500 caracteres com chamada para ação quando adequada), hashtags (array de 4 a 8 strings sem #), best_time (apenas uma sugestão geral, diga para validar com as métricas da conta), rationale (por que a ideia combina com o objetivo). Não prometa viralização, não invente estatísticas ou resultados, não repita ideias e não faça alegações factuais não sustentadas. A resposta deve ser somente JSON.";
+   const prompt="Você é estrategista de conteúdo para criadores brasileiros. Crie um plano prático para "+platforms+". Nicho: "+niche+". Público: "+(audience||"público interessado no nicho")+". Objetivo: "+goal+". Frequência solicitada: "+frequency+". Gere exatamente "+(frequency.startsWith("5")?"5":frequency.startsWith("3")?"3":"7")+" ideias. Contexto adicional: "+(context||"não informado")+". Retorne JSON válido com a chave ideas, um array com exatamente a quantidade solicitada de objetos. Cada objeto deve ter day (ex. Dia 1), topic (título claro), hook (gancho inicial curto), format (Reels ou YouTube Shorts), caption (legenda natural de até 500 caracteres com chamada para ação quando adequada), hashtags (array de 4 a 8 strings sem #), best_time (apenas uma sugestão geral, diga para validar com as métricas da conta), rationale (por que a ideia combina com o objetivo). Não prometa viralização, não invente estatísticas ou resultados, não repita ideias e não faça alegações factuais não sustentadas. A resposta deve ser somente JSON.";
    const endpoint="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(env.GEMINI_API_KEY);
    let response,data={};
    for(let attempt=0;attempt<2;attempt++){
-    response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.75,responseMimeType:"application/json"}})});
+    response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.75,responseMimeType:"application/json",maxOutputTokens:2600}})});
     data=await response.json().catch(()=>({}));
     if(response.ok||(response.status!==429&&response.status!==503)||attempt===1)break;
     await new Promise(resolve=>setTimeout(resolve,1200));
