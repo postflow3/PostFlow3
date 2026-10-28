@@ -1240,6 +1240,7 @@ input,select,textarea,button{max-width:100%}
   <button class="pfpro-tab" data-pfpro-tab="planner" role="tab" aria-selected="false">✦ Planejador IA</button>
   <button class="pfpro-tab" data-pfpro-tab="series" role="tab" aria-selected="false">🎬 Séries com IA</button>
   <button class="pfpro-tab" data-pfpro-tab="hooks" role="tab" aria-selected="false">⚡ Ganchos virais IA</button>
+  <button class="pfpro-tab" data-pfpro-tab="repurpose" role="tab" aria-selected="false">🔁 Adaptar por plataforma</button>
  </div>
  <div id="pfproPanel-planner" class="pfpro-panel hidden">
   <div class="pfpro-section-heading"><div><h3>Planejador de conteúdo com IA</h3><p>Gere um plano de 7 dias adaptado ao seu nicho. Você revisa cada ideia antes de criar ou agendar uma publicação.</p></div><span class="pfpro-ai-badge">GEMINI · IA</span></div>
@@ -1267,6 +1268,19 @@ input,select,textarea,button{max-width:100%}
   </form>
   <p id="pf3AiHooksStatus" class="pfpro-footnote" role="status" aria-live="polite">A IA sugere opções para testar; não garante viralização nem publica automaticamente.</p>
   <div id="pf3AiHooksResults" class="pf3-ai-plan-results hidden"></div>
+ </div>
+ <div id="pfproPanel-repurpose" class="pfpro-panel hidden">
+  <div class="pfpro-section-heading"><div><h3>Um conteúdo, versões para cada plataforma</h3><p>Transforme uma ideia ou vídeo em versões específicas para Instagram Reels e YouTube Shorts, sem deixar a mesma legenda genérica em todos os canais.</p></div><span class="pfpro-ai-badge">REPURPOSE · IA</span></div>
+  <form id="pf3AiRepurposeForm" class="pf3-ai-plan-form">
+   <label>Sobre o que é o vídeo?<input id="pf3AiRepurposeTopic" maxlength="180" required placeholder="Ex.: teste de uma seladora portátil"></label>
+   <label>Objetivo<select id="pf3AiRepurposeGoal"><option value="entreter e reter atenção">Entreter e reter atenção</option><option value="ensinar uma dica útil">Ensinar uma dica</option><option value="apresentar um produto com honestidade">Apresentar um produto</option><option value="gerar comentários">Gerar comentários</option><option value="contar uma história">Contar uma história</option></select></label>
+   <label>Tom de comunicação<select id="pf3AiRepurposeTone"><option value="natural e direto">Natural e direto</option><option value="bem-humorado">Bem-humorado</option><option value="educativo e claro">Educativo</option><option value="energético e curioso">Energético e curioso</option><option value="persuasivo sem exageros">Persuasivo sem exageros</option></select></label>
+   <label>Destinos desejados<select id="pf3AiRepurposePlatforms"><option value="Instagram Reels e YouTube Shorts">Instagram + YouTube</option><option value="somente Instagram Reels">Somente Instagram</option><option value="somente YouTube Shorts">Somente YouTube</option></select></label>
+   <label class="pf3-ai-context">Resumo do vídeo, fatos confirmados ou CTA desejada (opcional)<textarea id="pf3AiRepurposeContext" maxlength="900" rows="4" placeholder="O que aparece no vídeo? Quais benefícios foram realmente demonstrados? Alguma informação que a IA deve evitar inventar?"></textarea></label>
+   <button id="pf3AiRepurposeButton" class="pfpro-primary" type="submit">🔁 Criar versões para cada plataforma</button>
+  </form>
+  <p id="pf3AiRepurposeStatus" class="pfpro-footnote" role="status" aria-live="polite">A IA adapta título, legenda, hashtags e gancho. Você revisa e decide o que usar; nada será publicado automaticamente.</p>
+  <div id="pf3AiRepurposeResults" class="pf3-ai-plan-results hidden"></div>
  </div>
  <div id="pfproPanel-series" class="pfpro-panel hidden">
   <div class="pfpro-section-heading"><div><h3>Crie uma série inteira com IA</h3><p>Receba episódios conectados, roteiro, gancho e prompt pronto para gerar cada vídeo. Revise tudo antes de publicar.</p></div><span class="pfpro-ai-badge">SÉRIE · GEMINI</span></div>
@@ -1872,6 +1886,28 @@ function postFlowToast(title,message){
  root.querySelectorAll('[data-pfpro-go]').forEach(b=>b.addEventListener('click',()=>{if(typeof show==='function')show(b.dataset.pfproGo);}));
  const refresh=()=>{if(typeof loadServerPosts==='function'){loadServerPosts().then(()=>{renderIntelligence();renderQueue();});}else{renderIntelligence();renderQueue();}};
  $('pfproRefresh').addEventListener('click',refresh);$('pfproQueueRefresh').addEventListener('click',refresh);
+ const aiRepurposeForm=$('pf3AiRepurposeForm');
+ if(aiRepurposeForm)aiRepurposeForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const button=$('pf3AiRepurposeButton'),status=$('pf3AiRepurposeStatus'),results=$('pf3AiRepurposeResults');
+  const payload={action:'repurpose',topic:$('pf3AiRepurposeTopic').value.trim(),goal:$('pf3AiRepurposeGoal').value,tone:$('pf3AiRepurposeTone').value,platforms:$('pf3AiRepurposePlatforms').value,context:$('pf3AiRepurposeContext').value.trim()};
+  if(!payload.topic){status.textContent='Informe o assunto do vídeo.';return;}
+  button.disabled=true;button.textContent='🔁 Adaptando o conteúdo...';status.textContent='A IA está preparando versões diferentes para cada destino selecionado.';results.classList.add('hidden');results.innerHTML='';
+  try{
+   const response=await fetch('/api/ai-caption',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+   const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Não foi possível adaptar o conteúdo.');
+   const versions=Array.isArray(data.versions)?data.versions:[];if(!versions.length)throw new Error('A IA não retornou versões válidas. Tente novamente.');
+   const escRep=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   const plain=x=>[x.platform,x.title,'Gancho: '+x.hook,'Legenda: '+x.caption,'Hashtags: '+(x.hashtags||[]).map(t=>'#'+String(t).replace(/^#+/,'')).join(' '),'CTA: '+x.cta].filter(Boolean).join('\n\n');
+   results.innerHTML='<div class="pf3-ai-results-head"><h4>Versões adaptadas</h4><div class="pf3-ai-head-actions"><span>'+versions.length+' destino(s)</span><button type="button" class="pfpro-secondary" id="pf3AiRepurposeCopyAll">Copiar tudo</button></div></div>'+versions.map((x,i)=>'<article class="pf3-ai-idea"><div class="pf3-ai-idea-top"><span class="pf3-ai-day">'+escRep(x.platform)+'</span><span class="pf3-ai-format">Versão específica</span></div><h4>'+escRep(x.title)+'</h4><p class="pf3-ai-hook"><strong>Gancho:</strong> '+escRep(x.hook)+'</p><p><strong>Legenda:</strong> '+escRep(x.caption)+'</p><div class="pf3-ai-tags">'+(Array.isArray(x.hashtags)?x.hashtags:[]).map(t=>'<span>#'+escRep(String(t).replace(/^#+/,''))+'</span>').join('')+'</div><p><strong>CTA:</strong> '+escRep(x.cta)+'</p><p class="pf3-ai-rationale"><strong>Estratégia:</strong> '+escRep(x.rationale)+'</p><div class="pf3-ai-card-actions"><button type="button" class="pfpro-secondary" data-pf3-repurpose-copy="'+i+'">Copiar versão</button><button type="button" class="pfpro-secondary" data-pf3-repurpose-use="'+i+'">Usar no editor</button></div></article>').join('');
+   results.classList.remove('hidden');status.textContent='Versões prontas. Confira se a legenda descreve fielmente o vídeo antes de publicar.';
+   const copy=async value=>{try{await navigator.clipboard.writeText(value);status.textContent='Copiado para a área de transferência.';}catch(e){status.textContent='Não foi possível copiar automaticamente; selecione o texto e copie manualmente.';}};
+   const all=$('pf3AiRepurposeCopyAll');if(all)all.addEventListener('click',()=>copy(versions.map(plain).join('\n\n--------------------\n\n')));
+   results.querySelectorAll('[data-pf3-repurpose-copy]').forEach(b=>b.addEventListener('click',()=>{const x=versions[Number(b.dataset.pf3RepurposeCopy)];if(x)copy(plain(x));}));
+   results.querySelectorAll('[data-pf3-repurpose-use]').forEach(b=>b.addEventListener('click',()=>{const x=versions[Number(b.dataset.pf3RepurposeUse)];if(!x)return;const title=document.getElementById('title'),description=document.getElementById('description');if(title)title.value=String(x.title||'').slice(0,180);if(description)description.value=[x.caption||'',(x.hashtags||[]).map(t=>'#'+String(t).replace(/^#+/,'')).join(' ')].filter(Boolean).join('\n\n');if(typeof show==='function')show('conteudos');if(typeof window.postFlowToast==='function')window.postFlowToast('Versão aplicada','O título e a legenda foram preenchidos. Confira o destino e revise antes de agendar.');}));
+  }catch(error){status.textContent=error.message||'Falha ao adaptar o conteúdo.';}
+  finally{button.disabled=false;button.textContent='🔁 Criar versões para cada plataforma';}
+ });
  const aiHooksForm=$('pf3AiHooksForm');
  if(aiHooksForm)aiHooksForm.addEventListener('submit',async event=>{
   event.preventDefault();
