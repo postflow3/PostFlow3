@@ -6,7 +6,6 @@ export async function onRequestPost({request,env}){
  if(!env.GEMINI_API_KEY)return json({error:"A IA ainda não está configurada. Adicione o secret GEMINI_API_KEY nas variáveis do ambiente Preview do Cloudflare Pages."},503);
  try{
   const input=await request.json();
-  const input=await request.json();
   if(input.action==="plan"){
    const niche=String(input.niche||"").trim().slice(0,180);
    const audience=String(input.audience||"").trim().slice(0,180);
