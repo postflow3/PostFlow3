@@ -62,26 +62,50 @@ async function googleToken(env, userId) {
 }
 
 export async function onRequestGet({ request, env }) {
+  let diagnosticStage = "request";
+  let diagnosticUserId = "";
+  const recordDiagnostic = async details => {
+    try {
+      if (env.POSTFLOW3_KV) await env.POSTFLOW3_KV.put("system:instagram-media-diagnostic:last", JSON.stringify({
+        at: new Date().toISOString(), stage: diagnosticStage, userId: diagnosticUserId || null, ...details
+      }), { expirationTtl: 86400 });
+    } catch {}
+  };
   try {
     const url = new URL(request.url);
     const key = url.searchParams.get("key") || "";
     const suppliedSignature = url.searchParams.get("sig") || "";
     const match = key.match(/^instagram-media\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
 
-    if (!match || !suppliedSignature || !env.POSTFLOW3_KV) return notFound();
+    if (!match || !suppliedSignature || !env.POSTFLOW3_KV) {
+      await recordDiagnostic({ reason: "invalid_request_or_missing_kv" });
+      return notFound();
+    }
+    diagnosticStage = "signature";
     const expectedSignature = await signature(env, key);
     if (!expectedSignature || suppliedSignature.length !== expectedSignature.length || suppliedSignature !== expectedSignature) {
+      await recordDiagnostic({ reason: "signature_mismatch" });
       return notFound();
     }
 
     const [, userId, id] = match;
+    diagnosticUserId = userId;
+    diagnosticStage = "metadata";
     const raw = await env.POSTFLOW3_KV.get(userKey(userId, "instagram-drive:" + id));
-    if (!raw) return notFound();
+    if (!raw) {
+      await recordDiagnostic({ reason: "media_metadata_not_found" });
+      return notFound();
+    }
 
     const metadata = JSON.parse(raw);
-    if (!metadata.fileId) return notFound();
+    if (!metadata.fileId) {
+      await recordDiagnostic({ reason: "drive_file_id_missing" });
+      return notFound();
+    }
 
+    diagnosticStage = "google_token";
     const accessToken = await googleToken(env, userId);
+    diagnosticStage = "drive_download";
     const upstreamHeaders = new Headers({ Authorization: "Bearer " + accessToken });
     // Meta may request byte ranges while validating or downloading a Reel.
     const range = request.headers.get("Range");
@@ -91,7 +115,10 @@ export async function onRequestGet({ request, env }) {
       "https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(metadata.fileId) + "?alt=media",
       { headers: upstreamHeaders }
     );
-    if ((!upstream.ok && upstream.status !== 206) || !upstream.body) return notFound();
+    if ((!upstream.ok && upstream.status !== 206) || !upstream.body) {
+      await recordDiagnostic({ reason: "drive_download_failed", upstreamStatus: upstream.status });
+      return notFound();
+    }
 
     const responseHeaders = new Headers({
       "Content-Type": metadata.mimeType || upstream.headers.get("Content-Type") || "video/mp4",
@@ -105,8 +132,9 @@ export async function onRequestGet({ request, env }) {
     if (contentRange) responseHeaders.set("Content-Range", contentRange);
 
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
-  } catch {
-    // Do not leak Google tokens, Drive IDs, or internal exception details through this public signed URL.
+  } catch (error) {
+    // Keep diagnostics private in KV; never expose Google tokens, Drive IDs, or exceptions to Meta.
+    await recordDiagnostic({ reason: "exception", error: String(error?.message || error).slice(0, 180) });
     return notFound();
   }
 }
