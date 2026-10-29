@@ -14,6 +14,10 @@ export async function onRequestPost({request,env}){
  try{
   const existing=await env.POSTFLOW3_DB.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE LIMIT 1").bind(email).first();
   if(existing)return json({error:"Já existe uma conta com esse e-mail. Entre ou use outro endereço."},409);
+  if(email!=="sergiouai3@gmail.com"){
+   const capacity=await env.POSTFLOW3_DB.prepare("SELECT COUNT(*) AS total FROM users WHERE role = 'customer' AND lower(email) <> 'sergiouai3@gmail.com'").first();
+   if(Number(capacity?.total||0)>=10)return json({error:"O PostFlow3 atingiu o limite inicial de 10 clientes. Entre em contato com o administrador."},409);
+  }
   const id=crypto.randomUUID(),passwordHash=await hashPassword(password);
   try{
    const role=email==="sergiouai3@gmail.com"?"admin":"customer";
