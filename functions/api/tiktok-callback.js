@@ -36,21 +36,25 @@ export async function onRequestGet({ request, env }) {
       const detail = String(tokenData.error_description || tokenData.error || "O TikTok recusou a troca do código por token.").replace(/[\r\n<>]/g, " ").slice(0, 180);
       return respond("Não foi possível conectar", detail + " Confira o Client Key, Client Secret, o domínio autorizado e a URI de retorno no TikTok for Developers.", 502);
     }
+    // Request only fields authorized by user.info.basic. username requires user.info.profile.
     const profileUrl = new URL("https://open.tiktokapis.com/v2/user/info/");
-    profileUrl.searchParams.set("fields", "open_id,display_name,username,avatar_url");
+    profileUrl.searchParams.set("fields", "open_id,display_name,avatar_url");
     const profileResponse = await fetch(profileUrl, { headers: { Authorization: "Bearer " + tokenData.access_token } });
     const profileData = await profileResponse.json().catch(() => ({}));
     const profile = profileData.data?.user || {};
-    if (!profileResponse.ok || (profile.open_id && String(profile.open_id) !== String(tokenData.open_id))) {
-      return respond("Conexão incompleta", "O TikTok autorizou o acesso, mas não foi possível confirmar o perfil. Confira se a permissão user.info.basic está aprovada no aplicativo.", 502);
+    if (!profileResponse.ok || !profile.open_id || String(profile.open_id) !== String(tokenData.open_id)) {
+      const apiError = profileData.error || {};
+      const detail = String(apiError.code || apiError.message || "perfil não retornado").replace(/[\r\n<>]/g, " ").slice(0, 120);
+      console.error("PostFlow3 TikTok profile lookup failed", { status: profileResponse.status, error_code: detail, log_id: apiError.log_id || null });
+      return respond("Conexão incompleta", "O TikTok autorizou o acesso, mas a consulta do perfil falhou (" + detail + "). Confira a permissão user.info.basic e tente conectar novamente.", 502);
     }
-    const accountId = String(profile.open_id || tokenData.open_id);
+    const accountId = String(profile.open_id);
     const now = Date.now();
     const accountData = {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token || "",
       open_id: accountId,
-      username: profile.username || profile.display_name || "TikTok",
+      username: profile.display_name || "TikTok",
       display_name: profile.display_name || "",
       avatar_url: profile.avatar_url || "",
       scope: String(tokenData.scope || ""),
