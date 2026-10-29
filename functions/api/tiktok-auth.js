@@ -15,7 +15,9 @@ export async function onRequestGet({ request, env }) {
   const state = await makeOAuthState(env, session.userId);
   const params = new URLSearchParams({
     client_key: env.TIKTOK_CLIENT_KEY,
-    scope: "user.info.basic,video.publish,video.upload",
+    // Request only scopes currently enabled in the Sandbox app.
+    // video.publish must be added and approved in TikTok for Developers before requesting direct-post access.
+    scope: "user.info.basic,video.upload",
     response_type: "code",
     redirect_uri: redirectUri,
     state
