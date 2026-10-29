@@ -24,6 +24,7 @@ export async function onRequestGet({request,env}){
   add("drive","Google Drive",["GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"],"Credenciais Google presentes; acesso ao Drive e permissões do usuário não são testados por esta verificação.");
   add("ai","Geração de legendas por IA",["GEMINI_API_KEY"],"Chave presente; disponibilidade e cota do provedor não são testadas.");
   add("media","Armazenamento de mídia (Google Drive)",["GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"],"O PostFlow3 usa Google Drive para a mídia; o binding POSTFLOW3_MEDIA não é obrigatório nesta configuração. O acesso real ao Drive precisa de teste com uma conta conectada.");
+  checks.push({key:"kv",label:"Armazenamento operacional KV",status:env.POSTFLOW3_KV?"ok":"error",detail:env.POSTFLOW3_KV?"Binding KV disponível. Esta verificação não confirma isolamento físico entre Preview e produção.":"Binding POSTFLOW3_KV ausente; sessões auxiliares e execução agendada podem falhar."});
   let schedulerSecretPresent=false,schedulerLastRun=null;
   try {
    if(env.POSTFLOW3_KV){
