@@ -17,7 +17,7 @@ export async function onRequestGet({ request, env }) {
     client_key: env.TIKTOK_CLIENT_KEY,
     // Request only scopes currently enabled in the Sandbox app.
     // video.publish must be added and approved in TikTok for Developers before requesting direct-post access.
-    scope: "user.info.basic,video.upload",
+    scope: "user.info.basic,user.info.stats,video.upload",
     response_type: "code",
     redirect_uri: redirectUri,
     state
