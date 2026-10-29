@@ -1661,7 +1661,6 @@ async function loadSocialAccounts(){
   const instagramCounter=document.getElementById("instagramAccountCount"),youtubeCounter=document.getElementById("youtubeAccountCount"),tiktokCounter=document.getElementById("tiktokAccountCount"),totalCounter=document.getElementById("totalSocialAccountCount");
   if(instagramCounter)instagramCounter.textContent=String(instagramCount);
   if(youtubeCounter)youtubeCounter.textContent=String(youtubeCount);
-  const tiktokCounter=document.getElementById("tiktokAccountCount");if(tiktokCounter)tiktokCounter.textContent=String(tiktokCount);
   if(tiktokCounter)tiktokCounter.textContent=String(tiktokCount);
   if(totalCounter)totalCounter.textContent=String(socialAccounts.length);
   if(list)list.innerHTML=socialAccounts.length?socialAccounts.map(a=>'<div class="entry"><div><b>'+escapeHtml(a.platform==="instagram"?"📸 Instagram":a.platform==="tiktok"?"♪ TikTok":"▶️ YouTube")+'</b><div class="muted">'+escapeHtml(a.username||a.accountId)+'</div><div class="muted follower-count" data-followers-platform="'+escapeHtml(a.platform)+'" data-followers-account="'+escapeHtml(a.accountId)+'">Seguidores: consultando…</div></div><button class="outline-button" onclick="removeSocialAccount(\''+escapeHtml(a.platform)+'\',\''+escapeHtml(a.accountId)+'\')">Desconectar</button></div>').join(""):'<p class="muted">Nenhuma conta conectada ainda. Use um dos botões acima para adicionar sua primeira conta.</p>';
