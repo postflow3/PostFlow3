@@ -48,6 +48,27 @@ export async function onRequestPost({ request, env }) {
     if (publicationMode === "scheduled" && (!scheduledAt || !date || Number.isNaN(date.getTime()) || date.getTime() < Date.now() + 10 * 60_000)) {
       return json({ error: "Escolha um horário pelo menos 10 minutos no futuro." }, 400);
     }
+    if (publicationMode === "scheduled") {
+      // Prevent duplicate Drive files and overlapping scheduled slots for the same YouTube channel.
+      let cursor;
+      do {
+        const batch = await env.POSTFLOW3_KV.list({ prefix: userKey(session.userId, "post:"), limit: 100, ...(cursor ? { cursor } : {}) });
+        for (const item of batch.keys) {
+          const existing = await env.POSTFLOW3_KV.get(item.name, "json");
+          if (!existing || !Array.isArray(existing.platforms) || !existing.platforms.includes("YouTube")) continue;
+          const status = String(existing.status || "").toLowerCase();
+          if (!/scheduled|queued|pending|agendad|fila/.test(status)) continue;
+          const sameAccount = String(existing.youtubeAccountId || "") === youtubeAccountId;
+          const sameFile = String(existing.driveFileId || "") === fileId;
+          const existingTime = new Date(existing.scheduledAt || existing.scheduled_at || "").getTime();
+          const sameSlot = Number.isFinite(existingTime) && Math.abs(existingTime - date.getTime()) < 2 * 60 * 1000;
+          if (sameAccount && sameFile) return json({ error: "Este vídeo do Drive já está agendado para esse canal do YouTube. Confira a fila antes de criar outro envio.", duplicate: true }, 409);
+          if (sameAccount && sameSlot) return json({ error: "Este canal do YouTube já tem uma publicação agendada para esse horário. Escolha outro horário para evitar conflito.", scheduleConflict: true }, 409);
+        }
+        cursor = batch.list_complete ? undefined : batch.cursor;
+      } while (cursor);
+    }
+
     const tokens = await getTokens(env,session.userId,youtubeAccountId);
     const auth = { Authorization: "Bearer " + tokens.access_token };
     const driveMetaResponse = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId) + "?fields=id,name,mimeType,size,trashed", { headers: auth });
