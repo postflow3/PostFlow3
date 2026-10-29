@@ -1,6 +1,6 @@
 import { userKey, encryptJson, decryptJson } from "./security.js";
 
-const validPlatform = value => value === "instagram" || value === "youtube";
+const validPlatform = value => value === "instagram" || value === "youtube" || value === "tiktok";
 const safeId = value => String(value || "").trim().slice(0, 180);
 
 export function socialAccountKey(userId, platform, accountId) {
