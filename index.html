@@ -1664,9 +1664,30 @@ async function loadSocialAccounts(){
   const tiktokCounter=document.getElementById("tiktokAccountCount");if(tiktokCounter)tiktokCounter.textContent=String(tiktokCount);
   if(tiktokCounter)tiktokCounter.textContent=String(tiktokCount);
   if(totalCounter)totalCounter.textContent=String(socialAccounts.length);
-  if(list)list.innerHTML=socialAccounts.length?socialAccounts.map(a=>'<div class="entry"><div><b>'+escapeHtml(a.platform==="instagram"?"📸 Instagram":a.platform==="tiktok"?"♪ TikTok":"▶️ YouTube")+'</b><div class="muted">'+escapeHtml(a.username||a.accountId)+'</div></div><button class="outline-button" onclick="removeSocialAccount(\''+escapeHtml(a.platform)+'\',\''+escapeHtml(a.accountId)+'\')">Desconectar</button></div>').join(""):'<p class="muted">Nenhuma conta conectada ainda. Use um dos botões acima para adicionar sua primeira conta.</p>';
+  if(list)list.innerHTML=socialAccounts.length?socialAccounts.map(a=>'<div class="entry"><div><b>'+escapeHtml(a.platform==="instagram"?"📸 Instagram":a.platform==="tiktok"?"♪ TikTok":"▶️ YouTube")+'</b><div class="muted">'+escapeHtml(a.username||a.accountId)+'</div><div class="muted follower-count" data-followers-platform="'+escapeHtml(a.platform)+'" data-followers-account="'+escapeHtml(a.accountId)+'">Seguidores: consultando…</div></div><button class="outline-button" onclick="removeSocialAccount(\''+escapeHtml(a.platform)+'\',\''+escapeHtml(a.accountId)+'\')">Desconectar</button></div>').join(""):'<p class="muted">Nenhuma conta conectada ainda. Use um dos botões acima para adicionar sua primeira conta.</p>';
   renderDestinationAccounts();
+  refreshSocialFollowerCounts();
  }catch(e){if(list)list.innerHTML='<p class="muted">'+escapeHtml(e.message||"Erro ao carregar contas.")+'</p>';if(targets)targets.innerHTML='<p class="muted">Não foi possível carregar as contas conectadas.</p>';}
+}
+async function refreshSocialFollowerCounts(){
+ const nodes=[...document.querySelectorAll("[data-followers-platform][data-followers-account]")];
+ if(!nodes.length)return;
+ try{
+  const response=await fetch("/api/social-account-metrics",{credentials:"same-origin",cache:"no-store"});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"Não foi possível consultar seguidores.");
+  const metrics=Array.isArray(data.accounts)?data.accounts:[];
+  for(const node of nodes){
+   const item=metrics.find(m=>m.platform===node.dataset.followersPlatform&&String(m.accountId)===String(node.dataset.followersAccount));
+   if(!item){node.textContent="Seguidores: indisponível";continue;}
+   if(item.available&&Number.isFinite(Number(item.followersCount))){
+    node.textContent="Seguidores: "+Number(item.followersCount).toLocaleString("pt-BR");
+    node.title="Atualizado em "+new Date(data.updatedAt||Date.now()).toLocaleString("pt-BR");
+   }else node.textContent="Seguidores: "+(item.hiddenFollowers?"ocultos":(item.message||"indisponível"));
+  }
+ }catch{
+  for(const node of nodes)node.textContent="Seguidores: não foi possível atualizar";
+ }
 }
 function renderDestinationAccounts(){
  const root=document.getElementById("destinationAccounts");if(!root)return;
