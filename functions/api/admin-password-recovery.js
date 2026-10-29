@@ -51,15 +51,28 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const user = await env.POSTFLOW3_DB.prepare(
-      "SELECT id FROM users WHERE email = ? COLLATE NOCASE AND role = 'admin' AND status = 'active' LIMIT 1"
+      "SELECT id, role, status FROM users WHERE email = ? COLLATE NOCASE LIMIT 1"
     ).bind(ADMIN_EMAIL).first();
 
-    // Never create, reactivate, or change the role of an account through password recovery.
-    if (!user) return json({ error: "Conta administrativa ativa não encontrada." }, 404);
-
     const passwordHash = await hashPassword(newPassword);
+
+    // This Preview-only recovery route may initialize the reserved admin only if the
+    // exact reserved email has no row at all. It never promotes, reactivates, or
+    // overwrites any existing customer/suspended account.
+    if (!user) {
+      const id = crypto.randomUUID();
+      await env.POSTFLOW3_DB.prepare(
+        "INSERT INTO users (id, email, password_hash, display_name, role, status, plan) VALUES (?, ?, ?, ?, 'admin', 'active', 'free')"
+      ).bind(id, ADMIN_EMAIL, passwordHash, "PostFlow3 Admin").run();
+      return json({ ok: true, message: "Conta administrativa criada e senha definida. Entre usando a nova senha." });
+    }
+
+    if (user.role !== "admin" || user.status !== "active") {
+      return json({ error: "A conta reservada existe, mas não está ativa como administradora. Nenhuma alteração foi feita." }, 409);
+    }
+
     const result = await env.POSTFLOW3_DB.prepare(
-      "UPDATE users SET password_hash = ? WHERE id = ? AND email = ? COLLATE NOCASE AND role = 'admin' AND status = 'active'"
+      "UPDATE users SET password_hash = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ? AND email = ? COLLATE NOCASE AND role = 'admin' AND status = 'active'"
     ).bind(passwordHash, user.id, ADMIN_EMAIL).run();
 
     if (!Number(result?.meta?.changes || 0)) {
