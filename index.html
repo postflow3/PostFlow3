@@ -1722,7 +1722,7 @@ function applyAICaption(){
  if(description){const tags=(aiCaptionDraft.hashtags||[]).map(x=>"#"+String(x).replace(/^#+/,"")).join(" ");description.value=[aiCaptionDraft.caption||"",tags].filter(Boolean).join("\\n\\n");}
  document.getElementById("aiCaptionStatus").textContent="Sugestões aplicadas. Você ainda pode editar tudo antes de publicar.";
 }
-function startApp(){render();refreshYouTubeStatus();refreshInstagramStatus();loadSocialAccounts();loadServerPosts();}
+function startApp(){render();refreshYouTubeStatus();refreshInstagramStatus();refreshTikTokStatus();loadSocialAccounts();loadServerPosts();}
 initAuth();
 let videoAnalyticsData=null;
 const metricNumber=v=>v===null||v===undefined?"—":Number(v).toLocaleString("pt-BR");
