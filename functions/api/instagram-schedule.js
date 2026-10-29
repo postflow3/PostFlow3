@@ -44,6 +44,27 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "A conexão do Instagram expirou. Reconecte a conta antes de agendar." }, 401);
     }
 
+    // Guard against accidental duplicate media and two Instagram jobs colliding in the same time slot.
+    let cursor;
+    do {
+      const batch = await env.POSTFLOW3_KV.list({ prefix: userKey(session.userId, "post:"), limit: 100, ...(cursor ? { cursor } : {}) });
+      for (const item of batch.keys) {
+        const existing = await env.POSTFLOW3_KV.get(item.name, "json");
+        if (!existing || !Array.isArray(existing.platforms) || !existing.platforms.includes("Instagram")) continue;
+        const status = String(existing.status || "").toLowerCase();
+        const igStatus = String(existing.instagramStatus || "").toLowerCase();
+        const pending = /scheduled|queued|pending|processing|agendad|fila/.test(status) || /scheduled|queued|pending|processing/.test(igStatus);
+        if (!pending) continue;
+        const sameAccount = String(existing.instagramAccountId || "") === accountId;
+        const sameFile = String(existing.driveFileId || "") === driveFileId;
+        const existingTime = new Date(existing.scheduledAt || existing.scheduled_at || "").getTime();
+        const sameSlot = Number.isFinite(existingTime) && Math.abs(existingTime - date.getTime()) < 2 * 60 * 1000;
+        if (sameAccount && sameFile) return json({ error: "Este arquivo já está agendado para esta conta do Instagram. Confira a fila antes de criar outro envio.", duplicate: true }, 409);
+        if (sameAccount && sameSlot) return json({ error: "Esta conta do Instagram já tem uma publicação agendada para esse horário. Escolha outro horário para evitar conflito.", scheduleConflict: true }, 409);
+      }
+      cursor = batch.list_complete ? undefined : batch.cursor;
+    } while (cursor);
+
     const videoId = videoKey.split("/").pop();
     const mediaMetadataKey = userKey(session.userId, "instagram-drive:" + videoId);
     const mediaRaw = await env.POSTFLOW3_KV.get(mediaMetadataKey);
