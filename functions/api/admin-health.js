@@ -7,7 +7,7 @@ export async function onRequestGet({request,env}){
  if(!session)return json({error:"Faça login para continuar."},401);
  if(!env.POSTFLOW3_DB)return json({error:"Banco de dados indisponível."},503);
  try{
-  const admin=await env.POSTFLOW3_DB.prepare("SELECT id FROM users WHERE id = ? AND email = 'sergiouai3@gmail.com' COLLATE NOCASE AND status = 'active' LIMIT 1").bind(session.userId).first();
+  const admin=await env.POSTFLOW3_DB.prepare("SELECT id FROM users WHERE id = ? AND email = 'sergiouai3@gmail.com' COLLATE NOCASE AND role = 'admin' AND status = 'active' LIMIT 1").bind(session.userId).first();
   if(!admin)return json({error:"Acesso restrito à administração."},403);
   const checks=[];
   try{
