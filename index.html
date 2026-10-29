@@ -1677,7 +1677,7 @@ function renderDestinationAccounts(){
   if(!list.length)return "";
   const title=platform==="instagram"?"📸 Contas Instagram":platform==="tiktok"?"♪ Contas TikTok":"▶️ Canais YouTube";
   return '<div class="destination-group"><b>'+title+'</b><div class="checks">'+list.map(a=>{
-   const id=String(a.accountId),checked=hadCheckboxes?previous.has(platform+":"+id):true;
+   const id=String(a.accountId),checked=hadCheckboxes?previous.has(platform+":"+id):platform!=="tiktok";
    return '<label><input type="checkbox" data-platform-account="'+escapeHtml(id)+'" data-platform="'+platform+'" '+(checked?'checked':'')+'> '+escapeHtml(a.username||id)+'</label>';
   }).join("")+'</div></div>';
  }).join("");
