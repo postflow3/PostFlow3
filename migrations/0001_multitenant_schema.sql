@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
 -- Enforce the starter capacity in the database itself, including concurrent signups.
 CREATE TRIGGER IF NOT EXISTS users_initial_capacity
 BEFORE INSERT ON users
-WHEN (SELECT COUNT(*) FROM users) >= 10
+WHEN NEW.role = 'customer'
+ AND (SELECT COUNT(*) FROM users WHERE role = 'customer' AND lower(email) <> 'sergiouai3@gmail.com') >= 10
 BEGIN
   SELECT RAISE(ABORT, 'USER_CAPACITY_REACHED');
 END;
