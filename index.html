@@ -1984,7 +1984,7 @@ function postFlowToast(title,message){
  const body=document.createElement('span');body.textContent=message;
  item.append(close,heading,body);stack.prepend(item);setTimeout(()=>item.remove(),8000);
 }
-((function bindNotificationCenter(){
+(function bindNotificationCenter(){
  const button=document.getElementById('notificationButton'),panel=document.getElementById('pfNotificationPanel');
  if(!button||!panel)return;
  const close=()=>{panel.classList.add('hidden');button.setAttribute('aria-expanded','false');};
