@@ -1,0 +1,28 @@
+import { makeSessionCookie, verifyPassword, hashPassword } from "../_lib/security.js";
+const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...extra}});
+const DUMMY="pbkdf2-sha256.210000.AAAAAAAAAAAAAAAAAAAAAA==.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+export async function onRequestPost({request,env}){
+ if(!env.POSTFLOW3_DB)return json({error:"Banco de dados indisponível."},503);
+ if(!env.POSTFLOW3_SESSION_SECRET)return json({error:"O servidor ainda não está pronto para autenticar usuários."},503);
+ let body;try{body=await request.json()}catch{return json({error:"Dados de login inválidos."},400)}
+ const email=String(body.email||"").trim().toLowerCase(),password=typeof body.password==="string"?body.password:"";
+ if(email.length>254||!email||password.length>128)return json({error:"Informe seu e-mail e senha."},400);
+ try{
+  let user=await env.POSTFLOW3_DB.prepare("SELECT id,email,password_hash,display_name,status,role FROM users WHERE email = ? COLLATE NOCASE LIMIT 1").bind(email).first();
+  // Bootstrap the reserved admin only on a fresh isolated database, gated by the server-side admin password.
+  // Existing accounts are never overwritten, and the password is stored only as a PBKDF2 hash.
+  if(!user&&email==="sergiouai3@gmail.com"&&env.POSTFLOW3_ADMIN_PASSWORD&&password===env.POSTFLOW3_ADMIN_PASSWORD){
+   try{
+    const id=crypto.randomUUID(),passwordHash=await hashPassword(password);
+    await env.POSTFLOW3_DB.prepare("INSERT INTO users (id,email,password_hash,display_name,role,status,plan) VALUES (?,?,?,'PostFlow3 Admin','admin','active','free')").bind(id,email,passwordHash).run();
+   }catch(error){
+    if(!String(error?.message||"").toLowerCase().includes("unique"))throw error;
+   }
+   user=await env.POSTFLOW3_DB.prepare("SELECT id,email,password_hash,display_name,status,role FROM users WHERE email = ? COLLATE NOCASE LIMIT 1").bind(email).first();
+  }
+  const valid=await verifyPassword(password,user?.password_hash||DUMMY);
+  if(!user||!valid||user.status!=="active")return json({error:"E-mail ou senha incorretos."},401);
+  return json({ok:true,user:{id:user.id,name:user.display_name,email:user.email}},200,{"Set-Cookie":await makeSessionCookie(env,{id:user.id})});
+ }catch{return json({error:"Não foi possível entrar. Tente novamente."},500)}
+}
+export async function onRequest({request}){return request.method==="POST"?new Response(null,{status:405,headers:{Allow:"POST"}}):json({error:"Método não permitido."},405,{Allow:"POST"});}
