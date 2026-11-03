@@ -1,5 +1,5 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
-import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
+import { getSocialAccount, saveSocialAccount } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
@@ -8,7 +8,6 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 async function getAccessToken(env,userId,accountId="") {
   let tokens = await getSocialAccount(env,userId,"youtube",accountId);
   if (!tokens) throw new Error("Conecte ou selecione uma conta YouTube no PostFlow3.");
-  const storageKey = accountId && accountId !== "primary" ? socialAccountKey(userId,"youtube",accountId) : userKey(userId,"youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A autorização não tem token de renovação. Reconecte o YouTube.");
@@ -29,7 +28,7 @@ async function getAccessToken(env,userId,accountId="") {
     expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000,
     saved_at: Date.now()
   };
-  await env.POSTFLOW3_KV.put(storageKey, await encryptJson(env, tokens));
+  await saveSocialAccount(env,userId,"youtube",String(tokens.channel_id||accountId||"primary"),String(tokens.channel_title||""),tokens);
   return tokens.access_token;
 }
 
