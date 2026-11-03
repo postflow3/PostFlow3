@@ -37,7 +37,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestDelete({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Faça login novamente no PostFlow3." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento não configurado." }, 503);
+  if (!env.POSTFLOW3_KV && !env.POSTFLOW3_DB) return json({ error: "Armazenamento não configurado." }, 503);
   try {
     const input = await request.json();
     await removeSocialAccount(env, session.userId, String(input.platform || ""), String(input.accountId || ""));
