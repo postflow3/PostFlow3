@@ -5,7 +5,7 @@ export async function onRequestGet({request,env}){
  const url=new URL(request.url),p=url.searchParams;
  const headers={"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","Referrer-Policy":"no-referrer","Set-Cookie":"pf3_oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/api; Max-Age=0"};
  const respond=(t,m,s=400,ok=false)=>new Response(page(t,m,ok),{status:s,headers});
- if(!env.POSTFLOW3_KV)return respond("Armazenamento não configurado","Configure o namespace KV POSTFLOW3_KV no Cloudflare Pages.",503);
+ if(!env.POSTFLOW3_DB&&!env.POSTFLOW3_KV)return respond("Armazenamento não configurado","Configure o banco D1 POSTFLOW3_DB no Cloudflare Pages.",503);
  if(p.has("error"))return respond("Autorização cancelada","O Instagram não autorizou o acesso. Volte ao PostFlow3 e tente novamente.");
  const code=p.get("code"),state=p.get("state");
  if(!code||!state)return respond("Retorno inválido","O Instagram não enviou os dados necessários. Inicie a conexão novamente.");
