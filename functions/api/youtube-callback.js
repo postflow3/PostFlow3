@@ -13,7 +13,7 @@ export async function onRequestGet({ request, env }) {
   const params = url.searchParams;
   const headers = { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "Set-Cookie": "pf3_oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/api; Max-Age=0" };
   const respond = (title, message, status = 400, success = false) => new Response(page(title, message, success), { status, headers });
-  if (!env.POSTFLOW3_KV) return respond("Armazenamento não configurado", "Configure o namespace KV POSTFLOW3_KV no Cloudflare Pages.", 503);
+  if (!env.POSTFLOW3_DB && !env.POSTFLOW3_KV) return respond("Armazenamento não configurado", "Configure o banco D1 POSTFLOW3_DB no Cloudflare Pages.", 503);
   if (params.has("error")) return respond("Autorização cancelada", "O Google não autorizou o acesso. Volte ao PostFlow3 e tente novamente.");
   if (!params.get("code") || !params.get("state")) return respond("Retorno inválido", "O Google não enviou os dados necessários. Inicie a conexão novamente.");
   const session = await getSession(request, env);
