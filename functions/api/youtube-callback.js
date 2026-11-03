@@ -53,6 +53,6 @@ export async function onRequestGet({ request, env }) {
     // Record a sanitized diagnostic in Pages logs; never log OAuth tokens, codes, or secrets.
     const detail = String(error?.message || error || "erro desconhecido").replace(/[\\r\\n]/g, " ").slice(0, 240);
     console.error("PostFlow3 YouTube callback failure", { stage, detail });
-    return respond("Erro na conexão", `A conexão falhou durante: ${stage}. Confira os secrets GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET, POSTFLOW3_SESSION_SECRET e o KV POSTFLOW3_KV. Nenhum token foi exibido.`, 500);
+    return respond("Erro na conexão", `A conexão falhou durante: ${stage}. Confira GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET, POSTFLOW3_SESSION_SECRET e o banco D1 POSTFLOW3_DB. Nenhum token foi exibido.`, 500);
   }
 }
