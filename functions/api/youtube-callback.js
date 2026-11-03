@@ -19,21 +19,25 @@ export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return respond("Sessão expirada", "Volte ao PostFlow3, entre novamente e repita a conexão.", 401);
   if (!(await verifyStateCookie(request, env, params.get("state"), session.userId))) return respond("Validação de segurança falhou", "Não foi possível validar esta solicitação. Inicie a conexão novamente.");
+  let stage = "validando credenciais";
   try {
     const clientId = env.GOOGLE_CLIENT_ID, clientSecret = env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) return respond("Configuração incompleta", "Configure as credenciais Google nos secrets do Cloudflare Pages.", 503);
+    stage = "trocando código OAuth por token";
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ code: params.get("code"), client_id: clientId, client_secret: clientSecret, redirect_uri: env.GOOGLE_REDIRECT_URI || "https://cloudflare-migration.postflow3.pages.dev/api/youtube-callback", grant_type: "authorization_code" })
     });
     const tokens = await response.json();
     if (!response.ok || !tokens.access_token) return respond("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.", 502);
+    stage = "consultando canais do YouTube";
     const channelResponse = await fetch("https://youtube.googleapis.com/youtube/v3/channels?part=snippet&mine=true&maxResults=50", {
       headers: { Authorization: "Bearer " + tokens.access_token, Accept: "application/json" }
     });
     const channelData = await channelResponse.json().catch(() => ({}));
     const channels = channelResponse.ok && Array.isArray(channelData.items) ? channelData.items : [];
     if (!channels.length) return respond("Canal não encontrado", "O Google autorizou a conta, mas não retornou um canal do YouTube. Confirme que essa conta Google possui um canal e tente novamente.", 422);
+    stage = "salvando conta no armazenamento seguro";
     const connectedChannels = [];
     for (const channel of channels) {
       const channelId = String(channel.id || "");
@@ -45,7 +49,10 @@ export async function onRequestGet({ request, env }) {
     }
     if (!connectedChannels.length) return respond("Canal não encontrado", "Não foi possível identificar os canais do YouTube autorizados.", 422);
     return respond("YouTube conectado!", connectedChannels.length === 1 ? "O canal " + connectedChannels[0] + " foi salvo como uma conta independente. Você pode conectar outros canais sem substituir este." : connectedChannels.length + " canais do YouTube foram salvos como contas independentes: " + connectedChannels.join(", ") + ".", 200, true);
-  } catch {
-    return respond("Erro na conexão", "Confira os secrets e a configuração de armazenamento do Cloudflare Pages. Nenhum token foi exibido nesta página.", 500);
+  } catch (error) {
+    // Record a sanitized diagnostic in Pages logs; never log OAuth tokens, codes, or secrets.
+    const detail = String(error?.message || error || "erro desconhecido").replace(/[\\r\\n]/g, " ").slice(0, 240);
+    console.error("PostFlow3 YouTube callback failure", { stage, detail });
+    return respond("Erro na conexão", `A conexão falhou durante: ${stage}. Confira os secrets GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET, POSTFLOW3_SESSION_SECRET e o KV POSTFLOW3_KV. Nenhum token foi exibido.`, 500);
   }
 }
