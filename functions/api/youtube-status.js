@@ -1,19 +1,18 @@
-import { getSession, userKey, decryptJson, encryptJson } from "../_lib/security.js";
+import { getSession } from "../_lib/security.js";
+import { getSocialAccount, saveSocialAccount } from "../_lib/social-accounts.js";
 export async function onRequestGet({request,env}){
  const headers={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
  const session=await getSession(request,env);if(!session)return new Response(JSON.stringify({error:"Não autenticado."}),{status:401,headers});
- if(!env.POSTFLOW3_KV)return new Response(JSON.stringify({error:"Armazenamento não configurado."}),{status:503,headers});
+ if(!env.POSTFLOW3_KV&&!env.POSTFLOW3_DB)return new Response(JSON.stringify({error:"Armazenamento não configurado."}),{status:503,headers});
  try{
-  const key=userKey(session.userId,"youtube-owner");
-  const raw=await env.POSTFLOW3_KV.get(key);
-  if(!raw)return new Response(JSON.stringify({connected:false}),{status:200,headers});
-  const tokens=await decryptJson(env,raw);
+  const tokens=await getSocialAccount(env,session.userId,"youtube");
+  if(!tokens)return new Response(JSON.stringify({connected:false}),{status:200,headers});
   if(!tokens.access_token&&!tokens.refresh_token)return new Response(JSON.stringify({connected:false}),{status:200,headers});
   let accessToken=tokens.access_token;
   if(tokens.expiry_date&&Number(tokens.expiry_date)<Date.now()+60000&&tokens.refresh_token&&env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET){
    const refreshed=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,refresh_token:tokens.refresh_token,grant_type:"refresh_token"})});
    const fresh=await refreshed.json();
-   if(refreshed.ok&&fresh.access_token){accessToken=fresh.access_token;const updated={...tokens,...fresh,refresh_token:tokens.refresh_token,expiry_date:Date.now()+Number(fresh.expires_in||3600)*1000};await env.POSTFLOW3_KV.put(key,await encryptJson(env,updated));}
+   if(refreshed.ok&&fresh.access_token){accessToken=fresh.access_token;const updated={...tokens,...fresh,refresh_token:tokens.refresh_token,expiry_date:Date.now()+Number(fresh.expires_in||3600)*1000};await saveSocialAccount(env,session.userId,"youtube",String(tokens.channel_id||"primary"),String(tokens.channel_title||""),updated);}
   }
   const result={connected:true};
   try{
