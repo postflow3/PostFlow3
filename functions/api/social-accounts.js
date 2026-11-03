@@ -12,7 +12,7 @@ export async function onRequestGet({ request, env }) {
   try {
     const accounts = await listSocialAccounts(env, session.userId);
     // Include legacy single-account connections created before multi-account support.
-    for (const platform of ["instagram", "youtube"]) {
+    for (const platform of (env.POSTFLOW3_KV ? ["instagram", "youtube"] : [])) {
       const legacy = await env.POSTFLOW3_KV.get(userKey(session.userId, platform + "-owner"));
       if (!legacy) continue;
       let data;
