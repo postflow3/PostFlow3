@@ -1,4 +1,5 @@
-import { getSession, userKey, decryptJson } from "../_lib/security.js";
+import { getSession } from "../_lib/security.js";
+import { getSocialAccount } from "../_lib/social-accounts.js";
 export async function onRequestGet({request,env}){
  const headers={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
  const session=await getSession(request,env);if(!session)return Response.json({error:"Faça login novamente."},{status:401,headers});
