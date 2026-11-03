@@ -4,10 +4,9 @@ export async function onRequestGet({request,env}){
  const headers={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
  const session=await getSession(request,env);if(!session)return Response.json({error:"Faça login novamente."},{status:401,headers});
  try{
-  if(!env.POSTFLOW3_KV)return Response.json({connected:false,error:"Armazenamento não configurado."},{status:503,headers});
-  const raw=await env.POSTFLOW3_KV.get(userKey(session.userId,"instagram-owner"));
-  if(!raw)return Response.json({connected:false},{headers});
-  const data=await decryptJson(env,raw);
+  if(!env.POSTFLOW3_KV&&!env.POSTFLOW3_DB)return Response.json({connected:false,error:"Armazenamento não configurado."},{status:503,headers});
+  const data=await getSocialAccount(env,session.userId,"instagram");
+  if(!data)return Response.json({connected:false},{headers});
   if(!data.access_token||!data.user_id)return Response.json({connected:false},{headers});
   const result={connected:true,username:data.username||""};
   try{
