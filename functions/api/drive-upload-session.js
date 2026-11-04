@@ -1,7 +1,8 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function accessToken(env,userId){
- const raw=await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
+ const raw=await kv(env).get(userKey(userId,"youtube-owner"));
  if(!raw)throw new Error("Conecte novamente sua conta Google.");
  let t=await decryptJson(env,raw);
  const exp=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
@@ -11,12 +12,12 @@ async function accessToken(env,userId){
  const d=await r.json().catch(()=>({}));
  if(!r.ok||!d.access_token)throw new Error("Não foi possível renovar a autorização Google.");
  t={...t,...d,refresh_token:t.refresh_token,expiry_date:Date.now()+Number(d.expires_in||3600)*1000,saved_at:Date.now()};
- await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"),await encryptJson(env,t));
+ await kv(env).put(userKey(userId,"youtube-owner"),await encryptJson(env,t));
  return t.access_token;
 }
 export async function onRequestPost({request,env}){
  const s=await getSession(request,env);if(!s)return json({error:"Entre novamente no PostFlow3."},401);
- if(!env.POSTFLOW3_KV||!env.POSTFLOW3_SESSION_SECRET||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return json({error:"A configuração segura do Google está incompleta."},503);
+ if(!kv(env)||!env.POSTFLOW3_SESSION_SECRET||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return json({error:"A configuração segura do Google está incompleta."},503);
  try{
   const i=await request.json(),filename=String(i.filename||"video.mp4").slice(0,200),mimeType=String(i.mimeType||"video/mp4").toLowerCase(),size=Number(i.size);
   if(!Number.isSafeInteger(size)||size<1||!mimeType.startsWith("video/"))return json({error:"Arquivo de vídeo inválido."},400);
@@ -25,7 +26,7 @@ export async function onRequestPost({request,env}){
   const uploadUrl=r.headers.get("Location"),d=await r.json().catch(()=>({}));
   if(!r.ok||!uploadUrl)return json({error:d.error?.message||"O Google Drive não aceitou salvar a cópia do vídeo. Reconecte a conta Google e confira a permissão de arquivos."},502);
   const uploadId=crypto.randomUUID(),pending={uploadId,uploadUrl,filename,mimeType,size,createdAt:Date.now()};
-  await env.POSTFLOW3_KV.put(userKey(s.userId,"drive-upload:"+uploadId),await encryptJson(env,pending),{expirationTtl:86400});
+  await kv(env).put(userKey(s.userId,"drive-upload:"+uploadId),await encryptJson(env,pending),{expirationTtl:86400});
   return json({uploadId,chunkSize:8388608},201);
  }catch(e){return json({error:String(e?.message||"Não foi possível iniciar o salvamento no Drive.").slice(0,300)},500);}
 }
