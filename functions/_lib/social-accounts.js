@@ -1,7 +1,7 @@
 import { userKey, encryptJson, decryptJson } from "./security.js";
 
 const validPlatform = value => value === "instagram" || value === "youtube" || value === "tiktok";
-const d1Platform = value => value === "instagram" || value === "youtube";
+const d1Platform = value => value === "instagram" || value === "youtube" || value === "tiktok";
 const safeId = value => String(value || "").trim().slice(0, 180);
 const accountRow = row => ({
   accountId: String(row.platform_user_id || ""),
@@ -102,7 +102,7 @@ export async function getSocialAccount(env, userId, platform, accountId = "") {
     const legacy = await env.POSTFLOW3_KV.get(userKey(userId, platform + "-owner"));
     if (legacy) {
       const data = await decryptJson(env, legacy);
-      const legacyId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "");
+      const legacyId = platform === "instagram" ? String(data.user_id || "") : platform === "tiktok" ? String(data.open_id || "") : String(data.channel_id || "");
       if (legacyId && legacyId === id) return data;
     }
     return null;
@@ -130,7 +130,7 @@ export async function removeSocialAccount(env, userId, platform, accountId) {
       const current = await env.POSTFLOW3_KV.get(legacyKey);
       if (current) {
         const data = await decryptJson(env, current);
-        const currentId = platform === "instagram" ? String(data.user_id || "") : String(data.channel_id || "primary");
+        const currentId = platform === "instagram" ? String(data.user_id || "") : platform === "tiktok" ? String(data.open_id || "") : String(data.channel_id || "primary");
         if (currentId === id) await env.POSTFLOW3_KV.delete(legacyKey);
       }
     } catch {}
