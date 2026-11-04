@@ -1,4 +1,5 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -25,13 +26,13 @@ async function getTokens(env,userId,accountId="") {
   const refreshed = await response.json();
   if (!response.ok || !refreshed.access_token) throw new Error("Não foi possível renovar a autorização Google.");
   tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(storageKey, await encryptJson(env, tokens));
+  await kv(env).put(storageKey, await encryptJson(env, tokens));
   return tokens;
 }
 
 export async function onRequestPost({ request, env }) {
   const session=await getSession(request,env);if(!session)return json({error:"Faça login novamente no PostFlow3."},401);
-  if (!env.POSTFLOW3_KV || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  if (!kv(env) || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     return json({ error: "A configuração Google/KV está incompleta." }, 503);
   }
   try {
@@ -52,9 +53,9 @@ export async function onRequestPost({ request, env }) {
       // Prevent duplicate Drive files and overlapping scheduled slots for the same YouTube channel.
       let cursor;
       do {
-        const batch = await env.POSTFLOW3_KV.list({ prefix: userKey(session.userId, "post:"), limit: 100, ...(cursor ? { cursor } : {}) });
+        const batch = await kv(env).list({ prefix: userKey(session.userId, "post:"), limit: 100, ...(cursor ? { cursor } : {}) });
         for (const item of batch.keys) {
-          const existing = await env.POSTFLOW3_KV.get(item.name, "json");
+          const existing = await kv(env).get(item.name, "json");
           if (!existing || !Array.isArray(existing.platforms) || !existing.platforms.includes("YouTube")) continue;
           const status = String(existing.status || "").toLowerCase();
           if (!/scheduled|queued|pending|agendad|fila/.test(status)) continue;
@@ -129,14 +130,14 @@ export async function onRequestPost({ request, env }) {
       createdAt: new Date().toISOString(),
       platforms: ["YouTube"]
     };
-    await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
+    await kv(env).put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
 
     // Keep the original Drive file for both immediate and scheduled posts.
     // The Cloudflare Cron Worker checks YouTube's actual public status and removes
     // the source only after every selected destination has confirmed publication.
     post.driveSourceDeleted = false;
     post.driveCleanupPending = true;
-    await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
+    await kv(env).put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
     const message = publicationMode === "immediate"
       ? "O YouTube aceitou o envio. O PostFlow3 manterá o original no Google Drive até confirmar que o vídeo está público."
       : "O YouTube confirmou o agendamento. O original ficará no Google Drive até a publicação ser confirmada.";
