@@ -1,4 +1,5 @@
 import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
@@ -29,7 +30,7 @@ async function googleAccessToken(env, userId, accountId = "") {
   const refreshed = await response.json().catch(() => ({}));
   if (!response.ok || !refreshed.access_token) throw new Error(refreshed.error_description || "O Google não renovou a autorização.");
   tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(key, await encryptJson(env, tokens));
+  await kv(env).put(key, await encryptJson(env, tokens));
   return tokens.access_token;
 }
 
@@ -63,7 +64,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     post.instagramCreationId = creationId;
     post.instagramStatus = "processing";
     post.instagramAttemptedAt = new Date().toISOString();
-    await env.POSTFLOW3_KV.put(userKey(userId, "post:" + post.id), JSON.stringify(post));
+    await kv(env).put(userKey(userId, "post:" + post.id), JSON.stringify(post));
   }
 
   // Image containers are published directly; the asynchronous status polling is for Reels/video.
@@ -147,10 +148,10 @@ async function cleanupDriveIfComplete(env, userId, post) {
   const instagramDone = !hasInstagram || post.instagramStatus === "published" || post.status === "published_on_instagram";
   if (!youtubeDone || !instagramDone || post.driveSourceDeleted) return false;
   if (post.driveCleanupGroup) {
-    const all = await env.POSTFLOW3_KV.list({ prefix: userKey(userId, "post:"), limit: 1000 });
+    const all = await kv(env).list({ prefix: userKey(userId, "post:"), limit: 1000 });
     for (const item of all.keys) {
       if (item.name === userKey(userId, "post:" + post.id)) continue;
-      const sibling = await env.POSTFLOW3_KV.get(item.name, "json");
+      const sibling = await kv(env).get(item.name, "json");
       if (sibling && sibling.driveCleanupGroup === post.driveCleanupGroup &&
           sibling.instagramStatus !== "published" && sibling.status !== "published_on_instagram" && sibling.status !== "published") {
         post.driveCleanupPending = true;
@@ -164,7 +165,7 @@ async function cleanupDriveIfComplete(env, userId, post) {
   if (!fileId && post.instagramVideoKey) {
     const videoId = post.instagramVideoKey.split("/").pop();
     metadataKey = userKey(userId, "instagram-drive:" + videoId);
-    const raw = await env.POSTFLOW3_KV.get(metadataKey);
+    const raw = await kv(env).get(metadataKey);
     if (raw) {
       try { fileId = JSON.parse(raw).fileId || ""; } catch {}
     }
@@ -205,7 +206,7 @@ async function cleanupDriveIfComplete(env, userId, post) {
   }
   const response = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(fileId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
   if (response.ok || response.status === 404) {
-    if (metadataKey) await env.POSTFLOW3_KV.delete(metadataKey);
+    if (metadataKey) await kv(env).delete(metadataKey);
     post.driveSourceDeleted = true;
     post.driveCleanupPending = false;
     post.driveCleanupError = null;
@@ -219,25 +220,25 @@ async function cleanupDriveIfComplete(env, userId, post) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento KV não configurado." }, 503);
+  if (!kv(env)) return json({ error: "Armazenamento KV não configurado." }, 503);
   const configuredSecret = env.POSTFLOW3_SCHEDULER_SECRET;
-  const expected = configuredSecret || await env.POSTFLOW3_KV.get("system:scheduler-secret");
+  const expected = configuredSecret || await kv(env).get("system:scheduler-secret");
   const supplied = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!expected || !supplied || supplied !== expected) return json({ error: "Não autorizado." }, 401);
 
   const lockKey = "system:scheduler-lock";
   const now = Date.now();
-  const currentLock = await env.POSTFLOW3_KV.get(lockKey, "json");
+  const currentLock = await kv(env).get(lockKey, "json");
   if (currentLock?.until > now) return json({ busy: true, processed: 0, message: "Outra execução ainda está em andamento." }, 200);
   const runId = crypto.randomUUID();
-  await env.POSTFLOW3_KV.put(lockKey, JSON.stringify({ runId, until: now + 4 * 60 * 1000 }), { expirationTtl: 300 });
+  await kv(env).put(lockKey, JSON.stringify({ runId, until: now + 4 * 60 * 1000 }), { expirationTtl: 300 });
 
   const results = [];
   try {
     const keys = [];
     let cursor;
     do {
-      const page = await env.POSTFLOW3_KV.list({ prefix: "user:", limit: 1000, cursor });
+      const page = await kv(env).list({ prefix: "user:", limit: 1000, cursor });
       keys.push(...page.keys.filter(key => /^user:[0-9a-f-]{36}:post:/i.test(key.name)));
       cursor = page.list_complete ? undefined : page.cursor;
     } while (cursor);
@@ -246,7 +247,7 @@ export async function onRequestPost({ request, env }) {
       const match = item.name.match(/^user:([0-9a-f-]{36}):post:/i);
       if (!match) continue;
       const userId = match[1];
-      let post = await env.POSTFLOW3_KV.get(item.name, "json");
+      let post = await kv(env).get(item.name, "json");
       if (!post) continue;
       let changed = false;
       const isDue = due(post);
@@ -299,13 +300,13 @@ export async function onRequestPost({ request, env }) {
         post.publishedAt = post.publishedAt || new Date().toISOString();
         changed = true;
       }
-      if (changed) await env.POSTFLOW3_KV.put(item.name, JSON.stringify(post));
+      if (changed) await kv(env).put(item.name, JSON.stringify(post));
     }
     return json({ processed: results.length, results, checkedPosts: keys.length, at: new Date().toISOString() });
   } catch (error) {
     return json({ error: String(error?.message || "Erro ao processar a fila.").slice(0, 300) }, 500);
   } finally {
-    const lock = await env.POSTFLOW3_KV.get(lockKey, "json");
-    if (lock?.runId === runId) await env.POSTFLOW3_KV.delete(lockKey);
+    const lock = await kv(env).get(lockKey, "json");
+    if (lock?.runId === runId) await kv(env).delete(lockKey);
   }
 }
