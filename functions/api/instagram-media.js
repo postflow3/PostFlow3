@@ -1,4 +1,5 @@
 import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 
 function notFound() {
   return new Response("Not found", {
@@ -24,12 +25,12 @@ async function signature(env, key) {
 }
 
 async function googleToken(env, userId) {
-  if (!env.POSTFLOW3_KV || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  if (!kv(env) || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     throw new Error("Google Drive authorization is not configured");
   }
 
   const key = userKey(userId, "youtube-owner");
-  const raw = await env.POSTFLOW3_KV.get(key);
+  const raw = await kv(env).get(key);
   if (!raw) throw new Error("Google account is not connected");
 
   let token = await decryptJson(env, raw);
@@ -57,7 +58,7 @@ async function googleToken(env, userId) {
     expiry_date: Date.now() + Number(data.expires_in || 3600) * 1000,
     saved_at: Date.now()
   };
-  await env.POSTFLOW3_KV.put(key, await encryptJson(env, token));
+  await kv(env).put(key, await encryptJson(env, token));
   return token.access_token;
 }
 
@@ -66,7 +67,7 @@ export async function onRequestGet({ request, env }) {
   let diagnosticUserId = "";
   const recordDiagnostic = async details => {
     try {
-      if (env.POSTFLOW3_KV) await env.POSTFLOW3_KV.put("system:instagram-media-diagnostic:last", JSON.stringify({
+      if (kv(env)) await kv(env).put("system:instagram-media-diagnostic:last", JSON.stringify({
         at: new Date().toISOString(), stage: diagnosticStage, userId: diagnosticUserId || null, ...details
       }), { expirationTtl: 86400 });
     } catch {}
@@ -77,7 +78,7 @@ export async function onRequestGet({ request, env }) {
     const suppliedSignature = url.searchParams.get("sig") || "";
     const match = key.match(/^instagram-media\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
 
-    if (!match || !suppliedSignature || !env.POSTFLOW3_KV) {
+    if (!match || !suppliedSignature || !kv(env)) {
       await recordDiagnostic({ reason: "invalid_request_or_missing_kv" });
       return notFound();
     }
@@ -91,7 +92,7 @@ export async function onRequestGet({ request, env }) {
     const [, userId, id] = match;
     diagnosticUserId = userId;
     diagnosticStage = "metadata";
-    const raw = await env.POSTFLOW3_KV.get(userKey(userId, "instagram-drive:" + id));
+    const raw = await kv(env).get(userKey(userId, "instagram-drive:" + id));
     if (!raw) {
       await recordDiagnostic({ reason: "media_metadata_not_found" });
       return notFound();
