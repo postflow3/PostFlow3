@@ -1,4 +1,5 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -19,13 +20,13 @@ async function token(env,userId,accountId="") {
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.access_token) throw new Error("Não foi possível renovar a autorização Google.");
   t = { ...t, ...d, refresh_token: t.refresh_token, expiry_date: Date.now() + Number(d.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(storageKey, await encryptJson(env, t));
+  await kv(env).put(storageKey, await encryptJson(env, t));
   return t.access_token;
 }
 
 export async function onRequestPost({ request, env }) {
   const session=await getSession(request,env);if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
-  if (!env.POSTFLOW3_KV || !env.POSTFLOW3_SESSION_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração segura do YouTube está incompleta." }, 503);
+  if (!kv(env) || !env.POSTFLOW3_SESSION_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração segura do YouTube está incompleta." }, 503);
   try {
     const uploadId = request.headers.get("X-PostFlow-Upload-Id") || "";
     const start = Number(request.headers.get("X-Chunk-Start"));
@@ -34,7 +35,7 @@ export async function onRequestPost({ request, env }) {
     if (!/^[0-9a-f-]{36}$/i.test(uploadId) || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || !Number.isSafeInteger(total) || start < 0 || end < start || end >= total) {
       return json({ error: "Informações do trecho inválidas." }, 400);
     }
-    const raw = await env.POSTFLOW3_KV.get(userKey(session.userId,"youtube-upload:" + uploadId));
+    const raw = await kv(env).get(userKey(session.userId,"youtube-upload:" + uploadId));
     if (!raw) return json({ error: "Sessão de envio não encontrada ou expirada. Inicie o envio novamente." }, 404);
     const pending = await decryptJson(env, raw);
     if (pending.uploadId !== uploadId || pending.size !== total) return json({ error: "O trecho não corresponde ao vídeo selecionado." }, 409);
@@ -72,8 +73,8 @@ export async function onRequestPost({ request, env }) {
       youtubeVideoId: result.id, youtubeUrl: "https://www.youtube.com/watch?v=" + result.id, youtubeAccountId: pending.youtubeAccountId || null, youtubeAccountName: pending.youtubeAccountName || null,
       createdAt: pending.createdAt, uploadedAt: new Date().toISOString(), platforms: pending.publishInstagram ? ["YouTube", "Instagram"] : ["YouTube"], instagramVideoKey: pending.publishInstagram ? pending.instagramVideoKey : null, driveFileId: pending.publishInstagram ? (pending.driveFileId || null) : null, driveCleanupPending: Boolean(pending.publishInstagram && (pending.driveFileId || pending.instagramVideoKey)), instagramStatus: pending.publishInstagram ? (pending.publicationMode === "immediate" ? "pending" : "scheduled") : null
     };
-    await env.POSTFLOW3_KV.put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
-    await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, { ...pending, status: "complete", youtubeVideoId: result.id, completedAt: new Date().toISOString() }), { expirationTtl: 604800 });
+    await kv(env).put(userKey(session.userId,"post:" + post.id), JSON.stringify(post));
+    await kv(env).put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, { ...pending, status: "complete", youtubeVideoId: result.id, completedAt: new Date().toISOString() }), { expirationTtl: 604800 });
     return json({ complete: true, received: total, post, message: pending.publicationMode === "immediate" ? "O YouTube confirmou o envio para publicação imediata. Confira o canal para verificar a disponibilidade pública." : "O YouTube confirmou o vídeo. Ele está privado e agendado para a data escolhida." }, 201);
   } catch (e) {
     return json({ error: String(e?.message || "Falha ao enviar trecho ao YouTube.").slice(0, 350) }, 500);
