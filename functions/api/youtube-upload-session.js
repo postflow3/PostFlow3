@@ -1,4 +1,5 @@
 import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 import { getSocialAccount, saveSocialAccount } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -34,7 +35,7 @@ async function getAccessToken(env,userId,accountId="") {
 
 export async function onRequestPost({ request, env }) {
   const session=await getSession(request,env);if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
-  if (!env.POSTFLOW3_KV || !env.POSTFLOW3_SESSION_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  if (!kv(env) || !env.POSTFLOW3_SESSION_SECRET || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     return json({ error: "A configuração segura do YouTube/KV está incompleta." }, 503);
   }
   try {
@@ -93,7 +94,7 @@ export async function onRequestPost({ request, env }) {
       createdAt: new Date().toISOString(),
       status: "uploading"
     };
-    await env.POSTFLOW3_KV.put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, pending), { expirationTtl: 604800 });
+    await kv(env).put(userKey(session.userId,"youtube-upload:" + uploadId), await encryptJson(env, pending), { expirationTtl: 604800 });
     return json({ uploadId, chunkSize: 8 * 1024 * 1024, message: "Sessão de envio criada para a conta YouTube selecionada." }, 201);
   } catch (error) {
     return json({ error: String(error?.message || "Não foi possível iniciar o envio.").slice(0, 350) }, 500);
