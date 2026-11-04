@@ -1,4 +1,5 @@
 import { getSession, decryptJson, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 import { getSocialAccount } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -9,7 +10,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 export async function onRequestPost({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Sua sessão expirou. Entre novamente no PostFlow3." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "O armazenamento do PostFlow3 não está configurado." }, 503);
+  if (!kv(env)) return json({ error: "O armazenamento do PostFlow3 não está configurado." }, 503);
 
   try {
     const input = await request.json();
@@ -47,9 +48,9 @@ export async function onRequestPost({ request, env }) {
     // Guard against accidental duplicate media and two Instagram jobs colliding in the same time slot.
     let cursor;
     do {
-      const batch = await env.POSTFLOW3_KV.list({ prefix: userKey(session.userId, "post:"), limit: 100, ...(cursor ? { cursor } : {}) });
+      const batch = await kv(env).list({ prefix: userKey(session.userId, "post:"), limit: 100, ...(cursor ? { cursor } : {}) });
       for (const item of batch.keys) {
-        const existing = await env.POSTFLOW3_KV.get(item.name, "json");
+        const existing = await kv(env).get(item.name, "json");
         if (!existing || !Array.isArray(existing.platforms) || !existing.platforms.includes("Instagram")) continue;
         const status = String(existing.status || "").toLowerCase();
         const igStatus = String(existing.instagramStatus || "").toLowerCase();
@@ -67,7 +68,7 @@ export async function onRequestPost({ request, env }) {
 
     const videoId = videoKey.split("/").pop();
     const mediaMetadataKey = userKey(session.userId, "instagram-drive:" + videoId);
-    const mediaRaw = await env.POSTFLOW3_KV.get(mediaMetadataKey);
+    const mediaRaw = await kv(env).get(mediaMetadataKey);
     if (!mediaRaw) return json({ error: "O vídeo não está mais disponível no armazenamento. Envie-o novamente." }, 404);
     const mediaMetadata = JSON.parse(mediaRaw);
     if (String(mediaMetadata.fileId || "") !== driveFileId) {
@@ -100,7 +101,7 @@ export async function onRequestPost({ request, env }) {
       createdAt: now,
       uploadedAt: now
     };
-    await env.POSTFLOW3_KV.put(userKey(session.userId, "post:" + id), JSON.stringify(post));
+    await kv(env).put(userKey(session.userId, "post:" + id), JSON.stringify(post));
     return json({
       scheduled: true,
       post: { id, title, platforms: post.platforms, scheduledAt: post.scheduledAt, status: post.status },
