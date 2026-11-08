@@ -1,6 +1,6 @@
 import { getSession, makeOAuthState } from "../_lib/security.js";
 
-const DEFAULT_REDIRECT_URI = "https://cloudflare-migration.postflow3.pages.dev/api/tiktok-callback";
+
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" }
 });
@@ -11,7 +11,7 @@ export async function onRequestGet({ request, env }) {
   if (!env.TIKTOK_CLIENT_KEY || !env.TIKTOK_CLIENT_SECRET) {
     return json({ error: "A integração precisa dos secrets TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET no Cloudflare Pages Preview." }, 503);
   }
-  const redirectUri = env.TIKTOK_REDIRECT_URI || DEFAULT_REDIRECT_URI;
+  const redirectUri = env.TIKTOK_REDIRECT_URI || new URL(request.url).origin + "/api/tiktok-callback";
   const state = await makeOAuthState(env, session.userId);
   const params = new URLSearchParams({
     client_key: env.TIKTOK_CLIENT_KEY,
