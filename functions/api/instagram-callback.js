@@ -35,8 +35,8 @@ export async function onRequestGet({ request, env }) {
 
   let stage = "validando a configuração";
   try {
-    const appId = env.INSTAGRAM_APP_ID || "1628313285604238";
-    const appSecret = env.INSTAGRAM_APP_SECRET;
+    const appId = env.META_APP_ID || "1628313285604238";
+    const appSecret = env.META_APP_SECRET || env.INSTAGRAM_APP_SECRET;
     if (!appId || !appSecret) return respond("Configuração incompleta", "Configure o App ID e o App Secret correspondentes no Cloudflare Pages.", 503);
     const redirectUri = env.INSTAGRAM_REDIRECT_URI || url.origin + "/api/instagram-callback";
 
