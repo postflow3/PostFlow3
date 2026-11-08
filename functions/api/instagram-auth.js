@@ -9,9 +9,9 @@ export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return new Response(JSON.stringify({ error: "Entre no PostFlow3 antes de conectar o Instagram." }), { status: 401, headers: { ...headers, "Content-Type": "application/json; charset=utf-8" } });
 
-  const appId = env.INSTAGRAM_APP_ID || DEFAULT_APP_ID;
+  const appId = env.META_APP_ID || DEFAULT_APP_ID;
   const configId = env.INSTAGRAM_CONFIG_ID || DEFAULT_CONFIG_ID;
-  if (!appId || !env.INSTAGRAM_APP_SECRET || !configId) {
+  if (!appId || !(env.META_APP_SECRET || env.INSTAGRAM_APP_SECRET) || !configId) {
     return new Response(JSON.stringify({ error: "A configuração do Instagram está incompleta. Confira o App ID, App Secret e Config ID no Cloudflare Pages." }), { status: 503, headers: { ...headers, "Content-Type": "application/json; charset=utf-8" } });
   }
 
