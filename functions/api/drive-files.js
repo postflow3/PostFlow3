@@ -8,7 +8,8 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 async function getAccessToken(env, userId) {
   let tokens = await getSocialAccount(env, userId, "youtube", "");
   if (!tokens) throw new Error("Conecte novamente a conta Google no PostFlow3.");
-  if (tokens.access_token && tokens.expiry_date && tokens.expiry_date > Date.now() + 60_000) {
+  const expiresAt = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
+  if (tokens.access_token && expiresAt > Date.now() + 60_000) {
     return { tokens, accessToken: tokens.access_token };
   }
   if (!tokens.refresh_token) throw new Error("A conexão Google precisa ser renovada. Conecte novamente a conta Google.");
