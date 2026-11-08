@@ -13,9 +13,9 @@ export async function onRequestGet({request,env}){
  if(!(await verifyStateCookie(request,env,state,session.userId)))return respond("Validação de segurança falhou","Não foi possível validar esta solicitação. Inicie a conexão novamente.");
  let stage="validando configuração";
  try{
-  const id=env.INSTAGRAM_APP_ID,secret=env.INSTAGRAM_APP_SECRET;
+  const id=env.INSTAGRAM_APP_ID||"1628313285604238",secret=env.INSTAGRAM_APP_SECRET;
   if(!id||!secret)return respond("Configuração incompleta","Configure INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET nos secrets do Cloudflare Pages.",503);
-  const redirectUri=env.INSTAGRAM_REDIRECT_URI||"https://cloudflare-migration.postflow3.pages.dev/api/instagram-callback";
+  const redirectUri=env.INSTAGRAM_REDIRECT_URI||url.origin+"/api/instagram-callback";
   stage="trocando o código de autorização";
   const tr=await fetch("https://api.instagram.com/oauth/access_token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:id,client_secret:secret,grant_type:"authorization_code",redirect_uri:redirectUri,code})});
   const token=await tr.json();
