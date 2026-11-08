@@ -8,7 +8,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Faça login novamente no PostFlow3." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento não configurado." }, 503);
+  if (!env.POSTFLOW3_DB && !env.POSTFLOW3_KV) return json({ error: "Armazenamento não configurado." }, 503);
 
   try {
     const accounts = await listSocialAccounts(env, session.userId);
