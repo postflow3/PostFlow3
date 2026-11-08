@@ -16,3 +16,9 @@ O callback OAuth planejado é https://postflow3.pages.dev/api/youtube-callback. 
 - Ainda precisam ser cadastrados como secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `POSTFLOW3_ADMIN_PASSWORD` em Preview e Production.
 
 - A prévia da Cloudflare deve acompanhar apenas esta branch de migração enquanto a produção permanece desligada.
+
+## Armazenamento e agendador (revisão de estabilidade)
+- D1 (`POSTFLOW3_DB`) é o armazenamento principal para a fila compatível com KV e para tokens sociais do Instagram/YouTube/TikTok; KV pode permanecer temporariamente como fonte legada de leitura.
+- O Worker de Cron `postflow3-scheduler` precisa ter o mesmo binding D1 apontando para o mesmo banco usado pelo Pages Preview, além do secret `POSTFLOW3_SCHEDULER_SECRET`. Se o binding D1 não estiver presente no Worker, ele continuará usando o KV legado quando disponível.
+- Não remova o namespace KV enquanto houver dados legados que ainda não tenham sido migrados e validados.
+- A trava do agendador usa gravação condicional atômica no D1 para evitar duas execuções simultâneas processarem a mesma fila.
