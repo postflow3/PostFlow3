@@ -50,7 +50,7 @@ async function validAccessToken(env, userId, accountId) {
 export async function onRequestPost({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Entre no PostFlow3 para enviar ao TikTok." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "O armazenamento de contas não está configurado no Preview." }, 503);
+  if (!env.POSTFLOW3_KV && !env.POSTFLOW3_DB) return json({ error: "O armazenamento seguro de contas não está configurado no Preview." }, 503);
 
   try {
     const form = await request.formData();
