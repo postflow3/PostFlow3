@@ -1,4 +1,5 @@
-import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSession, decryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 import { kv } from "../_lib/kv.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 export async function onRequestPost({request,env}){
@@ -9,13 +10,13 @@ export async function onRequestPost({request,env}){
   if(!/^[0-9a-f-]{36}$/i.test(id)||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||!Number.isSafeInteger(total)||start<0||end<start||end>=total)return json({error:"Trecho inválido."},400);
   const key=userKey(s.userId,"drive-upload:"+id),raw=await kv(env).get(key);if(!raw)return json({error:"Sessão de salvamento no Drive expirada."},404);
   const p=await decryptJson(env,raw),bytes=await request.arrayBuffer();if(p.uploadId!==id||p.size!==total||bytes.byteLength!==end-start+1||bytes.byteLength>8388608)return json({error:"O trecho não corresponde ao vídeo selecionado."},400);
-  let t=await decryptJson(env,await kv(env).get(userKey(s.userId,"youtube-owner")));
+  let t=await getSocialAccount(env,s.userId,"youtube","");if(!t)throw new Error("Conecte novamente a conta Google para salvar vídeos no Drive.");
   const exp=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
   if(!t.access_token||exp<Date.now()+60000){
    if(!t.refresh_token)throw new Error("Reconecte a conta Google para salvar vídeos no Drive.");
    const rr=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,refresh_token:t.refresh_token,grant_type:"refresh_token"})}),nd=await rr.json().catch(()=>({}));
    if(!rr.ok||!nd.access_token)throw new Error("Não foi possível renovar a autorização Google.");
-   t={...t,...nd,refresh_token:t.refresh_token,expiry_date:Date.now()+Number(nd.expires_in||3600)*1000,saved_at:Date.now()};await kv(env).put(userKey(s.userId,"youtube-owner"),await encryptJson(env,t));
+   t={...t,...nd,refresh_token:t.refresh_token,expiry_date:Date.now()+Number(nd.expires_in||3600)*1000,saved_at:Date.now()};await updateSocialAccountTokens(env,s.userId,"youtube","",t);
   }
   const r=await fetch(p.uploadUrl,{method:"PUT",headers:{Authorization:"Bearer "+t.access_token,"Content-Type":p.mimeType,"Content-Length":String(bytes.byteLength),"Content-Range":"bytes "+start+"-"+end+"/"+total},body:bytes});
   if(r.status===308){const range=r.headers.get("Range")||"",m=range.match(/bytes=0-(\d+)/);return json({complete:false,nextOffset:m?Number(m[1])+1:end+1});}
