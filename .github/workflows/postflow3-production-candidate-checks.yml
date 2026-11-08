@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - postflow-v2
+      - main
   pull_request:
     branches:
       - main
