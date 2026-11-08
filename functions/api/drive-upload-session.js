@@ -1,10 +1,10 @@
-import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSession, encryptJson, userKey } from "../_lib/security.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 import { kv } from "../_lib/kv.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function accessToken(env,userId){
- const raw=await kv(env).get(userKey(userId,"youtube-owner"));
- if(!raw)throw new Error("Conecte novamente sua conta Google.");
- let t=await decryptJson(env,raw);
+ let t=await getSocialAccount(env,userId,"youtube","");
+ if(!t)throw new Error("Conecte novamente sua conta Google.");
  const exp=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
  if(t.access_token&&exp>Date.now()+60000)return t.access_token;
  if(!t.refresh_token)throw new Error("A conexão Google precisa ser renovada. Reconecte a conta.");
@@ -12,7 +12,7 @@ async function accessToken(env,userId){
  const d=await r.json().catch(()=>({}));
  if(!r.ok||!d.access_token)throw new Error("Não foi possível renovar a autorização Google.");
  t={...t,...d,refresh_token:t.refresh_token,expiry_date:Date.now()+Number(d.expires_in||3600)*1000,saved_at:Date.now()};
- await kv(env).put(userKey(userId,"youtube-owner"),await encryptJson(env,t));
+ await updateSocialAccountTokens(env,userId,"youtube","",t);
  return t.access_token;
 }
 export async function onRequestPost({request,env}){
