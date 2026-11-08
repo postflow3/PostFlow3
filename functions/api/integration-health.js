@@ -1,4 +1,5 @@
 import { getSession } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 import { getSocialAccount, listSocialAccounts } from "../_lib/social-accounts.js";
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
@@ -57,7 +58,8 @@ async function checkYouTube(account) {
 export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Faça login no PostFlow3 para executar o diagnóstico." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "O armazenamento seguro POSTFLOW3_KV não está configurado neste ambiente." }, 503);
+  const store = kv(env);
+  if (!store) return json({ error: "O armazenamento seguro do PostFlow3 não está configurado. Configure POSTFLOW3_DB (D1) ou o KV legado." }, 503);
 
   try {
     const userId = session.userId;
@@ -73,7 +75,7 @@ export async function onRequestGet({ request, env }) {
       checkedAt: new Date().toISOString(),
       environment: env.CF_PAGES_BRANCH || "unknown",
       configuration: {
-        kv: Boolean(env.POSTFLOW3_KV),
+        storage: env.POSTFLOW3_DB ? "D1" : env.POSTFLOW3_KV ? "KV legado" : "indisponível",
         sessionSecret: Boolean(env.POSTFLOW3_SESSION_SECRET),
         googleOAuth: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
         instagramApp: Boolean(env.INSTAGRAM_APP_ID && env.INSTAGRAM_APP_SECRET)
