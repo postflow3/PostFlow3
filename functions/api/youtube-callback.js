@@ -1,7 +1,7 @@
 import { getSession, verifyStateCookie } from "../_lib/security.js";
 import { saveSocialAccount } from "../_lib/social-accounts.js";
 
-// Redeploy after Google OAuth secrets are configured in the Cloudflare Pages preview environment.
+// OAuth callback is derived from the current deployment host unless explicitly overridden.
 
 function page(title, message, success = false) {
   const safeTitle = title.replace(/[&<>"]/g, "");
@@ -26,7 +26,7 @@ export async function onRequestGet({ request, env }) {
     stage = "trocando código OAuth por token";
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ code: params.get("code"), client_id: clientId, client_secret: clientSecret, redirect_uri: env.GOOGLE_REDIRECT_URI || "https://cloudflare-migration.postflow3.pages.dev/api/youtube-callback", grant_type: "authorization_code" })
+      body: new URLSearchParams({ code: params.get("code"), client_id: clientId, client_secret: clientSecret, redirect_uri: env.GOOGLE_REDIRECT_URI || url.origin + "/api/youtube-callback", grant_type: "authorization_code" })
     });
     const tokens = await response.json();
     if (!response.ok || !tokens.access_token) return respond("Não foi possível conectar", "O Google recusou a troca do código. Confira o URI de redirecionamento e as credenciais na Google Cloud.", 502);
