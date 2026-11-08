@@ -11,8 +11,8 @@ export async function onRequestGet({request,env}){
   if(!data.access_token||!data.user_id)return Response.json({connected:false},{headers});
   const result={connected:true,username:data.username||""};
   try{
-   const profileUrl=new URL(graphBase(data)+"/encodeURIComponent(data.user_id));
-   profileUrl.search=new URLSearchParams({fields:"user_id,username,followers_count,media_count",access_token:data.access_token}).toString();
+   const profileUrl=new URL(graphBase(data)+"/"+encodeURIComponent(data.user_id));
+   profileUrl.search=new URLSearchParams({fields:"id,username,followers_count,media_count",access_token:data.access_token}).toString();
    const response=await fetch(profileUrl,{headers:{"Accept":"application/json"}});
    const profile=await response.json();
    if(response.ok){
