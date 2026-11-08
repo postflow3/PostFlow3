@@ -2,6 +2,8 @@ import { userKey } from "../_lib/security.js";
 import { kv } from "../_lib/kv.js";
 import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 
+const instagramGraphBase = account => account.api_base || "https://graph.instagram.com/v23.0";
+
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 const due = post => post.publicationMode === "immediate" || !post.scheduledAt || new Date(post.scheduledAt).getTime() <= Date.now();
 const hasPlatform = (post, platform) => Array.isArray(post.platforms) ? post.platforms.includes(platform) : platform === "YouTube" ? Boolean(post.youtubeVideoId) : Boolean(post.instagramVideoKey);
@@ -53,7 +55,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     const mediaUrl = new URL("/api/instagram-media", mediaOrigin);
     mediaUrl.searchParams.set("key", videoKey);
     mediaUrl.searchParams.set("sig", await instagramSignature(env, videoKey));
-    const response = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media", {
+    const response = await fetch(instagramGraphBase(account) + "/ encodeURIComponent(account.user_id) + "/media", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(post.instagramMediaType === "IMAGE" ? { media_type: "IMAGE", image_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token } : { media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
     });
@@ -68,7 +70,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
 
   // Image containers are published directly; the asynchronous status polling is for Reels/video.
   if (post.instagramMediaType !== "IMAGE") {
-    const statusUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(creationId));
+    const statusUrl = new URL(instagramGraphBase(account) + "/ encodeURIComponent(creationId));
     statusUrl.searchParams.set("fields", "status_code,status,error_message");
     statusUrl.searchParams.set("access_token", account.access_token);
     const statusResponse = await fetch(statusUrl);
@@ -97,7 +99,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     }
   }
 
-  const publishResponse = await fetch("https://graph.instagram.com/v23.0/" + encodeURIComponent(account.user_id) + "/media_publish", {
+  const publishResponse = await fetch(instagramGraphBase(account) + "/ encodeURIComponent(account.user_id) + "/media_publish", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ creation_id: creationId, access_token: account.access_token })
   });
@@ -114,7 +116,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   post.instagramCreationId = null;
   post.instagramError = null;
   try {
-    const permalinkUrl = new URL("https://graph.instagram.com/v23.0/" + encodeURIComponent(published.id));
+    const permalinkUrl = new URL(instagramGraphBase(account) + "/ encodeURIComponent(published.id));
     permalinkUrl.searchParams.set("fields", "permalink");
     permalinkUrl.searchParams.set("access_token", account.access_token);
     const permalinkResponse = await fetch(permalinkUrl);
