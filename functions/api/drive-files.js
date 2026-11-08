@@ -1,14 +1,16 @@
-import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSession } from "../_lib/security.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
 });
 
-async function getAccessToken(request, env, userId) {
-  const encrypted = await env.POSTFLOW3_KV.get(userKey(userId,"youtube-owner"));
-  if (!encrypted) throw new Error("Conecte novamente a conta Google no PostFlow3.");
-  const tokens = await decryptJson(env, encrypted);
-  if (tokens.access_token && tokens.expiry_date && tokens.expiry_date > Date.now() + 60_000) return { tokens, accessToken: tokens.access_token };
+async function getAccessToken(env, userId) {
+  let tokens = await getSocialAccount(env, userId, "youtube", "");
+  if (!tokens) throw new Error("Conecte novamente a conta Google no PostFlow3.");
+  if (tokens.access_token && tokens.expiry_date && tokens.expiry_date > Date.now() + 60_000) {
+    return { tokens, accessToken: tokens.access_token };
+  }
   if (!tokens.refresh_token) throw new Error("A conexão Google precisa ser renovada. Conecte novamente a conta Google.");
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -17,18 +19,18 @@ async function getAccessToken(request, env, userId) {
       refresh_token: tokens.refresh_token, grant_type: "refresh_token"
     })
   });
-  const refreshed = await response.json();
+  const refreshed = await response.json().catch(() => ({}));
   if (!response.ok || !refreshed.access_token) throw new Error("Não foi possível renovar a autorização Google.");
   const next = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await env.POSTFLOW3_KV.put(userKey(userId,"youtube-owner"), await encryptJson(env, next));
+  await updateSocialAccountTokens(env, userId, "youtube", "", next);
   return { tokens: next, accessToken: next.access_token };
 }
 
 export async function onRequestGet({ request, env }) {
   const session=await getSession(request,env);if(!session)return json({error:"Faça login novamente."},401);
-  if (!env.POSTFLOW3_KV || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração Google segura está incompleta." }, 503);
+  if ((!env.POSTFLOW3_DB && !env.POSTFLOW3_KV) || !env.TOKEN_ENCRYPTION_KEY || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "A configuração Google segura está incompleta." }, 503);
   try {
-    const { accessToken } = await getAccessToken(request, env, session.userId);
+    const { accessToken } = await getAccessToken(env, session.userId);
     const files = [];
     let pageToken = "";
     // Search the user's accessible files, including shared drives. Filter video MIME types
