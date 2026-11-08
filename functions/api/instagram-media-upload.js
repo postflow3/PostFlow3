@@ -1,16 +1,18 @@
-import { getSession, decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { getSession, userKey } from "../_lib/security.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 import { kv } from "../_lib/kv.js";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function googleToken(env,userId){
- const key=userKey(userId,"youtube-owner"),raw=await kv(env).get(key);
- if(!raw)throw new Error("Conecte novamente sua conta Google para habilitar o armazenamento no Drive.");
- let t=await decryptJson(env,raw),exp=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
+ let t=await getSocialAccount(env,userId,"youtube","");
+ if(!t)throw new Error("Conecte novamente sua conta Google para habilitar o armazenamento no Drive.");
+ const exp=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
  if(t.access_token&&exp>Date.now()+60000)return t.access_token;
  if(!t.refresh_token)throw new Error("Reconecte sua conta Google para salvar vídeos no Drive.");
  const r=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,refresh_token:t.refresh_token,grant_type:"refresh_token"})}),d=await r.json().catch(()=>({}));
  if(!r.ok||!d.access_token)throw new Error("Não foi possível renovar a autorização Google. Reconecte a conta.");
  t={...t,...d,refresh_token:t.refresh_token,expiry_date:Date.now()+Number(d.expires_in||3600)*1000,saved_at:Date.now()};
- await kv(env).put(key,await encryptJson(env,t));return t.access_token;
+ await updateSocialAccountTokens(env,userId,"youtube","",t);
+ return t.access_token;
 }
 export async function onRequestPost({request,env}){
  const session=await getSession(request,env);if(!session)return json({error:"Entre novamente no PostFlow3."},401);
