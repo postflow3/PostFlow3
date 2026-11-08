@@ -1,6 +1,7 @@
 import {getSession,decryptJson,userKey} from "../_lib/security.js";
 import { kv } from "../_lib/kv.js";
 import {getSocialAccount} from "../_lib/social-accounts.js";
+const graphBase = account => account.api_base || "https://graph.instagram.com/v23.0";
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function signature(env,key){
  const secret=env.POSTFLOW3_SESSION_SECRET;if(!secret)throw new Error("A configuração de assinatura do PostFlow3 está incompleta.");
@@ -38,7 +39,7 @@ export async function onRequestPost({request,env}){
   if(pending?.creationId){
    created={id:pending.creationId};
   }else{
-   const createResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(isPhoto?{media_type:"IMAGE",image_url:mediaUrl.toString(),caption,access_token:account.access_token}:{media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
+   const createResponse=await fetch(graphBase(account)+"/encodeURIComponent(account.user_id)+"/media",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(isPhoto?{media_type:"IMAGE",image_url:mediaUrl.toString(),caption,access_token:account.access_token}:{media_type:"REELS",video_url:mediaUrl.toString(),caption,access_token:account.access_token})});
    created=await createResponse.json().catch(()=>({}));
    if(!createResponse.ok||!created.id){
     const metaError=created.error||{},metaCode=metaError.code!=null?String(metaError.code):"",metaSubcode=metaError.error_subcode!=null?String(metaError.error_subcode):"";
@@ -76,7 +77,7 @@ export async function onRequestPost({request,env}){
   let ready=mediaType==="IMAGE",lastStatus="";
   if(mediaType!=="IMAGE"){
    for(let i=0;i<12;i++){
-    const statusUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(created.id));
+    const statusUrl=new URL(graphBase(account)+"/encodeURIComponent(created.id));
     statusUrl.searchParams.set("fields","status_code,status,error_message");statusUrl.searchParams.set("access_token",account.access_token);
     const statusResponse=await fetch(statusUrl),statusData=await statusResponse.json().catch(()=>({}));
     if(statusResponse.ok&&statusData.status_code==="FINISHED"){ready=true;break;}
@@ -86,11 +87,11 @@ export async function onRequestPost({request,env}){
    }
    if(!ready)return json({pending:true,error:"O Instagram ainda está processando o vídeo ("+lastStatus+"). O PostFlow3 continuará verificando sem criar outra publicação."},202);
   }
-  const publishResponse=await fetch("https://graph.instagram.com/v23.0/"+encodeURIComponent(account.user_id)+"/media_publish",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({creation_id:created.id,access_token:account.access_token})});
+  const publishResponse=await fetch(graphBase(account)+"/encodeURIComponent(account.user_id)+"/media_publish",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({creation_id:created.id,access_token:account.access_token})});
   const published=await publishResponse.json().catch(()=>({}));
   if(!publishResponse.ok||!published.id)return json({error:published.error?.message||"O Instagram não confirmou a publicação."},502);
   let permalink="";
-  try{const pUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
+  try{const pUrl=new URL(graphBase(account)+"/encodeURIComponent(published.id));pUrl.searchParams.set("fields","permalink");pUrl.searchParams.set("access_token",account.access_token);const p=await fetch(pUrl);const d=await p.json();permalink=d.permalink||"";}catch{}
   pending.published=true;pending.mediaId=published.id;pending.permalink=permalink;pending.publishedAt=new Date().toISOString();await kv(env).put(pendingKey,JSON.stringify(pending));
   if(pending.postRecordId){
    const recordKey=userKey(session.userId,"post:"+pending.postRecordId);
