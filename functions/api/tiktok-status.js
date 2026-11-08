@@ -8,7 +8,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Faça login no PostFlow3 para verificar o TikTok." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento seguro não configurado." }, 503);
+  if (!env.POSTFLOW3_DB && !env.POSTFLOW3_KV) return json({ error: "Armazenamento seguro não configurado." }, 503);
   const configured = Boolean(env.TIKTOK_CLIENT_KEY && env.TIKTOK_CLIENT_SECRET);
   try {
     const accounts = await listSocialAccounts(env, session.userId);
