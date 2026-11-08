@@ -1,5 +1,6 @@
 import { getSession } from "../_lib/security.js";
 import { getSocialAccount } from "../_lib/social-accounts.js";
+const graphBase = account => account.api_base || "https://graph.instagram.com/v23.0";
 export async function onRequestGet({request,env}){
  const headers={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
  const session=await getSession(request,env);if(!session)return Response.json({error:"Faça login novamente."},{status:401,headers});
@@ -10,7 +11,7 @@ export async function onRequestGet({request,env}){
   if(!data.access_token||!data.user_id)return Response.json({connected:false},{headers});
   const result={connected:true,username:data.username||""};
   try{
-   const profileUrl=new URL("https://graph.instagram.com/v23.0/"+encodeURIComponent(data.user_id));
+   const profileUrl=new URL(graphBase(data)+"/encodeURIComponent(data.user_id));
    profileUrl.search=new URLSearchParams({fields:"user_id,username,followers_count,media_count",access_token:data.access_token}).toString();
    const response=await fetch(profileUrl,{headers:{"Accept":"application/json"}});
    const profile=await response.json();
