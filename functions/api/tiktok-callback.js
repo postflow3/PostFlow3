@@ -10,15 +10,15 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url), p = url.searchParams;
   const headers = { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
   const respond = (title, message, status = 400, success = false) => new Response(page(title, message, success), { status, headers });
-  if (!env.POSTFLOW3_DB && !env.POSTFLOW3_KV) return respond("Armazenamento não configurado", "Configure POSTFLOW3_DB (D1) no Cloudflare Pages Preview.", 503);
+  if (!env.POSTFLOW3_DB && !env.POSTFLOW3_KV) return respond("Armazenamento não configurado", "Configure POSTFLOW3_DB (D1) no Cloudflare Pages.", 503);
   if (p.has("error")) return respond("Autorização cancelada", "O TikTok não autorizou o acesso. Volte ao PostFlow3 e tente novamente.");
   const code = p.get("code"), state = p.get("state");
   if (!code || !state) return respond("Retorno inválido", "O TikTok não enviou os dados necessários. Inicie a conexão novamente.");
   const session = await getSession(request, env);
   if (!session) return respond("Sessão expirada", "Entre novamente no PostFlow3 e repita a conexão.", 401);
   if (!(await verifyStateCookie(request, env, state, session.userId))) return respond("Validação de segurança falhou", "Não foi possível validar esta solicitação. Inicie a conexão novamente.");
-  if (!env.TIKTOK_CLIENT_KEY || !env.TIKTOK_CLIENT_SECRET) return respond("Configuração incompleta", "Configure os secrets TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET no Preview.", 503);
-  const redirectUri = env.TIKTOK_REDIRECT_URI || "https://cloudflare-migration.postflow3.pages.dev/api/tiktok-callback";
+  if (!env.TIKTOK_CLIENT_KEY || !env.TIKTOK_CLIENT_SECRET) return respond("Configuração incompleta", "Configure os secrets TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET no Cloudflare Pages.", 503);
+  const redirectUri = env.TIKTOK_REDIRECT_URI || url.origin + "/api/tiktok-callback";
   try {
     const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
       method: "POST",
