@@ -1,4 +1,5 @@
 import { getSession } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Vary":"Cookie"}});
 
@@ -24,19 +25,20 @@ export async function onRequestGet({request,env}){
   add("drive","Google Drive",["GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"],"Credenciais Google presentes; acesso ao Drive e permissões do usuário não são testados por esta verificação.");
   add("ai","Geração de legendas por IA",["GEMINI_API_KEY"],"Chave presente; disponibilidade e cota do provedor não são testadas.");
   add("media","Armazenamento de mídia (Google Drive)",["GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"],"O PostFlow3 usa Google Drive para a mídia; o binding POSTFLOW3_MEDIA não é obrigatório nesta configuração. O acesso real ao Drive precisa de teste com uma conta conectada.");
-  checks.push({key:"kv",label:"Armazenamento operacional KV",status:env.POSTFLOW3_KV?"ok":"error",detail:env.POSTFLOW3_KV?"Binding KV disponível. Esta verificação não confirma isolamento físico entre Preview e produção.":"Binding POSTFLOW3_KV ausente; sessões auxiliares e execução agendada podem falhar."});
-  let schedulerSecretPresent=false,schedulerLastRun=null;
-  try {
-   if(env.POSTFLOW3_KV){
-    schedulerSecretPresent=Boolean(await env.POSTFLOW3_KV.get("system:scheduler-secret"));
-    const last=await env.POSTFLOW3_KV.get("system:scheduler-last-run");
-    if(last){const parsed=JSON.parse(last);schedulerLastRun={ok:parsed.ok===true,httpStatus:Number(parsed.httpStatus)||null,startedAt:parsed.startedAt||null,finishedAt:parsed.finishedAt||null,cron:String(parsed.cron||"").slice(0,80),error:parsed.error?String(parsed.error).slice(0,180):null};}
+  const store=kv(env);
+  checks.push({key:"storage",label:"Armazenamento operacional",status:env.POSTFLOW3_DB?"ok":env.POSTFLOW3_KV?"warning":"error",detail:env.POSTFLOW3_DB?"D1 disponível como armazenamento principal; KV pode permanecer apenas para compatibilidade legada.":env.POSTFLOW3_KV?"Somente KV legado está disponível. Recomenda-se concluir a migração para D1.":"Nenhum binding D1/KV está disponível."});
+  let schedulerSecretPresent=Boolean(env.POSTFLOW3_SCHEDULER_SECRET),schedulerLastRun=null;
+  try{
+   if(store){
+    schedulerSecretPresent=schedulerSecretPresent||Boolean(await store.get("system:scheduler-secret"));
+    const last=await store.get("system:scheduler-last-run");
+    if(last){const parsed=typeof last==="string"?JSON.parse(last):last;schedulerLastRun={ok:parsed.ok===true,httpStatus:Number(parsed.httpStatus)||null,startedAt:parsed.startedAt||null,finishedAt:parsed.finishedAt||null,cron:String(parsed.cron||"").slice(0,80),error:parsed.error?String(parsed.error).slice(0,180):null};}
    }
   }catch{}
-  checks.push({key:"scheduler",label:"Execução agendada",status:!schedulerSecretPresent?"warning":schedulerLastRun?.ok===true?"ok":"warning",detail:!schedulerSecretPresent?"O segredo de execução não foi encontrado no KV.":schedulerLastRun?.ok===true?"Segredo presente; a última execução registrada do Cron terminou com HTTP "+(schedulerLastRun.httpStatus||"200")+".": "Segredo presente, mas não há uma última execução bem-sucedida registrada."});
+  checks.push({key:"scheduler",label:"Execução agendada",status:!schedulerSecretPresent?"warning":schedulerLastRun?.ok===true?"ok":"warning",detail:!schedulerSecretPresent?"O segredo de execução não foi encontrado nas configurações nem no armazenamento.":schedulerLastRun?.ok===true?"Segredo presente; a última execução registrada do Cron terminou com HTTP "+(schedulerLastRun.httpStatus||"200")+".": "Segredo presente, mas não há uma última execução bem-sucedida registrada."});
   let mediaDiagnostic=null;
   try {
-   const raw=env.POSTFLOW3_KV?await env.POSTFLOW3_KV.get("system:instagram-media-diagnostic:last"):null;
+   const raw=store?await store.get("system:instagram-media-diagnostic:last"):null;
    if(raw){const d=JSON.parse(raw);mediaDiagnostic={at:d.at||null,stage:String(d.stage||"").slice(0,40),reason:String(d.reason||"").slice(0,80),upstreamStatus:Number(d.upstreamStatus)||null,contentType:String(d.contentType||"").slice(0,80)};}
   }catch{}
   const warnings=checks.filter(x=>x.status!=="ok").length;
