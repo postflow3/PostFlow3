@@ -78,6 +78,34 @@ export async function saveSocialAccount(env, userId, platform, accountId, userna
   return next;
 }
 
+export async function updateSocialAccountTokens(env, userId, platform, accountId, tokenData) {
+  if (!validPlatform(platform)) throw new Error("Conta social inválida.");
+  const encrypted = await encryptJson(env, tokenData);
+  const now = new Date().toISOString();
+  const id = safeId(accountId);
+
+  if (env.POSTFLOW3_DB) {
+    let targetId = id && id !== "primary" ? id : "";
+    if (!targetId) {
+      const row = await env.POSTFLOW3_DB.prepare(
+        "SELECT platform_user_id FROM social_accounts WHERE user_id = ? AND platform = ? ORDER BY updated_at DESC LIMIT 1"
+      ).bind(userId, platform).first();
+      targetId = String(row?.platform_user_id || "");
+    }
+    if (targetId) {
+      const expires = Number(tokenData?.expiry_date || tokenData?.access_token_expires_at || 0);
+      const result = await env.POSTFLOW3_DB.prepare(
+        "UPDATE social_accounts SET encrypted_tokens = ?, token_expires_at = ?, updated_at = ? WHERE user_id = ? AND platform = ? AND platform_user_id = ?"
+      ).bind(encrypted, expires ? new Date(expires).toISOString() : null, now, userId, platform, targetId).run();
+      if (Number(result.meta?.changes || 0) > 0) return;
+    }
+  }
+
+  if (!env.POSTFLOW3_KV) throw new Error("Não foi possível salvar a renovação da conta social.");
+  const key = id && id !== "primary" ? socialAccountKey(userId, platform, id) : userKey(userId, platform + "-owner");
+  await env.POSTFLOW3_KV.put(key, encrypted);
+}
+
 export async function getSocialAccount(env, userId, platform, accountId = "") {
   if (!validPlatform(platform)) return null;
   const id = safeId(accountId);
