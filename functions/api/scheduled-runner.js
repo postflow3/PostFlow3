@@ -1,4 +1,4 @@
-import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { userKey } from "../_lib/security.js";
 import { kv } from "../_lib/kv.js";
 import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 
