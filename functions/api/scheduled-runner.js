@@ -1,6 +1,6 @@
 import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
 import { kv } from "../_lib/kv.js";
-import { getSocialAccount, socialAccountKey } from "../_lib/social-accounts.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 const due = post => post.publicationMode === "immediate" || !post.scheduledAt || new Date(post.scheduledAt).getTime() <= Date.now();
@@ -19,7 +19,6 @@ const instagramRetryReady = post => {
 async function googleAccessToken(env, userId, accountId = "") {
   let tokens = await getSocialAccount(env, userId, "youtube", accountId);
   if (!tokens) throw new Error("Conecte novamente a conta YouTube selecionada.");
-  const key = accountId && accountId !== "primary" ? socialAccountKey(userId, "youtube", accountId) : userKey(userId, "youtube-owner");
   const expiry = Number(tokens.expiry_date || ((tokens.saved_at || 0) + Number(tokens.expires_in || 0) * 1000));
   if (tokens.access_token && expiry > Date.now() + 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new Error("A conexão Google não tem token de renovação.");
@@ -30,7 +29,7 @@ async function googleAccessToken(env, userId, accountId = "") {
   const refreshed = await response.json().catch(() => ({}));
   if (!response.ok || !refreshed.access_token) throw new Error(refreshed.error_description || "O Google não renovou a autorização.");
   tokens = { ...tokens, ...refreshed, refresh_token: tokens.refresh_token, expiry_date: Date.now() + Number(refreshed.expires_in || 3600) * 1000, saved_at: Date.now() };
-  await kv(env).put(key, await encryptJson(env, tokens));
+  await updateSocialAccountTokens(env, userId, "youtube", accountId, tokens);
   return tokens.access_token;
 }
 
@@ -228,10 +227,25 @@ export async function onRequestPost({ request, env }) {
 
   const lockKey = "system:scheduler-lock";
   const now = Date.now();
-  const currentLock = await kv(env).get(lockKey, "json");
-  if (currentLock?.until > now) return json({ busy: true, processed: 0, message: "Outra execução ainda está em andamento." }, 200);
   const runId = crypto.randomUUID();
-  await kv(env).put(lockKey, JSON.stringify({ runId, until: now + 4 * 60 * 1000 }), { expirationTtl: 300 });
+  const lockValue = JSON.stringify({ runId, until: now + 4 * 60 * 1000 });
+  let acquired = false;
+  if (env.POSTFLOW3_DB) {
+    // Atomic compare-and-set prevents two Cron invocations from publishing the same queue item.
+    const result = await env.POSTFLOW3_DB.prepare(
+      "INSERT INTO kv_store (key, value, expires_at, updated_at) VALUES (?, ?, ?, ?) " +
+      "ON CONFLICT(key) DO UPDATE SET value = excluded.value, expires_at = excluded.expires_at, updated_at = excluded.updated_at " +
+      "WHERE CASE WHEN json_valid(kv_store.value) THEN CAST(json_extract(kv_store.value, '$.until') AS INTEGER) ELSE 0 END <= ?"
+    ).bind(lockKey, lockValue, now + 5 * 60 * 1000, now, now).run();
+    acquired = Number(result.meta?.changes || 0) > 0;
+  } else {
+    const currentLock = await kv(env).get(lockKey, "json");
+    if (!(currentLock?.until > now)) {
+      await kv(env).put(lockKey, lockValue, { expirationTtl: 300 });
+      acquired = true;
+    }
+  }
+  if (!acquired) return json({ busy: true, processed: 0, message: "Outra execução ainda está em andamento." }, 200);
 
   const results = [];
   try {
@@ -306,7 +320,11 @@ export async function onRequestPost({ request, env }) {
   } catch (error) {
     return json({ error: String(error?.message || "Erro ao processar a fila.").slice(0, 300) }, 500);
   } finally {
-    const lock = await kv(env).get(lockKey, "json");
-    if (lock?.runId === runId) await kv(env).delete(lockKey);
+    try {
+      const lock = await kv(env).get(lockKey, "json");
+      if (lock?.runId === runId) await kv(env).delete(lockKey);
+    } catch (error) {
+      console.error("PostFlow3 scheduler lock cleanup failed", String(error?.message || error).slice(0, 160));
+    }
   }
 }
