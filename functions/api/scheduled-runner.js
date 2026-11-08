@@ -55,7 +55,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     const mediaUrl = new URL("/api/instagram-media", mediaOrigin);
     mediaUrl.searchParams.set("key", videoKey);
     mediaUrl.searchParams.set("sig", await instagramSignature(env, videoKey));
-    const response = await fetch(instagramGraphBase(account) + "/ encodeURIComponent(account.user_id) + "/media", {
+    const response = await fetch(instagramGraphBase(account) + "/" + encodeURIComponent(account.user_id) + "/media", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(post.instagramMediaType === "IMAGE" ? { media_type: "IMAGE", image_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token } : { media_type: "REELS", video_url: mediaUrl.toString(), caption: String(post.description || "").slice(0, 2200), access_token: account.access_token })
     });
@@ -70,7 +70,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
 
   // Image containers are published directly; the asynchronous status polling is for Reels/video.
   if (post.instagramMediaType !== "IMAGE") {
-    const statusUrl = new URL(instagramGraphBase(account) + "/ encodeURIComponent(creationId));
+    const statusUrl = new URL(instagramGraphBase(account) + "/" + encodeURIComponent(creationId));
     statusUrl.searchParams.set("fields", "status_code,status,error_message");
     statusUrl.searchParams.set("access_token", account.access_token);
     const statusResponse = await fetch(statusUrl);
@@ -99,7 +99,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
     }
   }
 
-  const publishResponse = await fetch(instagramGraphBase(account) + "/ encodeURIComponent(account.user_id) + "/media_publish", {
+  const publishResponse = await fetch(instagramGraphBase(account) + "/" + encodeURIComponent(account.user_id) + "/media_publish", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ creation_id: creationId, access_token: account.access_token })
   });
@@ -116,7 +116,7 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   post.instagramCreationId = null;
   post.instagramError = null;
   try {
-    const permalinkUrl = new URL(instagramGraphBase(account) + "/ encodeURIComponent(published.id));
+    const permalinkUrl = new URL(instagramGraphBase(account) + "/" + encodeURIComponent(published.id));
     permalinkUrl.searchParams.set("fields", "permalink");
     permalinkUrl.searchParams.set("access_token", account.access_token);
     const permalinkResponse = await fetch(permalinkUrl);
