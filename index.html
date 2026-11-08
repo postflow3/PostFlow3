@@ -1362,7 +1362,434 @@ button:not(.nav){border-radius:10px}
 .pf-notification-actions{display:flex;gap:8px}
 .pf-notification-actions button{flex:1;padding:10px;border-radius:9px;background:#0a2c53;border:1px solid #205487;color:#a9d1ff;font-size:10px;font-weight:800}
 @media(max-width:680px){.pf3-live-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pf3-live-performance-head{align-items:flex-start}.pf-notification-panel{top:72px;right:12px}.pf3-live-kpis strong{font-size:21px}}
-</style></head><body><div id="authGate" class="auth-screen"><div class="auth-card"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><h1 id="authTitle">Crie sua conta</h1><p>Organize suas publicações do Instagram e YouTube em um só lugar. As contas e os conteúdos ficam separados por usuário.</p><div class="auth-tabs"><button id="tabRegister" class="active" type="button" onclick="setAuthMode('register')">Criar conta</button><button id="tabLogin" type="button" onclick="setAuthMode('login')">Entrar</button></div><form id="registerForm" class="auth-form" onsubmit="submitRegister(event)"><label for="registerName">Seu nome</label><input id="registerName" autocomplete="name" maxlength="80" required placeholder="Como podemos te chamar?"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="registerPassword">Senha (mínimo 10 caracteres)</label><input id="registerPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Crie uma senha forte"><button class="primary" type="submit">Criar minha conta</button><div id="registerMessage" class="auth-message" role="status"></div></form><form id="loginForm" class="auth-form hidden" onsubmit="submitLogin(event)"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Sua senha"><button class="primary" type="submit">Entrar no PostFlow3</button><div id="loginMessage" class="auth-message" role="status"></div></form><div class="auth-foot">Cadastro inicial limitado a 10 usuários. Não use senha de outros serviços.<div id="publicSignupCounter" class="public-signup-counter" aria-live="polite">Carregando total de clientes...</div><p style="margin:12px 0 0;font-size:12px"><a href="/privacy.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> · <a href="mailto:contasergio04@gmail.com">Contato e suporte</a></p></div></div></div><div class="layout"><aside class="side"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><div class="side-label">PAINEL</div><button class="nav active" data-page="inicio"><i>⌂</i> Início</button><div class="side-label">CONTEÚDO</div><button class="nav" data-page="conteudos"><i>▣</i> Criar conteúdo</button><button class="nav" data-page="agendamentos"><i>▦</i> Calendário</button><button class="nav" data-page="publicacoes"><i>↗</i> Publicações</button><button class="nav" data-page="estatisticas"><i>▥</i> Estatísticas</button><div class="side-label">CONTA</div><button class="nav" data-page="contas"><i>♧</i> Redes conectadas</button><button class="nav" data-page="configuracoes"><i>⚙</i> Configurações</button><div class="side-label">GESTÃO</div><button class="nav" data-page="centralpro"><i>✦</i> Central Pro</button><button class="nav" data-page="administracao" id="adminNav" style="display:none" aria-hidden="true"><i>◈</i> Administração</button><div class="side-footer"><span class="side-footer-mark">✦</span><div><b>PostFlow3</b><small>Central de publicações</small></div><span class="side-live" title="Painel carregado"></span></div></aside><main class="main"><div class="top"><div class="top-brand"><div class="top-logo top-logo-image"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"><small>Seu conteúdo em todos os lugares</small></div><label class="top-search" for="globalSearch"><span class="search-glyph">⌕</span><input id="globalSearch" type="search" placeholder="Buscar publicações, vídeos e contas..." aria-label="Buscar no PostFlow3"><kbd>BUSCAR</kbd></label></div><div class="user-menu"><button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menu" aria-expanded="false">☰</button><button class="notification" id="notificationButton" aria-label="Ver notificações" title="Notificações" aria-expanded="false">♧<span id="pfNotificationBadge" class="pf-notification-badge hidden">0</span></button><span class="user-avatar">D</span><span><b id="userGreeting">Olá!</b><small>Plano Gratuito</small></span><button class="nav" style="width:auto;margin:0" onclick="logoutUser()">Sair</button></div></div><div id="pfNotificationPanel" class="pf-notification-panel hidden" role="dialog" aria-labelledby="pfNotificationTitle" aria-modal="false"><div class="pf-notification-head"><div><span class="pf3-live-kicker">CENTRAL DE ALERTAS</span><h3 id="pfNotificationTitle">Notificações</h3><p id="pfNotificationSummary">Consultando seus conteúdos...</p></div><button type="button" id="pfNotificationClose" aria-label="Fechar notificações">×</button></div><div id="pfNotificationItems" class="pf-notification-items"><p class="muted">Carregando...</p></div><div class="pf-notification-actions"><button type="button" id="pfNotificationPosts">Ver publicações</button><button type="button" id="pfNotificationAccounts">Ver contas</button></div></div><section id="inicio"><div class="dashboard-grid"><div class="dashboard-main"><div class="banner create-hero"><div class="hero-copy"><span class="hero-eyebrow">✦ AUTOMAÇÃO DE CONTEÚDO</span><h2>Crie uma vez.<br><span>Publique em todos os lugares.</span></h2><p>Envie seu vídeo, escolha Instagram, YouTube ou TikTok e deixe o PostFlow3 cuidar do resto.</p><div class="hero-points"><span>⚡ Agende com facilidade</span><span>◷ Publique automaticamente</span></div></div><img class="hero-art" src="/assets/postflow3-hero.svg" alt="Ilustração neon do painel PostFlow3 com destinos Instagram, YouTube e TikTok" loading="eager"><div class="hero-slogan">Suas redes<br>trabalhando por você</div></div><div class="pf-quick-actions" aria-label="Ações rápidas">
+</style>
+<style id="postflow3-visual-refresh-2026">
+:root{
+ --pf-bg:#050b18;--pf-surface:#0b1629;--pf-surface-2:#0e1d34;--pf-line:rgba(120,157,214,.16);
+ --pf-text:#edf4ff;--pf-muted:#91a6c6;--pf-blue:#3685ff;--pf-violet:#8057ff;--pf-cyan:#25d9e8;
+ --pf-radius:18px;--pf-shadow:0 18px 50px rgba(0,0,0,.24)
+}
+html{background:var(--pf-bg)!important;scroll-behavior:smooth}
+body{background:
+ radial-gradient(ellipse at 78% -12%,rgba(57,105,255,.18),transparent 34%),
+ radial-gradient(ellipse at 4% 45%,rgba(83,45,179,.10),transparent 30%),
+ linear-gradient(145deg,#050b18 0%,#071326 55%,#050b18 100%)!important;
+ color:var(--pf-text)!important;letter-spacing:.005em}
+.layout{min-height:100vh;gap:0}
+.side{
+ width:264px;flex:0 0 264px;padding:24px 15px 18px;display:flex;flex-direction:column;
+ background:linear-gradient(180deg,rgba(8,21,42,.98),rgba(5,14,29,.98))!important;
+ border-right:1px solid rgba(89,139,211,.17)!important;box-shadow:12px 0 42px rgba(0,0,0,.18)!important;
+ backdrop-filter:blur(22px)
+}
+.side .brand-logo{padding:7px 10px 22px;margin:0 0 16px!important;border-bottom:1px solid var(--pf-line)}
+.side .brand-logo img{max-width:188px;max-height:54px;object-fit:contain;object-position:left center}
+.side-label{padding:13px 12px 7px;color:#6683ad!important;font-size:9px!important;font-weight:900!important;letter-spacing:1.8px}
+.nav{
+ position:relative;display:flex;align-items:center;gap:12px;width:100%;margin:3px 0;padding:12px 13px;
+ border:1px solid transparent;border-radius:12px;color:#a9bddb!important;background:transparent!important;
+ font-size:12px;font-weight:700;letter-spacing:.01em;transition:background .2s,border-color .2s,transform .2s,color .2s
+}
+.nav i{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:9px;
+ background:rgba(115,151,207,.09);color:#8fbaff;font-size:17px}
+.nav:hover{background:rgba(47,105,190,.13)!important;border-color:rgba(90,151,235,.15);color:#fff!important;transform:translateX(2px)}
+.nav.active{background:linear-gradient(105deg,rgba(37,111,255,.24),rgba(111,69,255,.18))!important;
+ border-color:rgba(87,146,255,.36);box-shadow:inset 3px 0 0 #438cff,0 8px 24px rgba(17,83,189,.13)!important}
+.nav.active i{background:linear-gradient(140deg,#287fff,#714cff);color:#fff;box-shadow:0 5px 16px rgba(45,111,255,.3)}
+.side-footer{margin-top:auto;padding:13px 11px;border:1px solid rgba(100,146,207,.17);border-radius:14px;
+ background:linear-gradient(135deg,rgba(22,47,82,.78),rgba(13,27,49,.8))}
+.side-footer-mark{background:linear-gradient(135deg,#347fff,#8555ff)!important;box-shadow:0 5px 15px #347fff44}
+.side-footer b{color:#edf5ff}.side-footer small{color:#8099bd}
+.main{width:100%;max-width:1740px;padding:26px clamp(20px,3vw,48px) 54px}
+.top{
+ position:sticky;top:0;z-index:35;display:flex;align-items:center;justify-content:space-between;gap:20px;
+ padding:12px 0 17px;margin:0 0 20px;border-bottom:1px solid rgba(111,151,206,.15);
+ background:linear-gradient(180deg,rgba(5,13,27,.94),rgba(5,13,27,.78));backdrop-filter:blur(18px)
+}
+.top-brand{display:flex;align-items:center;gap:22px;min-width:0}
+.top-logo-image{min-width:150px}.top-logo-image img{max-width:158px;max-height:42px;object-fit:contain}
+.top-logo-image small{margin-top:3px;color:#8299ba;font-size:9px;letter-spacing:.4px}
+.top-search{width:min(40vw,490px);min-width:190px;padding:10px 14px;border-radius:13px;
+ background:rgba(13,31,57,.82)!important;border:1px solid rgba(98,146,211,.2)!important;color:#91bfff!important}
+.top-search:focus-within{border-color:rgba(64,139,255,.65)!important;box-shadow:0 0 0 4px rgba(55,126,255,.1)}
+.top-search input{background:transparent!important;border:0!important;box-shadow:none!important;color:#eef5ff!important}
+.top-search kbd{padding:4px 7px;border:1px solid rgba(122,157,204,.18);border-radius:6px;color:#7895bd;font-size:9px}
+.user-menu{gap:10px}.user-menu b{font-size:12px;color:#f0f6ff}.user-menu small{color:#43d8c2!important;font-size:10px}
+.user-avatar{width:39px;height:39px;border:2px solid rgba(153,183,255,.25);box-shadow:0 0 0 4px rgba(62,112,203,.08)}
+.notification{position:relative;display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--pf-line);border-radius:11px;background:#0c1c33;color:#b8d2f7!important;font-size:18px}
+.notification:hover{background:#132b4d}
+.user-menu>.nav{width:auto;padding:9px 12px;border:1px solid var(--pf-line);background:#0b1a30!important}
+.card,.stat-card,.side-panel,.queue-card,.create-shortcut{
+ border:1px solid rgba(111,154,218,.17)!important;border-radius:var(--pf-radius)!important;
+ background:linear-gradient(145deg,rgba(13,29,52,.96),rgba(8,19,36,.98))!important;
+ box-shadow:0 12px 34px rgba(0,0,0,.16)!important
+}
+.card:hover,.stat-card:hover{border-color:rgba(81,145,255,.3)!important}
+.card h3{color:#f1f6ff!important;font-weight:800;letter-spacing:-.35px}
+.muted{color:var(--pf-muted)!important}
+.metric{font-size:clamp(25px,2.1vw,33px);font-weight:850;letter-spacing:-1.2px}
+.banner,.create-hero{
+ position:relative;isolation:isolate;overflow:hidden;border-radius:22px!important;
+ border:1px solid rgba(111,151,255,.32)!important;
+ background:radial-gradient(ellipse at 82% 0%,rgba(83,151,255,.28),transparent 36%),
+ linear-gradient(112deg,#0b2450 0%,#171b59 54%,#2a1769 100%)!important;
+ box-shadow:0 20px 50px rgba(20,49,125,.22)!important
+}
+.create-hero:before{content:"";position:absolute;z-index:-1;width:300px;height:300px;right:-90px;top:-170px;border-radius:50%;
+ background:rgba(54,151,255,.16);filter:blur(2px)}
+.create-hero .hero-copy h2{font-size:clamp(25px,3vw,38px);line-height:1.12;letter-spacing:-1.1px;color:#fff}
+.create-hero .hero-copy h2 span{background:linear-gradient(90deg,#fff,#91d9ff 52%,#c2a5ff);background-clip:text;-webkit-background-clip:text;color:transparent}
+.create-hero .hero-copy p{max-width:560px;color:#c3d6f5;font-size:13px;line-height:1.7}
+.hero-eyebrow{color:#82caff!important;letter-spacing:1.8px;font-weight:900}
+.hero-points span{color:#c4d9fa!important}
+.primary,.pfpro-primary{border-radius:12px!important;background:linear-gradient(105deg,#287fff,#704bfa)!important;
+ border:1px solid rgba(142,184,255,.35)!important;box-shadow:0 8px 22px rgba(45,111,255,.22)!important}
+.primary:hover,.pfpro-primary:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.field,.auth-form input,select,textarea,input{
+ border-radius:11px!important;border-color:rgba(111,157,219,.25)!important;
+ background:#071a32!important;color:#eff6ff!important
+}
+.field:focus,.auth-form input:focus,select:focus,textarea:focus,input:focus{
+ border-color:#438fff!important;box-shadow:0 0 0 4px rgba(53,132,255,.11)!important
+}
+.upload{border-radius:16px!important;background:linear-gradient(145deg,#0b1e38,#0b2545)!important;
+ border:1.5px dashed #397ac5!important}
+.checks label,.destination-chip{border-radius:11px!important;background:#0b203a!important;border-color:rgba(104,157,222,.22)!important}
+.entry,.social-row,.account-row,.post-row,.publication-row{border-color:rgba(112,151,204,.15)!important}
+.tag{border:1px solid rgba(101,151,229,.18);border-radius:8px!important;background:#10294b!important}
+.note{border-radius:12px!important}
+.auth-screen{background:radial-gradient(ellipse at 80% 10%,rgba(49,103,255,.2),transparent 35%),rgba(3,9,20,.96)!important}
+.auth-card{border-radius:24px!important;border:1px solid rgba(105,157,224,.24)!important;
+ background:linear-gradient(145deg,#0d203a,#08162a)!important;box-shadow:0 30px 100px rgba(0,0,0,.5)!important}
+.auth-card .brand-logo img{max-height:58px;max-width:220px;object-fit:contain}
+.auth-card h1{color:#f5f8ff!important}.auth-card p{color:#a9bddb!important}
+.auth-tabs{padding:5px;border:1px solid var(--pf-line);border-radius:13px;background:#07152a}
+.auth-tabs button{border-radius:9px!important}
+.pf-notification-panel{border:1px solid rgba(107,156,224,.25)!important;border-radius:18px!important;
+ background:linear-gradient(145deg,#0e2039,#08172c)!important;box-shadow:0 24px 70px #0008!important}
+@media(min-width:1500px){.side{width:276px;flex-basis:276px}.main{padding-left:44px;padding-right:44px}}
+@media(max-width:1150px){.side{width:230px;flex-basis:230px}.main{padding-left:24px;padding-right:24px}}
+@media(max-width:900px){.top{position:relative}.top-brand{flex-wrap:wrap}.top-search{flex:1 1 100%;width:100%}}
+@media(max-width:720px){
+ .layout{display:block}.side{position:sticky;top:0;z-index:50;width:100%;height:auto;max-height:none;flex-direction:row;
+  align-items:center;overflow-x:auto;overflow-y:hidden;padding:9px 10px;gap:4px;border-right:0!important;
+  border-bottom:1px solid rgba(105,155,220,.22)!important;box-shadow:0 10px 25px #0005!important}
+ .side .brand-logo{flex:0 0 120px;width:120px;min-width:120px;margin:0 7px 0 0!important;padding:3px 5px 3px 2px!important;border:0}
+ .side .brand-logo img{max-width:112px;max-height:34px}
+ .side-label,.side-footer{display:none}
+ .side .nav{width:auto;flex:0 0 auto;gap:7px;margin:0;padding:8px 10px;font-size:11px;border-radius:10px}
+ .side .nav i{width:25px;height:25px;flex-basis:25px;font-size:14px}
+ .main{padding:13px 13px 34px}
+ .top{position:relative;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0 13px;margin-bottom:13px}
+ .top-brand{flex:1 1 100%;gap:10px}.top-logo-image{min-width:0}.top-logo-image img{max-width:132px;max-height:35px}
+ .top-search{min-width:0;padding:8px 10px}.top-search kbd{display:none}
+ .user-menu{width:100%;justify-content:flex-end}.user-menu>.nav{padding:7px 10px}
+ .dashboard-grid{grid-template-columns:1fr;gap:10px}.dashboard-side{display:grid;grid-template-columns:1fr;gap:10px}
+ .dashboard-main .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .stat-card{padding:14px!important}.stat-card .metric{font-size:25px}
+ .banner,.create-hero{padding:20px!important;border-radius:17px!important}
+ .create-hero .hero-copy h2{font-size:26px}
+ .card,.side-panel,.queue-card,.create-shortcut{padding:15px!important;border-radius:15px!important}
+}
+@media(max-width:420px){
+ .side .brand-logo{flex-basis:96px;width:96px;min-width:96px}.side .brand-logo img{max-width:90px}
+ .side .nav{padding:7px 8px;font-size:10px;gap:5px}.side .nav i{width:22px;height:22px;flex-basis:22px}
+ .main{padding-left:10px;padding-right:10px}.user-menu{gap:7px}.user-menu b{font-size:11px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .card,.stat-card,.nav,.primary,.pfpro-primary{transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+ .card:hover{transform:translateY(-2px)}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+
+
+<style id="postflow3-workspace-pages-refresh">
+/* Unified visual language for every workspace */
+.page,.view,.page-section,[data-page-view]{color:var(--pf-text)}
+.page-header,.page-title-row,.section-heading{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap
+}
+.page-header h1,.page-title-row h1,.section-heading h2{color:#f3f7ff!important;letter-spacing:-.65px;font-weight:850}
+.page-header p,.page-title-row p,.section-heading p{color:#8fa8ca!important;line-height:1.65}
+.section-heading{margin:22px 0 13px}
+.section-heading h2{font-size:16px}
+.section-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;
+ background:linear-gradient(145deg,rgba(50,130,255,.23),rgba(117,74,255,.2));border:1px solid rgba(101,158,255,.22);color:#a9d5ff}
+.stats{gap:13px}
+.stat-card{position:relative;overflow:hidden;min-height:112px;padding:18px!important}
+.stat-card:after{content:"";position:absolute;width:100px;height:100px;right:-42px;top:-48px;border-radius:50%;
+ background:radial-gradient(circle,rgba(69,135,255,.14),transparent 70%);pointer-events:none}
+.stat-label{color:#91a9ca!important;font-size:10px!important;font-weight:800;letter-spacing:.8px;text-transform:uppercase}
+.stat-card .metric{margin-top:9px;color:#f4f8ff!important}
+.stat-card small{color:#8299ba!important}
+.dashboard-grid{gap:17px}
+.dashboard-main,.dashboard-side{min-width:0}
+.side-panel{padding:19px!important}
+.platform-stats{gap:10px}
+.platform-stat{border:1px solid rgba(112,157,220,.15)!important;border-radius:13px!important;background:#0a1b32!important;padding:12px}
+.platform-stat-icon{border-radius:10px!important}
+.pf3-dashboard-times{overflow:hidden;border:1px solid rgba(108,155,221,.2)!important;border-radius:18px!important;
+ background:linear-gradient(145deg,#0d2039,#09182d)!important;box-shadow:var(--pf-shadow)}
+.pf3-dash-time-top{padding:17px 18px;border-bottom:1px solid var(--pf-line)}
+.pf3-dash-kicker{color:#70b9ff!important;font-size:9px!important;letter-spacing:1.5px;font-weight:900}
+.pf3-dash-platforms{gap:7px;flex-wrap:wrap}
+.pf3-dash-platforms>*{border:1px solid rgba(110,158,220,.2)!important;border-radius:9px!important;background:#102541!important}
+.pf3-best-times-table{width:100%;border-collapse:separate;border-spacing:0}
+.pf3-best-times-table th{padding:12px;color:#7f9bc1;background:#0a1a30;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+.pf3-best-times-table td{padding:13px 12px;color:#d5e4fa;border-top:1px solid rgba(112,151,204,.12);font-size:11px}
+.pf3-best-times-table tr:hover td{background:rgba(51,113,199,.08)}
+/* Create content: focused editor and clear destination selection */
+.work{gap:17px;align-items:start}
+.work>*,.create-layout>*{min-width:0}
+.work .card,.create-layout .card{padding:21px!important}
+.work h2,.work h3,.create-layout h2,.create-layout h3{color:#f0f6ff!important}
+.work label,.create-layout label{color:#a9bfdc!important;font-weight:700}
+.work textarea,.work input,.work select,.create-layout textarea,.create-layout input,.create-layout select{
+ width:100%;min-height:42px;padding:11px 13px;line-height:1.5
+}
+.work textarea,.create-layout textarea{min-height:116px;resize:vertical}
+.destination-accounts,.destination-grid{gap:10px}
+.youtube-choice,.instagram-choice,.tiktok-choice{
+ min-height:70px;padding:13px!important;border:1px solid rgba(109,157,221,.2)!important;border-radius:14px!important;
+ background:linear-gradient(145deg,#0d2340,#0a192e)!important;transition:.2s
+}
+.youtube-choice:hover,.instagram-choice:hover,.tiktok-choice:hover{border-color:rgba(75,147,255,.5)!important;transform:translateY(-2px)}
+.ai-caption-button{border-radius:11px!important;background:linear-gradient(105deg,#2b7df5,#7750ef)!important;
+ box-shadow:0 8px 22px rgba(52,112,240,.18)}
+.ai-caption-status{border-radius:10px!important;color:#9eb9dc!important}
+/* Calendar and scheduling */
+.calendar-card{padding:18px!important;border-radius:18px!important;background:#0b1a30!important}
+.calendar-controls{gap:9px;flex-wrap:wrap}
+.calendar-range,.calendar-summary{border-radius:12px!important;background:#0d2340!important;border:1px solid var(--pf-line)!important;padding:10px 13px}
+.calendar-filter-row{gap:8px;flex-wrap:wrap;margin:12px 0}
+.calendar-filter{border:1px solid rgba(109,154,215,.2)!important;border-radius:999px!important;background:#0b1c33!important;color:#a9c1e3!important;padding:8px 12px!important}
+.calendar-filter.active{background:rgba(48,119,234,.22)!important;border-color:#428cff!important;color:#eaf4ff!important}
+.schedule-calendar{border:1px solid rgba(111,153,211,.16);border-radius:14px;overflow:hidden;background:#09182c}
+.calendar-days{gap:1px;background:rgba(111,153,211,.12)}
+.calendar-day{min-height:112px;padding:8px;background:#0a1a30!important;border:0!important;transition:background .2s}
+.calendar-day:hover{background:#102846!important}
+.calendar-day-head{color:#7e9bc2!important;font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+.calendar-day.today{box-shadow:inset 0 0 0 1px #398dff;background:#0d2443!important}
+.calendar-event{border-radius:7px!important;padding:5px 7px!important;font-size:9px!important}
+.calendar-empty{color:#7892b8!important}
+.calendar-legend{gap:13px;flex-wrap:wrap;color:#9cb2d2;font-size:10px}
+/* Publications, queue, history */
+.post-row{display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:13px;
+ padding:13px 0;border-bottom:1px solid rgba(112,151,204,.13)}
+.post-cover{width:58px;height:58px;border-radius:11px!important;overflow:hidden;background:#102642!important}
+.post-row-title{color:#eaf2ff!important;font-size:12px;font-weight:800}
+.post-row-meta,.post-row-time{color:#89a3c7!important;font-size:10px}
+.post-metrics{display:flex;gap:10px;flex-wrap:wrap;color:#8ea9ce;font-size:10px}
+.post-status{padding:6px 9px;border-radius:999px!important;border:1px solid rgba(112,158,220,.2);background:#102541;color:#b9d4f7;font-size:9px;font-weight:800}
+.post-row-error{border:1px solid rgba(255,111,128,.2);border-radius:10px;padding:9px;color:#ffadb5;background:rgba(137,38,54,.12)}
+.cancel-one-button,.danger-button{border-radius:10px!important}
+.empty-state{border:1px dashed rgba(113,157,216,.28)!important;border-radius:15px!important;background:rgba(11,29,52,.48)!important;padding:30px 18px!important;color:#91a8c9!important}
+.outline-button,.text-button{border:1px solid rgba(113,158,221,.23)!important;border-radius:10px!important;background:#0c203a!important;color:#b9d3f4!important}
+.outline-button:hover,.text-button:hover{border-color:#438cff!important;color:#fff!important}
+/* Analytics */
+.analytics-panels{gap:14px}
+.analytics-panel,.weekly-chart,.video-analytics-panel{
+ padding:18px!important;border:1px solid rgba(111,154,218,.17)!important;border-radius:17px!important;
+ background:linear-gradient(145deg,#0d2039,#09182c)!important;box-shadow:var(--pf-shadow)
+}
+.analytics-panel h3,.weekly-chart h3,.video-analytics-panel h3{color:#f0f6ff!important;font-size:13px;font-weight:800}
+.analytics-panel small,.video-analytics-status{color:#8da6c8!important}
+.weekly-chart{min-height:230px}
+.video-analytics-content{color:#c5d7f1}
+.video-analytics-panel{overflow:hidden}
+/* Social accounts */
+.accounts{gap:14px}
+.social-account-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.social-account-stat{padding:14px!important;border:1px solid rgba(111,155,219,.17)!important;border-radius:14px!important;background:#0c1e36!important}
+.social-account-stat b{display:block;color:#f0f6ff;font-size:20px}
+.social-account-stat small{color:#8ba5c9;font-size:10px}
+.accounts>.card,.accounts>.account-card{padding:19px!important;min-width:0}
+.accounts h3{color:#f1f6ff!important}
+.accounts .primary{width:100%}
+.accounts .account-row{padding:12px;border-radius:12px;background:rgba(9,27,49,.6)}
+/* Settings and admin */
+.settings-hero{padding:23px!important;border-radius:19px!important;background:linear-gradient(115deg,#102b54,#211d59)!important;
+ border:1px solid rgba(107,158,255,.25)!important}
+.settings-hero h2{color:#fff!important;letter-spacing:-.5px}
+.settings-eyebrow{color:#82caff!important;font-size:9px;font-weight:900;letter-spacing:1.5px}
+.settings-grid{gap:13px}
+.settings-card{padding:17px!important;border:1px solid rgba(112,154,214,.17)!important;border-radius:15px!important;
+ background:linear-gradient(145deg,#0d2039,#09182d)!important}
+.settings-title{color:#eff5ff!important;font-weight:800}
+.settings-icon{width:35px;height:35px;border-radius:10px!important;background:rgba(55,126,244,.18)!important;color:#9ac9ff!important}
+.settings-note,.settings-safety{border-radius:11px!important;background:#0c2038!important;border:1px solid rgba(111,153,211,.14)!important}
+.pfpro-panel{padding:20px!important;border:1px solid rgba(113,153,216,.18)!important;border-radius:18px!important;
+ background:linear-gradient(145deg,#0d203a,#09172b)!important}
+.pfpro-section-heading{color:#f0f6ff!important}
+.pfpro-business-status{border-radius:12px!important;background:#0d2440!important}
+#adminOverviewMetrics,#adminHealthChecks{gap:11px}
+#adminOverviewMetrics>* ,#adminHealthChecks>* ,#adminUsersList>*{
+ border:1px solid rgba(111,154,218,.16)!important;border-radius:13px!important;background:#0c1e36!important;padding:13px
+}
+/* Accessible focus and touch targets */
+button,a,[role=button]{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+ outline:2px solid #57a4ff!important;outline-offset:2px
+}
+button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:900px){
+ .work,.analytics-panels,.settings-grid{grid-template-columns:1fr!important}
+ .accounts{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .calendar-day{min-height:88px}
+}
+@media(max-width:600px){
+ .social-account-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .social-account-stat{padding:10px!important}.social-account-stat b{font-size:17px}
+ .accounts{grid-template-columns:1fr!important}
+ .post-row{grid-template-columns:46px minmax(0,1fr);gap:10px}
+ .post-cover{width:46px;height:46px}
+ .post-row>.post-status,.post-row>.cancel-one-button{grid-column:2;justify-self:start}
+ .calendar-day{min-height:72px;padding:5px}.calendar-event{font-size:8px!important;padding:4px!important}
+ .calendar-controls>*{max-width:100%}
+ .analytics-panel,.weekly-chart,.video-analytics-panel{padding:14px!important}
+}
+/* Deployment preview trigger after enabling the isolated postflow-v2 preview branch. */
+</style>
+
+
+<style id="postflow3-reference-layout-2026">
+/* PostFlow3 — visual system based on the approved dashboard reference */
+:root{
+ --pf-bg:#050817;--pf-panel:#0b1230;--pf-panel-2:#101a3d;--pf-line:rgba(100,139,255,.24);
+ --pf-text:#f4f7ff;--pf-muted:#9aabd0;--pf-blue:#168cff;--pf-cyan:#19d8f4;
+ --pf-violet:#742cff;--pf-pink:#e22cff;--pf-green:#00e2a0;--pf-red:#ff386c;
+ --pf-radius:18px;--pf-glow:0 0 28px rgba(30,111,255,.13)
+}
+html,body{background:#050817!important;color:var(--pf-text)!important}
+body{background:radial-gradient(ellipse at 72% 0%,rgba(25,74,190,.18),transparent 38%),radial-gradient(ellipse at 2% 38%,rgba(103,30,210,.12),transparent 32%),#050817!important}
+.layout{background:transparent!important;min-height:100vh}
+.side{width:272px;flex:0 0 272px;padding:22px 15px 18px!important;background:linear-gradient(180deg,#080e28 0%,#090d25 100%)!important;border-right:1px solid rgba(58,113,255,.32)!important;box-shadow:10px 0 40px rgba(0,0,0,.3)!important}
+.side .brand-logo{padding:6px 10px 23px!important;margin-bottom:18px!important;border-bottom:1px solid rgba(95,128,255,.2)!important}
+.side .brand-logo img{max-width:194px;max-height:58px;object-fit:contain}
+.side-label{color:#6079b6!important;font-size:9px!important;letter-spacing:1.8px!important;font-weight:900!important;padding:13px 12px 7px!important}
+.nav{min-height:44px;margin:3px 0!important;padding:11px 13px!important;border:1px solid transparent!important;border-radius:12px!important;background:transparent!important;color:#c5d2f0!important;font-size:13px!important;font-weight:650!important;transition:all .2s ease}
+.nav:hover{background:rgba(28,88,190,.17)!important;border-color:rgba(51,139,255,.28)!important;color:#fff!important;transform:translateX(2px)}
+.nav.active{background:linear-gradient(100deg,rgba(19,105,255,.38),rgba(89,35,230,.24))!important;border-color:rgba(41,153,255,.78)!important;color:#fff!important;box-shadow:0 0 18px rgba(0,130,255,.22),inset 0 0 18px rgba(33,104,255,.12)!important}
+.nav i{color:#a9c9ff!important}
+.side-footer{border:1px solid rgba(63,129,255,.32)!important;border-radius:14px!important;background:linear-gradient(140deg,rgba(17,47,108,.65),rgba(43,19,105,.52))!important;padding:13px!important}
+.main{min-width:0;background:transparent!important}
+.top{position:sticky;top:0;z-index:40;min-height:78px;padding:13px 26px!important;background:rgba(5,9,28,.86)!important;border-bottom:1px solid rgba(60,120,255,.28)!important;backdrop-filter:blur(20px)}
+.top-brand{gap:22px;min-width:0;flex:1}
+.top-logo{display:none!important}
+.top-search{width:min(520px,55vw)!important;min-width:220px!important;border:1px solid rgba(36,137,255,.38)!important;border-radius:28px!important;background:linear-gradient(110deg,rgba(16,29,69,.96),rgba(8,31,69,.88))!important;box-shadow:inset 0 0 18px rgba(22,105,255,.08)}
+.top-search input{color:#f4f7ff!important}.top-search input::placeholder{color:#9badcf!important}
+.user-menu{gap:12px;color:#f5f7ff!important}.user-menu small{color:#8fa5cf!important}
+.user-avatar{border:2px solid #248dff!important;box-shadow:0 0 15px rgba(0,143,255,.3)}
+.notification{border:1px solid rgba(90,139,255,.2)!important;background:#101a3d!important;color:#cfe3ff!important;border-radius:12px!important}
+#inicio{padding:20px 24px 34px!important}
+.dashboard-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(270px,300px)!important;gap:16px!important;align-items:start}
+.dashboard-main,.dashboard-side{min-width:0}
+.dashboard-main .banner{position:relative;overflow:hidden;min-height:126px!important;margin:4px 0 15px!important;padding:22px 25px!important;border:1px solid rgba(36,133,255,.45)!important;border-radius:18px!important;background:linear-gradient(105deg,#101b55 0%,#17105e 55%,#310b76 100%)!important;box-shadow:0 12px 34px rgba(17,49,150,.2)!important}
+.hero-copy h2{color:#fff!important;font-size:clamp(23px,2.2vw,32px)!important;letter-spacing:-1px!important}.hero-copy h2 span{color:#26caff!important}
+.hero-copy p,.hero-points{color:#d0defb!important}.hero-art{max-height:150px!important;filter:drop-shadow(0 0 18px rgba(0,127,255,.4))}
+.hero-slogan{color:#c8d8ff!important;font-weight:800}
+.pf-quick-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;margin:0 0 15px!important;padding:13px!important;border:1px solid var(--pf-line)!important;border-radius:16px!important;background:linear-gradient(145deg,rgba(12,22,54,.96),rgba(8,14,38,.96))!important}
+.pf-quick-intro{grid-column:1/-1!important}.pf-quick-intro strong{color:#fff!important}.pf-quick-intro small{color:var(--pf-muted)!important}
+.pf-action{min-width:0!important;border:1px solid rgba(90,128,220,.23)!important;border-radius:12px!important;background:linear-gradient(140deg,#141e4b,#0d1737)!important;color:#f2f6ff!important;padding:10px!important}
+.pf-action:hover{border-color:#268dff!important;box-shadow:0 0 18px rgba(22,125,255,.2)!important}
+.pf-action-main{background:linear-gradient(110deg,#1247ca,#5220c7)!important;border-color:#3c9dff!important}
+.pf-action small{color:#9db2dd!important}
+.dashboard-main .stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;margin:0 0 15px!important}
+.card,.dashboard-main .card,.dashboard-side .card{color:var(--pf-text)!important;background:linear-gradient(145deg,rgba(14,23,57,.98),rgba(8,15,39,.98))!important;border:1px solid var(--pf-line)!important;border-radius:var(--pf-radius)!important;box-shadow:var(--pf-glow)!important}
+.stat-card{position:relative;overflow:hidden;min-height:116px;padding:17px!important}
+.stat-card:after{content:"";position:absolute;right:-30px;top:-35px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(27,138,255,.22),transparent 70%);pointer-events:none}
+.stat-label{color:#b4c4e9!important;font-size:11px!important;font-weight:750!important;min-height:26px}
+.stat-card .metric{font-size:29px!important;color:#fff!important;font-weight:850!important}
+.stat-card .positive{color:#00e2a0!important}.stat-card .muted{color:#93a9d0!important}
+.smart-overview,.pf3-viral-agent,.pf3-live-performance,.create-shortcut,.queue-card{padding:18px!important;margin:0 0 15px!important}
+.section-heading h3,.section-heading h2,.card h3{color:#f5f7ff!important}
+.section-heading p,.muted{color:var(--pf-muted)!important}
+.smart-metric{background:rgba(18,34,77,.75)!important;border:1px solid rgba(84,131,230,.2)!important;border-radius:12px!important;padding:12px!important}
+.smart-metric strong{color:#fff!important}
+.pf3-viral-agent{border-color:rgba(123,66,255,.48)!important;background:linear-gradient(140deg,rgba(30,16,76,.96),rgba(8,17,46,.98))!important}
+.pf3-agent-kicker,.pf3-live-kicker{color:#55caff!important}
+.pf3-agent-form label,.field,.settings-card label{color:#d9e5ff!important}
+.pf3-agent-form input,.pf3-agent-form select,.field,input,textarea,select{background:#0a1533!important;color:#f4f7ff!important;border-color:rgba(105,143,226,.32)!important}
+input::placeholder,textarea::placeholder{color:#8197c2!important}
+.platform-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;margin:0 0 15px!important}
+.platform-stat{padding:13px!important;background:linear-gradient(145deg,#111d48,#0a1433)!important}
+.platform-stat small,.platform-stat span{color:#9eafd3!important}.platform-stat strong{color:#fff!important}
+.pf3-live-kpis>div{background:rgba(16,32,75,.75)!important;border:1px solid rgba(74,132,236,.2)!important;border-radius:12px!important;padding:13px!important}
+.pf3-live-kpis strong{color:#fff!important}
+.dashboard-side{display:flex!important;flex-direction:column;gap:13px}
+.dashboard-side .side-panel{margin:0!important;padding:16px!important}
+.dashboard-side .section-heading{margin-bottom:8px!important}
+.social-row{border-color:rgba(100,139,220,.2)!important}
+.social-info b{color:#fff!important}.social-info small{color:#9fb6e2!important}
+.outline-button{background:linear-gradient(110deg,#102d68,#21145b)!important;border:1px solid rgba(57,143,255,.42)!important;color:#d4eaff!important;border-radius:10px!important}
+.primary{background:linear-gradient(105deg,#087dff,#6529ec)!important;color:white!important;border:1px solid rgba(92,174,255,.7)!important;box-shadow:0 5px 18px rgba(36,104,255,.2)}
+.primary:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.text-button,.pf3-live-link{color:#54caff!important}
+.pf3-dashboard-times,.calendar-card{margin:15px 0!important;padding:19px!important}
+.pf3-dash-time-top h2{color:#fff!important}.pf3-dash-time-top p{color:var(--pf-muted)!important}
+.pf3-best-times-wrap{overflow-x:auto;border:1px solid rgba(94,136,220,.2)!important;border-radius:12px}
+.pf3-best-times-table{min-width:650px!important;background:rgba(7,15,39,.5)!important;color:#e8f0ff!important}
+.pf3-best-times-table th{background:#111d46!important;color:#9ecbff!important}
+.pf3-best-times-table td{color:#dce7ff!important;border-color:rgba(85,126,205,.18)!important}
+.pf3-use-time{background:#123b80!important;color:#eaf5ff!important;border:1px solid #287dff!important;border-radius:8px!important}
+.calendar-card .calendar-range,.calendar-card .calendar-summary{color:#dce8ff!important}
+.schedule-calendar{color:#e8f0ff!important}
+.calendar-filter{background:#111d46!important;color:#c7d7f5!important;border:1px solid var(--pf-line)!important}
+.calendar-filter.active{background:#164b9d!important;border-color:#2b9aff!important;color:#fff!important}
+#conteudos,#agendamentos,#publicacoes,#estatisticas,#contas,#configuracoes,#centralpro,#administracao{padding:22px 24px 36px!important;color:var(--pf-text)!important}
+#conteudos>.create-hero,#configuracoes>.settings-hero,#administracao>.settings-hero,#centralpro>.pfpro-hero{border:1px solid rgba(50,136,255,.42)!important;border-radius:18px!important;background:linear-gradient(110deg,#101c50,#211064 65%,#0d3b75)!important;box-shadow:var(--pf-glow)!important}
+#conteudos .work{gap:16px!important}
+#conteudos .work>.card,#agendamentos>.card,#publicacoes>.card,#estatisticas>.card,#contas>.card,#configuracoes .settings-card,#centralpro .pfpro-panel,#administracao>.card{padding:19px!important}
+#conteudos .upload{border:1px dashed rgba(54,153,255,.6)!important;background:rgba(12,28,68,.75)!important;border-radius:14px!important;color:#e7f1ff!important}
+.ai-caption-card{background:linear-gradient(145deg,#101e4d,#11143e)!important;border:1px solid rgba(103,85,255,.48)!important}
+.destination-choice{background:linear-gradient(145deg,#101e46,#0b1534)!important;border:1px solid rgba(96,142,235,.28)!important;color:#f4f7ff!important}
+.accounts{gap:14px!important}
+.accounts>.card{padding:20px!important;min-width:0}
+.social-account-stat{background:#101c43!important;border:1px solid rgba(94,139,230,.22)!important;color:#dce8ff!important;border-radius:13px!important}
+.social-account-stat strong{color:#fff!important}
+.settings-card,.analytics-panel,.pfpro-card{background:linear-gradient(145deg,#101a40,#0a1432)!important}
+.settings-title h3,.settings-title p,.preference-row b{color:#f1f6ff!important}
+.settings-note,.settings-safety{background:#101e48!important;border:1px solid var(--pf-line)!important;color:#dce8ff!important}
+.pfpro-tabs{background:#0b1535!important;border:1px solid var(--pf-line)!important;border-radius:13px!important}
+.pfpro-tab{color:#b8c9ec!important}.pfpro-tab.active{background:linear-gradient(110deg,#1455bf,#5725bd)!important;color:#fff!important}
+.pfpro-hero h2,.pfpro-section-heading h3{color:#fff!important}
+.post-row,.entry,.calendar-event,.activity-row{border-color:rgba(98,137,220,.2)!important}
+.auth-screen{background:radial-gradient(ellipse at 70% 10%,rgba(24,100,255,.22),transparent 40%),#050817!important}
+.auth-card{background:linear-gradient(145deg,#101a40,#080f2b)!important;border:1px solid rgba(58,135,255,.42)!important;border-radius:22px!important;box-shadow:0 25px 80px rgba(0,0,0,.45),0 0 35px rgba(30,111,255,.12)!important;color:#f3f7ff!important}
+.auth-card p,.auth-foot{color:#a5b7db!important}.auth-card label{color:#dce8ff!important}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #35c9ff!important;outline-offset:2px}
+@media(max-width:1180px){
+ .dashboard-grid{grid-template-columns:minmax(0,1fr)!important}
+ .dashboard-side{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .dashboard-side .side-panel{min-width:0}
+}
+@media(max-width:820px){
+ .side{width:245px;flex-basis:245px}
+ .top{padding:12px 16px!important}
+ #inicio,#conteudos,#agendamentos,#publicacoes,#estatisticas,#contas,#configuracoes,#centralpro,#administracao{padding:16px!important}
+ .dashboard-main .stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .pf-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+ .side{width:min(86vw,290px);flex-basis:min(86vw,290px)}
+ .top{position:relative;flex-wrap:wrap}.top-brand{width:100%}.top-search{width:100%!important;min-width:0!important}
+ .user-menu{width:100%;justify-content:flex-end}
+ .dashboard-main .banner{padding:17px!important;min-height:0!important}.hero-art{max-width:110px!important;opacity:.85}
+ .hero-copy h2{font-size:22px!important}
+ .dashboard-main .stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .dashboard-side{display:flex!important}
+ .platform-stats{grid-template-columns:1fr!important}
+ .pf-quick-actions{grid-template-columns:1fr!important}
+ .pf-quick-intro{grid-column:auto!important}
+ .smart-metrics,.pf3-live-kpis{grid-template-columns:1fr!important}
+ .accounts{grid-template-columns:1fr!important}
+ .work{grid-template-columns:1fr!important}
+ .calendar-controls{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+</head><body><div id="authGate" class="auth-screen"><div class="auth-card"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><h1 id="authTitle">Crie sua conta</h1><p>Organize suas publicações do Instagram e YouTube em um só lugar. As contas e os conteúdos ficam separados por usuário.</p><div class="auth-tabs"><button id="tabRegister" class="active" type="button" onclick="setAuthMode('register')">Criar conta</button><button id="tabLogin" type="button" onclick="setAuthMode('login')">Entrar</button></div><form id="registerForm" class="auth-form" onsubmit="submitRegister(event)"><label for="registerName">Seu nome</label><input id="registerName" autocomplete="name" maxlength="80" required placeholder="Como podemos te chamar?"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="registerPassword">Senha (mínimo 10 caracteres)</label><input id="registerPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Crie uma senha forte"><button class="primary" type="submit">Criar minha conta</button><div id="registerMessage" class="auth-message" role="status"></div></form><form id="loginForm" class="auth-form hidden" onsubmit="submitLogin(event)"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" maxlength="254" required placeholder="voce@exemplo.com"><label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Sua senha"><button class="primary" type="submit">Entrar no PostFlow3</button><div id="loginMessage" class="auth-message" role="status"></div></form><div class="auth-foot">Cadastro inicial limitado a 10 usuários. Não use senha de outros serviços.<div id="publicSignupCounter" class="public-signup-counter" aria-live="polite">Carregando total de clientes...</div><p style="margin:12px 0 0;font-size:12px"><a href="/privacy.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> · <a href="mailto:contasergio04@gmail.com">Contato e suporte</a></p></div></div></div><div class="layout"><aside class="side"><div class="brand brand-logo"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"></div><div class="side-label">PAINEL</div><button class="nav active" data-page="inicio"><i>⌂</i> Início</button><div class="side-label">CONTEÚDO</div><button class="nav" data-page="conteudos"><i>▣</i> Criar conteúdo</button><button class="nav" data-page="agendamentos"><i>▦</i> Calendário</button><button class="nav" data-page="publicacoes"><i>↗</i> Publicações</button><button class="nav" data-page="estatisticas"><i>▥</i> Estatísticas</button><div class="side-label">CONTA</div><button class="nav" data-page="contas"><i>♧</i> Redes conectadas</button><button class="nav" data-page="configuracoes"><i>⚙</i> Configurações</button><div class="side-label">GESTÃO</div><button class="nav" data-page="centralpro"><i>✦</i> Central Pro</button><button class="nav" data-page="administracao" id="adminNav" style="display:none" aria-hidden="true"><i>◈</i> Administração</button><div class="side-footer"><span class="side-footer-mark">✦</span><div><b>PostFlow3</b><small>Central de publicações</small></div><span class="side-live" title="Painel carregado"></span></div></aside><main class="main"><div class="top"><div class="top-brand"><div class="top-logo top-logo-image"><img src="/assets/postflow3-logo.svg" alt="PostFlow3"><small>Seu conteúdo em todos os lugares</small></div><label class="top-search" for="globalSearch"><span class="search-glyph">⌕</span><input id="globalSearch" type="search" placeholder="Buscar publicações, vídeos e contas..." aria-label="Buscar no PostFlow3"><kbd>BUSCAR</kbd></label></div><div class="user-menu"><button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menu" aria-expanded="false">☰</button><button class="notification" id="notificationButton" aria-label="Ver notificações" title="Notificações" aria-expanded="false">♧<span id="pfNotificationBadge" class="pf-notification-badge hidden">0</span></button><span class="user-avatar">D</span><span><b id="userGreeting">Olá!</b><small>Plano Gratuito</small></span><button class="nav" style="width:auto;margin:0" onclick="logoutUser()">Sair</button></div></div><div id="pfNotificationPanel" class="pf-notification-panel hidden" role="dialog" aria-labelledby="pfNotificationTitle" aria-modal="false"><div class="pf-notification-head"><div><span class="pf3-live-kicker">CENTRAL DE ALERTAS</span><h3 id="pfNotificationTitle">Notificações</h3><p id="pfNotificationSummary">Consultando seus conteúdos...</p></div><button type="button" id="pfNotificationClose" aria-label="Fechar notificações">×</button></div><div id="pfNotificationItems" class="pf-notification-items"><p class="muted">Carregando...</p></div><div class="pf-notification-actions"><button type="button" id="pfNotificationPosts">Ver publicações</button><button type="button" id="pfNotificationAccounts">Ver contas</button></div></div><section id="inicio"><div class="dashboard-grid"><div class="dashboard-main"><div class="banner create-hero"><div class="hero-copy"><span class="hero-eyebrow">✦ AUTOMAÇÃO DE CONTEÚDO</span><h2>Crie uma vez.<br><span>Publique em todos os lugares.</span></h2><p>Envie seu vídeo, escolha Instagram, YouTube ou TikTok e deixe o PostFlow3 cuidar do resto.</p><div class="hero-points"><span>⚡ Agende com facilidade</span><span>◷ Publique automaticamente</span></div></div><img class="hero-art" src="/assets/postflow3-hero.svg" alt="Ilustração neon do painel PostFlow3 com destinos Instagram, YouTube e TikTok" loading="eager"><div class="hero-slogan">Suas redes<br>trabalhando por você</div></div><div class="pf-quick-actions" aria-label="Ações rápidas">
   <div class="pf-quick-intro"><span class="pf-quick-kicker">CENTRAL DE COMANDO</span><strong>O que vamos fazer hoje?</strong><small>Atalhos para acelerar sua rotina de publicação.</small></div>
   <button type="button" class="pf-action pf-action-main" onclick="show('conteudos')"><span class="pf-action-icon">＋</span><span><b>Novo conteúdo</b><small>Enviar e preparar vídeo</small></span><span class="pf-action-arrow">↗</span></button>
   <button type="button" class="pf-action" onclick="show('agendamentos')"><span class="pf-action-icon">◷</span><span><b>Ver calendário</b><small>Conferir próximos posts</small></span><span class="pf-action-arrow">↗</span></button>

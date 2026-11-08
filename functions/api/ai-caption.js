@@ -3,7 +3,7 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:
 export async function onRequestPost({request,env}){
  const session=await getSession(request,env);
  if(!session)return json({error:"Sua sessão expirou. Entre novamente no PostFlow3."},401);
- if(!env.GEMINI_API_KEY)return json({error:"A IA ainda não está configurada. Adicione o secret GEMINI_API_KEY nas variáveis do ambiente Preview do Cloudflare Pages."},503);
+ if(!env.GEMINI_API_KEY)return json({error:"A IA ainda não está configurada. Adicione o secret GEMINI_API_KEY nas variáveis do ambiente Cloudflare Pages deste site."},503);
  try{
   const contentLength=Number(request.headers.get("content-length")||0);
   if(contentLength>16000000)return json({error:"A solicitação é muito grande. Reduza o tamanho do vídeo ou tente novamente."},413);
