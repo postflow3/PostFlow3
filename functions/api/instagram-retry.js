@@ -1,5 +1,6 @@
 import { getSession, userKey } from "../_lib/security.js";
 import { publishInstagramStep } from "./scheduled-runner.js";
+import { kv } from "../_lib/kv.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -9,7 +10,8 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 export async function onRequestPost({ request, env }) {
   const session = await getSession(request, env);
   if (!session) return json({ error: "Faça login novamente." }, 401);
-  if (!env.POSTFLOW3_KV) return json({ error: "Armazenamento de publicações não configurado." }, 503);
+  const store = kv(env);
+  if (!store) return json({ error: "Armazenamento de publicações não configurado. Configure D1 ou KV legado." }, 503);
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -17,7 +19,7 @@ export async function onRequestPost({ request, env }) {
     if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "Identificador da publicação inválido." }, 400);
 
     const key = userKey(session.userId, "post:" + id);
-    const post = await env.POSTFLOW3_KV.get(key, "json");
+    const post = await store.get(key, "json");
     if (!post) return json({ error: "Publicação não encontrada." }, 404);
     if (!post.instagramVideoKey || !(Array.isArray(post.platforms) ? post.platforms.includes("Instagram") : true)) {
       return json({ error: "Esta publicação não tem foto ou vídeo selecionado para o Instagram." }, 409);
@@ -31,7 +33,7 @@ export async function onRequestPost({ request, env }) {
     post.scheduledAt = new Date().toISOString();
     post.instagramStatus = post.instagramCreationId ? "processing" : "pending";
     post.instagramAttemptedAt = new Date().toISOString();
-    await env.POSTFLOW3_KV.put(key, JSON.stringify(post));
+    await store.put(key, JSON.stringify(post));
 
     try {
       const state = await publishInstagramStep({ request, env, userId: session.userId, post });
@@ -47,13 +49,13 @@ export async function onRequestPost({ request, env }) {
         post.status = (post.youtubeVideoId && post.youtubeStatus !== "published") ? "partially_published" : "published";
         post.publishedAt = post.publishedAt || new Date().toISOString();
       }
-      await env.POSTFLOW3_KV.put(key, JSON.stringify(post));
+      await store.put(key, JSON.stringify(post));
       return json({ ok: state !== "failed", status: state, post, message: state === "published" ? "Instagram publicou o vídeo." : state === "processing" ? "O Instagram está processando o vídeo; o agendador continuará verificando." : (post.instagramError || "O Instagram não publicou o vídeo.") }, state === "failed" ? 502 : 200);
     } catch (error) {
       post.instagramStatus = "failed";
       post.instagramError = String(error?.message || "Falha ao tentar publicar no Instagram.").slice(0, 250);
       post.status = "failed";
-      await env.POSTFLOW3_KV.put(key, JSON.stringify(post));
+      await store.put(key, JSON.stringify(post));
       return json({ error: post.instagramError, post }, 502);
     }
   } catch (error) {
