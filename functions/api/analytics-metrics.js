@@ -1,17 +1,19 @@
-import { getSession, userKey, decryptJson, encryptJson } from "../_lib/security.js";
+import { getSession, userKey } from "../_lib/security.js";
+import { kv } from "../_lib/kv.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function youtubeToken(env,userId){
- const key=userKey(userId,"youtube-owner"),raw=await env.POSTFLOW3_KV.get(key);
- if(!raw)return null;
- let t=await decryptJson(env,raw),expiry=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
+ let t=await getSocialAccount(env,userId,"youtube","");
+ if(!t)return null;
+ let expiry=Number(t.expiry_date||((t.saved_at||0)+Number(t.expires_in||0)*1000));
  if(t.access_token&&expiry>Date.now()+60000)return t.access_token;
  if(!t.refresh_token||!env.GOOGLE_CLIENT_ID||!env.GOOGLE_CLIENT_SECRET)return null;
  const r=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,refresh_token:t.refresh_token,grant_type:"refresh_token"})});
  const d=await r.json().catch(()=>({}));
  if(!r.ok||!d.access_token)return null;
  t={...t,...d,refresh_token:t.refresh_token,expiry_date:Date.now()+Number(d.expires_in||3600)*1000,saved_at:Date.now()};
- await env.POSTFLOW3_KV.put(key,await encryptJson(env,t));
+ await updateSocialAccountTokens(env,userId,"youtube","",t);
  return t.access_token;
 }
 export async function onRequestGet({request,env}){
@@ -19,13 +21,13 @@ export async function onRequestGet({request,env}){
  if(!session)return json({error:"Sua sessão expirou. Entre novamente."},401);
  if(!env.POSTFLOW3_KV)return json({error:"Armazenamento não configurado."},503);
  try{
-  const prefix=userKey(session.userId,"post:"),listed=await env.POSTFLOW3_KV.list({prefix,limit:100});
+  const prefix=userKey(session.userId,"post:"),listed=await store.list({prefix,limit:100});
   const posts=[];
-  for(const k of listed.keys){const p=await env.POSTFLOW3_KV.get(k.name,"json");if(p)posts.push(p);}
+  for(const k of listed.keys){const p=await store.get(k.name,"json");if(p)posts.push(p);}
   const published=posts.filter(p=>/publicad|published|success|conclu/i.test(String(p.status||""))&&!/falha|erro|scheduled|agendad/i.test(String(p.status||"")));
   const results=[],platforms={youtube:{connected:false,available:false,message:"Conecte o YouTube para consultar as métricas.",videos:[]},instagram:{connected:false,available:false,message:"Conecte o Instagram profissional para consultar as métricas.",videos:[]}};
-  const ytRaw=await env.POSTFLOW3_KV.get(userKey(session.userId,"youtube-owner"));
-  if(ytRaw){
+  const ytAccount=await getSocialAccount(env,session.userId,"youtube","");
+  if(ytAccount){
    platforms.youtube.connected=true;
    const token=await youtubeToken(env,session.userId);
    if(token){
@@ -44,10 +46,10 @@ export async function onRequestGet({request,env}){
     }else platforms.youtube.message="Ainda não há vídeos publicados com ID do YouTube registrado no histórico.";
    }else platforms.youtube.message="Não foi possível renovar a autorização do YouTube. Reconecte a conta e confirme a permissão de leitura.";
   }
-  const igRaw=await env.POSTFLOW3_KV.get(userKey(session.userId,"instagram-owner"));
-  if(igRaw){
+  const igAccount=await getSocialAccount(env,session.userId,"instagram","");
+  if(igAccount){
    platforms.instagram.connected=true;
-   const account=await decryptJson(env,igRaw),items=published.filter(p=>p.instagramMediaId);
+   const account=igAccount,items=published.filter(p=>p.instagramMediaId);
    if(items.length){
     let any=false,lastError="";
     for(const p of items.slice(0,50)){
