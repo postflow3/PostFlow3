@@ -1,5 +1,6 @@
-import { decryptJson, encryptJson, userKey } from "../_lib/security.js";
+import { userKey } from "../_lib/security.js";
 import { kv } from "../_lib/kv.js";
+import { getSocialAccount, updateSocialAccountTokens } from "../_lib/social-accounts.js";
 
 function notFound() {
   return new Response("Not found", {
@@ -28,37 +29,20 @@ async function googleToken(env, userId) {
   if (!kv(env) || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     throw new Error("Google Drive authorization is not configured");
   }
-
-  const key = userKey(userId, "youtube-owner");
-  const raw = await kv(env).get(key);
-  if (!raw) throw new Error("Google account is not connected");
-
-  let token = await decryptJson(env, raw);
+  let token = await getSocialAccount(env, userId, "youtube", "");
+  if (!token) throw new Error("Google account is not connected");
   const expiresAt = Number(token.expiry_date || ((token.saved_at || 0) + Number(token.expires_in || 0) * 1000));
   if (token.access_token && expiresAt > Date.now() + 60000) return token.access_token;
   if (!token.refresh_token) throw new Error("Google authorization expired; reconnect Google");
-
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: env.GOOGLE_CLIENT_ID,
-      client_secret: env.GOOGLE_CLIENT_SECRET,
-      refresh_token: token.refresh_token,
-      grant_type: "refresh_token"
-    })
+    body: new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, refresh_token: token.refresh_token, grant_type: "refresh_token" })
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data.access_token) throw new Error("Google token refresh failed");
-
-  token = {
-    ...token,
-    ...data,
-    refresh_token: token.refresh_token,
-    expiry_date: Date.now() + Number(data.expires_in || 3600) * 1000,
-    saved_at: Date.now()
-  };
-  await kv(env).put(key, await encryptJson(env, token));
+  token = { ...token, ...data, refresh_token: token.refresh_token, expiry_date: Date.now() + Number(data.expires_in || 3600) * 1000, saved_at: Date.now() };
+  await updateSocialAccountTokens(env, userId, "youtube", "", token);
   return token.access_token;
 }
 
