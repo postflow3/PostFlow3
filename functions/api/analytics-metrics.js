@@ -19,7 +19,7 @@ async function youtubeToken(env,userId){
 export async function onRequestGet({request,env}){
  const session=await getSession(request,env);
  if(!session)return json({error:"Sua sessão expirou. Entre novamente."},401);
- if(!env.POSTFLOW3_KV)return json({error:"Armazenamento não configurado."},503);
+ const store=kv(env);if(!store)return json({error:"Armazenamento não configurado. Configure D1 ou KV legado."},503);
  try{
   const prefix=userKey(session.userId,"post:"),listed=await store.list({prefix,limit:100});
   const posts=[];
