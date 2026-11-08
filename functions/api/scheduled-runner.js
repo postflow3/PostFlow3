@@ -48,8 +48,9 @@ export async function publishInstagramStep({ request, env, userId, post }) {
   if (!account.access_token || !account.user_id) throw new Error("A conexão do Instagram está incompleta.");
   let creationId = post.instagramCreationId;
   if (!creationId) {
-    const requestHost = new URL(request.url).hostname;
-    const mediaOrigin = requestHost === "postflow3.pages.dev" ? "https://postflow3.pages.dev" : "https://cloudflare-migration.postflow3.pages.dev";
+    // Use the same public deployment that is running this scheduler.
+    // This keeps production, branch previews, and future preview deployments isolated.
+    const mediaOrigin = new URL(request.url).origin;
     const mediaUrl = new URL("/api/instagram-media", mediaOrigin);
     mediaUrl.searchParams.set("key", videoKey);
     mediaUrl.searchParams.set("sig", await instagramSignature(env, videoKey));
